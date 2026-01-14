@@ -7,7 +7,9 @@ export interface RequestResultDto {
     finalScore: number;
     tempScore: number;
     cityName: string;
+
     dateCreated: string;
+    maxAffordableRent?: number;
 }
 
 export interface CreateRequestDto {

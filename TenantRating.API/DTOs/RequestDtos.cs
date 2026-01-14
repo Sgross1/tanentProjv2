@@ -24,4 +24,5 @@ public class RequestResultDto
     public decimal TempScore { get; set; }
     public string CityName { get; set; } = string.Empty;
     public DateTime DateCreated { get; set; }
+    public decimal MaxAffordableRent { get; set; }
 }

@@ -55,7 +55,8 @@ public class RequestsController : ControllerBase
             FinalScore = request.FinalScore,
             TempScore = request.TempScore,
             CityName = request.CityName,
-            DateCreated = request.DateCreated
+            DateCreated = request.DateCreated,
+            MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
         };
     }
 

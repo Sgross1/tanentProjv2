@@ -7,7 +7,7 @@ public static class RentabilityScoreCalculator
     private const decimal MarriedExpenseFactor = 300m; // Risk per spouse
 
     // Debt-to-Income Ratio (DTI)
-    private const decimal RentToIncomeRatio = 0.35m; // 35% of adjusted income allocated for rent
+    public const decimal RentToIncomeRatio = 0.35m; // 35% of adjusted income allocated for rent
 
     public static decimal CalculateTempScore(
         decimal netIncome,

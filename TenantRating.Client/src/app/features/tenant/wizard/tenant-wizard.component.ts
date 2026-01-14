@@ -124,7 +124,14 @@ export class TenantWizardComponent {
         next: (result) => {
           this.isProcessing = false;
           this.finalScore = result.finalScore;
+          // Capture Max Affordable Rent from backend
+          this.maxAffordableRent = result.maxAffordableRent || 0; 
           this.createdRequestId = result.requestId;
+          
+          // Initialize slider and calculation
+          this.sliderValue = Math.round(this.finalScore);
+          this.updateRentCalculation();
+
           this.generatePercentileGraph(this.finalScore);
           this.currentStep = 4; // Result view
         },
@@ -137,6 +144,21 @@ export class TenantWizardComponent {
       });
 
     }, 3000);
+  }
+
+  // Dynamic Rent Calculation Logic
+  maxAffordableRent = 0;
+  sliderValue = 0;
+  calculatedRent = 0;
+
+  updateRentCalculation() {
+    if (this.sliderValue <= 0) {
+      this.calculatedRent = 0;
+      return;
+    }
+    // Formula: Score = (MaxRent / RequestRent) * 100
+    // Therefore: RequestRent = (MaxRent * 100) / Score
+    this.calculatedRent = Math.round((this.maxAffordableRent * 100) / this.sliderValue);
   }
 
   generatePercentileGraph(score: number) {

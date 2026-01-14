@@ -104,6 +104,20 @@
                 עבור שכ"ד {{ requestData.desiredRent | number }} ₪, הציון שלך הוא {{ finalScore | number:'1.0-1' }}
             </p>
 
+            <!-- Dynamic Slider Section -->
+            <div class="slider-container"
+                style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h4>מה צריך לקרות כדי להגיע לציון {{ sliderValue }}?</h4>
+                <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
+                    (input)="updateRentCalculation()" style="width: 100%;">
+
+                <p style="margin-top: 10px; font-weight: bold; color: #0078d4;">
+                    כדי לקבל ציון <span style="font-size: 1.2em;">{{ sliderValue }}</span>, עליך לבקש שכירות של עד:
+                    <br>
+                    <span style="font-size: 1.5em;">{{ calculatedRent | number }} ₪</span>
+                </p>
+            </div>
+
             <div class="distribution-graph-container">
                 <h3>אתה באחוזון ה-{{ (finalScore / 1000) * 100 | number:'1.0-0' }} מבין המשתמשים בארץ</h3>
                 <div class="distribution-graph">
