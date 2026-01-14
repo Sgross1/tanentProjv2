@@ -1,0 +1,47 @@
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="fade-in-up">השכרת דירה בראש שקט</h1>
+        <p class="subtitle fade-in-up delay-1">מערכת דירוג הדיירים המתקדמת בישראל. שקיפות, אמינות וביטחון לכולם.</p>
+
+        <div class="cta-group fade-in-up delay-2">
+            <button class="btn-card tenant" (click)="handleRoleClick('Tenant')">
+                <span class="icon">🏠</span>
+                <span class="text">אני שוכר</span>
+                <span class="sub">קבל דירוג אשראי</span>
+            </button>
+            <button class="btn-card landlord" (click)="handleRoleClick('Landlord')">
+                <span class="icon">🔑</span>
+                <span class="text">אני משכיר</span>
+                <span class="sub">חפש דיירים</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Animated Background Elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+</div>
+
+<div class="scroll-reveal-section" #scrollSection id="how-it-works" [class.visible]="isVisible">
+    <div class="half-circle-container">
+        <div class="half-circle">
+            <div class="circle-content">
+                <h2>איך זה עובד?</h2>
+                <div class="steps">
+                    <div class="step">
+                        <span class="num">1</span>
+                        <p>העלה תלושי שכר מאובטחים</p>
+                    </div>
+                    <div class="step">
+                        <span class="num">2</span>
+                        <p>קבל ציון אמינות חכם</p>
+                    </div>
+                    <div class="step">
+                        <span class="num">3</span>
+                        <p>הצג למשכירים וסגור חוזה</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="search-container fadeIn">
+    <header class="search-header">
+        <h1>חיפוש שוכרים</h1>
+        <p>מצא את הדייר המושלם עבורך</p>
+    </header>
+
+    <div class="search-box">
+        <div class="input-group">
+            <span class="icon">🔍</span>
+            <input type="text" [(ngModel)]="searchCity" (input)="onSearchInput()" (keyup.enter)="onSearch()"
+                placeholder="חפש לפי עיר (למשל: תל אביב)">
+
+            <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
+                <div class="item" *ngFor="let city of filteredCities" (click)="selectCity(city)">
+                    {{city}}
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <input type="number" [(ngModel)]="minRent" placeholder="שכר דירה מינימלי">
+            <span>-</span>
+            <input type="number" [(ngModel)]="maxRent" placeholder="שכר דירה מקסימלי">
+        </div>
+
+        <button class="search-btn" (click)="onSearch()">
+            חפש
+        </button>
+    </div>
+
+    <div class="loading" *ngIf="isLoading">
+        <div class="spinner"></div>
+        מחפש דיירים מתאימים...
+    </div>
+
+    <div class="results-grid" *ngIf="!isLoading && results.length > 0">
+        <div class="tenant-card" *ngFor="let tenant of results">
+            <button class="save-btn" [class.active]="savedMap[tenant.requestId]" (click)="toggleSave(tenant)">
+                {{ savedMap[tenant.requestId] ? '❤️' : '🤍' }}
+            </button>
+            <div class="score-badge" [style.color]="getScoreColor(tenant.finalScore)">
+                <span class="label">ציון:</span>
+                {{tenant.finalScore | number:'1.0-1'}}
+            </div>
+            <h3>{{tenant.tenantName}}</h3>
+            <div class="details">
+                <p>📍 {{tenant.cityName}}</p>
+                <p>💰 {{tenant.desiredRent}} ₪</p>
+                <p class="date">📅 {{tenant.dateOfRating | date:'dd/MM/yyyy'}}</p>
+            </div>
+
+            <button class="contact-btn" (click)="togglePhone(tenant)" *ngIf="!showPhoneMap[tenant.requestId]">
+                📞 הצג טלפון
+            </button>
+            <div class="phone-display" *ngIf="showPhoneMap[tenant.requestId]">
+                {{ tenant.phoneNumber || 'לא הוזן טלפון' }}
+            </div>
+        </div>
+    </div>
+
+    <div class="no-results" *ngIf="hasSearched && !isLoading && results.length === 0">
+        <div class="icon">🕵️</div>
+        <h3>לא נמצאו תוצאות</h3>
+        <p>נסה לשנות את פרמטרי החיפוש</p>
+    </div>
+
+    <!-- Quick Suggestions for Demo if empty -->
+    <div class="suggestions-list" *ngIf="!hasSearched">
+        <p>ערים פופולריות:</p>
+        <div class="tags">
+            <span (click)="searchCity='תל אביב'; onSearch()">תל אביב - יפו</span>
+            <span (click)="searchCity='רמת גן'; onSearch()">רמת גן</span>
+            <span (click)="searchCity='גבעתיים'; onSearch()">גבעתיים</span>
+        </div>
+    </div>
+</div>

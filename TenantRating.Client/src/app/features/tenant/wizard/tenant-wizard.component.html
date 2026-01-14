@@ -1,0 +1,134 @@
+<div class="wizard-container">
+    <div class="wizard-card">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="step-indicator" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">1</div>
+            <div class="line" [class.active]="currentStep > 1"></div>
+            <div class="step-indicator" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">2</div>
+            <div class="line" [class.active]="currentStep > 2"></div>
+            <div class="step-indicator" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">3</div>
+        </div>
+
+        <!-- Step 1: Details -->
+        <div class="step-content fade-in" *ngIf="currentStep === 1">
+            <h2>פרטים בסיסיים</h2>
+            <p>בוא נתחיל עם הפרטים על הדירה שאתה מחפש.</p>
+
+            <div class="form-group">
+                <label>תעודת זהות</label>
+                <input type="text" [(ngModel)]="requestData.idNumber" placeholder="מספר תעודת זהות תקין (9 ספרות)">
+            </div>
+
+            <div class="form-group relative">
+                <label>יישובים מבוקשים (ניתן לבחור כמה)</label>
+
+                <div class="city-chips">
+                    <div class="chip" *ngFor="let city of requestData.cities">
+                        {{city}}
+                        <span class="remove" (click)="removeCity(city)">×</span>
+                    </div>
+                </div>
+
+                <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()" placeholder="הקלד שם ישוב..."
+                    [disabled]="requestData.cities.length >= 5">
+
+                <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
+                    <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
+                        {{city}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>שכר דירה רצוי (₪)</label>
+                <input type="number" [(ngModel)]="requestData.desiredRent" placeholder="לדוגמה: 6000">
+            </div>
+
+            <div class="actions">
+                <button class="btn-secondary" routerLink="/tenant/dashboard">ביטול</button>
+                <button class="btn-primary" (click)="nextStep()"
+                    [disabled]="requestData.cities.length === 0 || !requestData.desiredRent || !requestData.idNumber">
+                    המשך
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Upload -->
+        <div class="step-content fade-in" *ngIf="currentStep === 2">
+            <h2>העלאת מסמכים</h2>
+            <p>העלה 3 תלושי שכר אחרונים ותדפיס עו"ש.</p>
+
+            <div class="privacy-note">
+                🔒 <strong>פרטיות מעל לכל:</strong> המסמכים משמשים לחישוב הדירוג בלבד אינם נשמרים בשרת לאחר העיבוד.
+            </div>
+
+            <div class="upload-zone" (click)="fileInput.click()">
+                <input #fileInput type="file" multiple style="display: none" (change)="onFileSelected($event)">
+                <div class="icon">📂</div>
+                <p>לחץ כאן לבחירת קבצים</p>
+                <div class="file-list" *ngFor="let file of uploadedFiles">
+                    <span>{{file.name}}</span>
+                    <span>✅</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn-secondary" (click)="prevStep()">חזור</button>
+                <button class="btn-primary" (click)="nextStep()" [disabled]="uploadedFiles.length === 0">נתח
+                    מסמכים</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Processing -->
+        <div class="step-content processing" *ngIf="currentStep === 3">
+            <div class="scanner-animation">
+                <div class="scan-line"></div>
+                <div class="doc-icon">📄</div>
+            </div>
+            <h2>מנתח נתונים...</h2>
+            <p>ה-AI שלנו סורק את המסמכים שלך ומחשב דירוג.</p>
+        </div>
+
+        <!-- Step 4: Result -->
+        <div class="step-content result fade-in" *ngIf="currentStep === 4">
+            <h2>הדירוג שלך מוכן!</h2>
+
+            <div class="score-display">
+                <div class="score-circle">
+                    <span class="score-value">{{finalScore | number:'1.0-1'}}</span>
+                    <span class="score-label">ציון אמינות</span>
+                </div>
+            </div>
+
+            <p class="score-desc">
+                עבור שכ"ד {{ requestData.desiredRent | number }} ₪, הציון שלך הוא {{ finalScore | number:'1.0-1' }}
+            </p>
+
+            <div class="distribution-graph-container">
+                <h3>אתה באחוזון ה-{{ (finalScore / 1000) * 100 | number:'1.0-0' }} מבין המשתמשים בארץ</h3>
+                <div class="distribution-graph">
+                    <div class="bar-wrapper" *ngFor="let bar of percentileBars; let i = index">
+                        <div class="label-you" *ngIf="i === userPercentileIndex">בדיוק כאן</div>
+                        <div class="bar" [class.highlight]="i === userPercentileIndex"
+                            [style.height.%]="(bar / percentileBars[percentileBars.length-1]) * 100">
+                        </div>
+                    </div>
+                </div>
+                <p class="graph-note">מותאם ליוקר המחייה בישראל</p>
+            </div>
+
+            <div class="notification-actions">
+                <button class="btn-outline" (click)="sendSms()">
+                    📱 שלח לי SMS
+                </button>
+                <button class="btn-outline" (click)="sendEmail()">
+                    📧 שלח לי למייל
+                </button>
+            </div>
+
+            <div class="actions">
+                <button class="btn-primary full-width" (click)="finish()">חזור לאיזור האישי</button>
+            </div>
+        </div>
+    </div>
+</div>

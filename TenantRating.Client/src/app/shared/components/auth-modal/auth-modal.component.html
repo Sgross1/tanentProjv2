@@ -1,0 +1,68 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="close()">
+    <div class="modal-content glass-panel" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="close()">✕</button>
+
+        <div class="modal-header">
+            <h2 *ngIf="isLogin">ברוכים הבאים</h2>
+            <h2 *ngIf="!isLogin">צור חשבון חדש</h2>
+            <p>המערכת הבטוחה לניהול שכירויות</p>
+        </div>
+
+        <form [formGroup]="authForm" (ngSubmit)="onSubmit()">
+
+            <!-- Register Fields -->
+            <div class="form-group-row" *ngIf="!isLogin">
+                <div class="input-group">
+                    <input type="text" formControlName="firstName" placeholder="שם פרטי">
+                </div>
+                <div class="input-group">
+                    <input type="text" formControlName="lastName" placeholder="שם משפחה">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <input type="email" formControlName="email" placeholder="כתובת אימייל">
+            </div>
+
+            <div class="input-group">
+                <input type="password" formControlName="password" placeholder="סיסמה">
+            </div>
+
+            <div class="input-group" *ngIf="!isLogin">
+                <input type="tel" formControlName="phoneNumber" placeholder="מספר טלפון">
+            </div>
+
+            <!-- Role Selection (Register Only) -->
+            <div class="role-selector" *ngIf="!isLogin">
+                <label>
+                    <input type="radio" formControlName="role" value="Tenant">
+                    <div class="role-card">
+                        <span>🏠</span>
+                        <span>אני שוכר</span>
+                    </div>
+                </label>
+                <label>
+                    <input type="radio" formControlName="role" value="Landlord">
+                    <div class="role-card">
+                        <span>🔑</span>
+                        <span>אני משכיר</span>
+                    </div>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-premium submit-btn" [disabled]="authForm.invalid || isLoading">
+                <span *ngIf="!isLoading">{{ isLogin ? 'התחבר' : 'הרשמה מהירה' }}</span>
+                <span *ngIf="isLoading" class="loader">...</span>
+            </button>
+        </form>
+
+        <div class="modal-footer">
+            <p *ngIf="isLogin">
+                אין לך חשבון? <a (click)="toggleMode()">הירשם עכשיו</a>
+            </p>
+            <p *ngIf="!isLogin">
+                כבר רשום? <a (click)="toggleMode()">התחבר</a>
+            </p>
+        </div>
+    </div>
+</div>

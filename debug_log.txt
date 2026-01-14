@@ -1,0 +1,37 @@
+Running Diagnostics... 
+Date: Mon 01/12/2026 20:50:07.94 
+ 
+[CHECK 1] Node.js Version: 
+'node' is not recognized as an internal or external command,
+operable program or batch file.
+Node.js NOT found for User 
+ 
+[CHECK 2] .NET SDK Version: 
+The command could not be loaded, possibly because:
+  * You intended to execute a .NET application:
+      The application '--version' does not exist.
+  * You intended to execute a .NET SDK command:
+      No .NET SDKs were found.
+
+Download a .NET SDK:
+https://aka.ms/dotnet/download
+
+Learn about SDK resolution:
+https://aka.ms/dotnet/sdk-not-found
+READ HERE: .NET SDK NOT found 
+ 
+[CHECK 3] Project Directory: 
+ Volume in drive C is OS
+ Volume Serial Number is 640F-B70A
+
+ Directory of C:\Users\shlgr\.gemini\antigravity\scratch\tenant-rating\TenantRating.Client
+
+01/12/2026  08:33 PM    <DIR>          .
+01/12/2026  08:50 PM    <DIR>          ..
+01/12/2026  08:33 PM             2,861 angular.json
+01/12/2026  08:33 PM             1,050 package.json
+01/12/2026  08:33 PM    <DIR>          src
+01/12/2026  08:33 PM               228 tsconfig.app.json
+01/12/2026  08:33 PM               785 tsconfig.json
+               4 File(s)          4,924 bytes
+               3 Dir(s)  394,975,076,352 bytes free

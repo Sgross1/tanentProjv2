@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.lock.json
+*.suo
+
+# Angular
+node_modules/
+dist/
+.angular/
+.editorconfig
+.cache/
+coverage/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary
+*.log
