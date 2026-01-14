@@ -9,6 +9,8 @@ public class SavedRequest
     public int SavedRequestId { get; set; }
 
     public int LandlordUserId { get; set; }
+    [ForeignKey("LandlordUserId")]
+    public User? LandlordUser { get; set; }
     
     public int TenantRequestId { get; set; }
     

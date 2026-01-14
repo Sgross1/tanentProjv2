@@ -1,3 +1,4 @@
+import { FormsModule } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -9,7 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-tenant-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
   <div class="dashboard-container" *ngIf="viewState$ | async as vs">
     <header class="welcome-header">
@@ -39,6 +40,20 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
         </div>
 
+        <!-- Global Slider Section -->
+        <div class="slider-container-global" *ngIf="hasScore" style="background: #ffffff; padding: 2rem; border-radius: 16px; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h3 style="margin-bottom: 1rem; color: var(--primary-color);">סימולטור דירוג</h3>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">הזז את הסליידר כדי לבדוק איך הציון משתנה בהתאם לשכר הדירה המבוקש.</p>
+            
+            <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue" (input)="updateRentCalculation()" style="width: 100%; margin: 15px 0;">
+            
+            <p style="font-weight: bold; color: #0078d4; text-align: center; margin-top: 1rem;">
+                    כדי לקבל ציון <span style="font-size: 1.2em;">{{ sliderValue }}</span>, עליך לבקש שכירות של עד:
+                    <br>
+                    <span style="font-size: 1.5em;">{{ calculatedRent | number }} ₪</span>
+            </p>
+        </div>
+
         <div class="requests-list-container">
             <div *ngIf="requests$ | async as requests">
                 <div class="empty-state" *ngIf="requests.length === 0">
@@ -46,19 +61,23 @@ import { AuthService } from '../../core/services/auth.service';
                     <button class="action-btn primary" (click)="uploadNewRequest()">צור בקשה ראשונה</button>
                 </div>
 
-                <div class="request-row" *ngFor="let req of requests">
-                    <div class="req-info">
-                        <span class="req-date">{{ req.dateCreated | date: 'dd/MM/yyyy' }}</span>
-                        <span class="req-city">{{ req.cityName }}</span>
-                    </div>
-                    <div class="req-score" [style.color]="getScoreColor(req.finalScore)">
-                        {{ req.finalScore | number: '1.0-1' }}
-                    </div>
-                    <div class="req-status">
-                         <span class="badge">הושלם</span>
+                <div *ngFor="let req of requests">
+                    <!-- Row -->
+                    <div class="request-row">
+                        <div class="req-info">
+                            <span class="req-date">{{ req.dateCreated | date: 'dd/MM/yyyy' }}</span>
+                            <span class="req-city">{{ req.cityName }}</span>
+                        </div>
+                        <div class="req-score" [style.color]="getScoreColor(req.finalScore)">
+                            {{ req.finalScore | number: '1.0-1' }}
+                        </div>
+                        <div class="req-status">
+                             <span class="badge">הושלם</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
             
             <div class="actions-section" *ngIf="(requests$ | async)?.length">
                 <button class="action-btn primary" (click)="uploadNewRequest()">
@@ -188,6 +207,12 @@ export class TenantDashboardComponent implements OnInit {
 
   viewState$: Observable<{ viewType: 'tenant-only' | 'landlord-only' | 'combined' | 'empty', showTabs: boolean }>;
 
+  // Slider Logic (Global)
+  sliderValue = 0;
+  calculatedRent = 0;
+  currentMaxAffordableRent = 0;
+  hasScore = false;
+
   constructor(
     private router: Router,
     private requestService: RequestService,
@@ -198,14 +223,35 @@ export class TenantDashboardComponent implements OnInit {
     this.activeRequestsCount$ = this.requests$.pipe(map(reqs => reqs.length));
     this.latestScore$ = this.requests$.pipe(map(reqs => reqs.length > 0 ? reqs[0].finalScore : 0));
 
+    this.requests$.pipe(take(1)).subscribe(reqs => {
+      if (reqs && reqs.length > 0) {
+        const latestInfo = reqs[0];
+        this.currentMaxAffordableRent = latestInfo.maxAffordableRent || (latestInfo.finalScore * 0.35 * 100);
+        this.sliderValue = Math.round(latestInfo.finalScore);
+        this.hasScore = true;
+        this.updateRentCalculation();
+      }
+    });
+
     this.savedRequests$ = this.landlordService.getSavedRequests().pipe(shareReplay(1));
 
     // Determine Logic
     this.viewState$ = combineLatest([this.requests$, this.savedRequests$, this.authService.currentUser$]).pipe(
       map(([requests, saved, user]) => {
+        const userRole = user?.role; // 'Tenant', 'Landlord', 'Both'
+
+        // Strict Role View
+        if (userRole === 'Both') {
+          return { viewType: 'combined', showTabs: true };
+        } else if (userRole === 'Tenant') {
+          return { viewType: 'tenant-only', showTabs: false };
+        } else if (userRole === 'Landlord') {
+          return { viewType: 'landlord-only', showTabs: false };
+        }
+
+        // Fallback (e.g. Admin or glitch) - use data
         const hasRequests = requests.length > 0;
         const hasSaved = saved.length > 0;
-        const userRole = user?.role; // 'Tenant' or 'Landlord'
 
         if (hasRequests && hasSaved) {
           return { viewType: 'combined', showTabs: true };
@@ -215,11 +261,7 @@ export class TenantDashboardComponent implements OnInit {
           return { viewType: 'landlord-only', showTabs: false };
         }
 
-        // Fallback for new users
-        if (userRole === 'Tenant') return { viewType: 'tenant-only', showTabs: false }; // Shows empty tenant state
-        if (userRole === 'Landlord') return { viewType: 'landlord-only', showTabs: false }; // Shows empty landlord state
-
-        return { viewType: 'empty', showTabs: false }; // Should barely happen if role is required
+        return { viewType: 'empty', showTabs: false };
       })
     );
   }
@@ -237,10 +279,7 @@ export class TenantDashboardComponent implements OnInit {
   unsave(id: number) {
     if (!confirm('להסיר מהמועדפים?')) return;
     this.landlordService.unsaveRequest(id).subscribe(() => {
-      // Re-fetching by re-assign logic or manual refresh trigger
-      // Simplest here is direct refresh but since we use shareReplay we might need to trigger reload
-      // For now, let's navigate or refresh page, but better:
-      window.location.reload(); // Quick fix to refresh all streams
+      window.location.reload();
     });
   }
 
@@ -248,5 +287,13 @@ export class TenantDashboardComponent implements OnInit {
     if (score >= 850) return '#00cec9';
     if (score >= 700) return '#fdcb6e';
     return '#ff7675';
+  }
+
+  updateRentCalculation() {
+    if (this.sliderValue <= 0) {
+      this.calculatedRent = 0;
+      return;
+    }
+    this.calculatedRent = Math.round((this.currentMaxAffordableRent * 100) / this.sliderValue);
   }
 }

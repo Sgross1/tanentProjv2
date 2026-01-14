@@ -45,7 +45,7 @@ export class HomeComponent implements AfterViewInit {
 
     // Logged in -> Navigate based on role
     if (role === 'Tenant') {
-      this.router.navigate(['/tenant/dashboard']);
+      this.router.navigate(['/tenant/wizard']);
     } else if (role === 'Landlord') {
       this.router.navigate(['/landlord/search']);
     }

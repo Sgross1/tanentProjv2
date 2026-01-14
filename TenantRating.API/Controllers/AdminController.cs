@@ -112,18 +112,29 @@ public class AdminController : ControllerBase
             query = query.Where(u => u.IsActive == isActive.Value);
         }
 
-        var users = await query
+        var usersData = await query
+            .Include(u => u.Requests)
+            .Include(u => u.SavedRequests)
+            .ToListAsync();
+
+        var users = usersData
             .Select(u => new 
             {
                 u.Id,
                 u.FirstName,
                 u.LastName,
                 u.Email,
-                u.Role,
+                // Dynamic Role Logic:
+                // If has Requests AND SavedRequests -> Both (3)
+                // If has Requests only -> Tenant (0)
+                // If has SavedRequests only -> Landlord (1)
+                // Else -> Original Role
+                Role = (u.Requests.Any() && u.SavedRequests.Any()) ? UserRole.Both :
+                       (u.Requests.Any() ? UserRole.Tenant :
+                       (u.SavedRequests.Any() ? UserRole.Landlord : u.Role)),
                 u.IsActive,
                 u.DateJoined
-            })
-            .ToListAsync();
+            });
 
         return Ok(users);
     }
@@ -208,6 +219,25 @@ public class AdminController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok();
     }
+    [HttpPut("users/{id}/role")]
+    public async Task<ActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleDto dto)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
+
+        if (Enum.IsDefined(typeof(UserRole), dto.Role))
+        {
+            user.Role = dto.Role;
+            await _context.SaveChangesAsync();
+            return Ok(new { Role = user.Role });
+        }
+        return BadRequest("Invalid Role");
+    }
+}
+
+public class UpdateUserRoleDto
+{
+    public UserRole Role { get; set; }
 }
 
 public class UpdateRequestDto
