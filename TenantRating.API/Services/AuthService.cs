@@ -45,17 +45,38 @@ public class AuthService : IAuthService
 
     public async Task<string?> Login(string email, string password)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+        var user = await _context.Users
+            .Include(u => u.Requests)
+            .Include(u => u.SavedRequests)
+            .FirstOrDefaultAsync(x => x.Email == email);
+
         if (user == null) return null;
 
         if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt)) return null;
 
+        // Dynamic Role Logic (Transient - does not save to DB, just for Token)
+        if (user.Requests.Any() && user.SavedRequests.Any()) user.Role = UserRole.Both;
+        else if (user.Requests.Any()) user.Role = UserRole.Tenant;
+        else if (user.SavedRequests.Any()) user.Role = UserRole.Landlord;
+        
         return CreateToken(user);
     }
 
     public async Task<User?> GetUser(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+        var user = await _context.Users
+            .Include(u => u.Requests)
+            .Include(u => u.SavedRequests)
+            .FirstOrDefaultAsync(x => x.Email == email);
+
+        if (user != null)
+        {
+            if (user.Requests.Any() && user.SavedRequests.Any()) user.Role = UserRole.Both;
+            else if (user.Requests.Any()) user.Role = UserRole.Tenant;
+            else if (user.SavedRequests.Any()) user.Role = UserRole.Landlord;
+        }
+
+        return user;
     }
 
     public async Task<bool> UserExists(string email)

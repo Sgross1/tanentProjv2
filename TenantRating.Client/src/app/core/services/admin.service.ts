@@ -50,6 +50,10 @@ export class AdminService {
         return this.http.post(`${this.apiUrl}/users/${userId}/reset-password`, {});
     }
 
+    updateUserRole(userId: number, role: number): Observable<any> {
+        return this.http.put(`${this.apiUrl}/users/${userId}/role`, { role });
+    }
+
     getRequests(status?: number): Observable<AdminRequestDto[]> {
         let params: any = {};
         if (status !== undefined) params.status = status;

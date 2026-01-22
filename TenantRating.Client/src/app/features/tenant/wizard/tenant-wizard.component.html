@@ -1,4 +1,5 @@
 <div class="wizard-container">
+    <h1 class="page-title">צור פניה חדשה</h1>
     <div class="wizard-card">
         <!-- Progress Bar -->
         <div class="progress-container">
@@ -56,7 +57,19 @@
         <!-- Step 2: Upload -->
         <div class="step-content fade-in" *ngIf="currentStep === 2">
             <h2>העלאת מסמכים</h2>
-            <p>העלה 3 תלושי שכר אחרונים ותדפיס עו"ש.</p>
+            <p>{{ spouseFilesRequested ? 'העלה 3 תלושים של בן/בת הזוג' : 'העלה 3 תלושי שכר אחרונים ותדפיס עו"ש.' }}</p>
+
+            <!-- Spouse Prompt Modal/Card -->
+            <div class="spouse-promo" *ngIf="askSpouse"
+                style="background: rgba(108, 92, 231, 0.1); border: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; animation: fadeIn 0.3s;">
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">🎉 העלית 3 תלושים בהצלחה!</h3>
+                <p style="margin-bottom: 1rem;">האם תרצה להעלות גם את התלושים של בן/בת הזוג? <br> הוספת הכנסה נוספת
+                    יכולה לשפר משמעותית את הדירוג שלך!</p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button class="btn-primary" (click)="acceptSpouseUpload()">כן, אני רוצה</button>
+                    <button class="btn-secondary" (click)="declineSpouseUpload()">לא, תודה</button>
+                </div>
+            </div>
 
             <div class="privacy-note">
                 🔒 <strong>פרטיות מעל לכל:</strong> המסמכים משמשים לחישוב הדירוג בלבד אינם נשמרים בשרת לאחר העיבוד.
@@ -66,9 +79,10 @@
                 <input #fileInput type="file" multiple style="display: none" (change)="onFileSelected($event)">
                 <div class="icon">📂</div>
                 <p>לחץ כאן לבחירת קבצים</p>
-                <div class="file-list" *ngFor="let file of uploadedFiles">
-                    <span>{{file.name}}</span>
-                    <span>✅</span>
+                <div class="file-list" *ngFor="let file of uploadedFiles; let i = index">
+                    <span style="flex: 1;">{{file.name}}</span>
+                    <span style="color: #ff7675; cursor: pointer; font-weight: bold; margin-left: 10px;"
+                        (click)="removeFile(i); $event.stopPropagation()">✕</span>
                 </div>
             </div>
 

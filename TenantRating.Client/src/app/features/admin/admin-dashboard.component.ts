@@ -99,6 +99,7 @@ import { FormsModule } from '@angular/forms';
                   <option [ngValue]="0">שוכר</option>
                   <option [ngValue]="1">משכיר</option>
                   <option [ngValue]="2">מנהל</option>
+                  <option [ngValue]="3">שוכר ומשכיר</option>
               </select>
           </div>
           
@@ -136,6 +137,9 @@ import { FormsModule } from '@angular/forms';
                           </button>
                           <button class="action-btn small warning" (click)="resetPassword(user)">
                               איפוס סיסמה
+                          </button>
+                          <button class="action-btn small" style="background: #a29bfe;" (click)="changeRole(user)">
+                              תפקיד
                           </button>
                       </td>
                   </tr>
@@ -332,6 +336,22 @@ export class AdminDashboardComponent implements OnInit {
     this.adminService.resetPassword(user.id).subscribe(res => alert('סיסמה אופסה ל: ' + res.tempPassword));
   }
 
+  changeRole(user: UserDto) {
+    const roles = ['שוכר (0)', 'משכיר (1)', 'מנהל (2)', 'שוכר ומשכיר (3)'];
+    const newRoleStr = prompt(`בחר תפקיד חדש עבור ${user.firstName}:\n${roles.join('\n')}`, user.role.toString());
+
+    if (newRoleStr !== null) {
+      const newRole = parseInt(newRoleStr);
+      if (!isNaN(newRole) && newRole >= 0 && newRole <= 3) {
+        this.adminService.updateUserRole(user.id, newRole).subscribe(() => {
+          user.role = newRole;
+        });
+      } else {
+        alert('ערך לא תקין');
+      }
+    }
+  }
+
   updateRequestStatus(req: AdminRequestDto, status: number) {
     this.adminService.updateRequest(req.requestId, { status }).subscribe(() => {
       req.status = status;
@@ -339,7 +359,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   getRoleName(role: number): string {
-    return ['שוכר', 'משכיר', 'מנהל'][role] || 'אחר';
+    return ['שוכר', 'משכיר', 'מנהל', 'שוכר ומשכיר'][role] || 'אחר';
   }
 
   getStatusName(status: number): string {

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TenantRating.API.Data.Entities;
 
@@ -6,7 +7,8 @@ public enum UserRole
 {
     Tenant,
     Landlord,
-    Admin
+    Admin,
+    Both
 }
 
 public class User
@@ -32,4 +34,10 @@ public class User
     public bool IsActive { get; set; } = true;
     
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
+
+    [InverseProperty("User")]
+    public List<Request> Requests { get; set; } = new();
+    
+    [InverseProperty("LandlordUser")]
+    public List<SavedRequest> SavedRequests { get; set; } = new();
 }

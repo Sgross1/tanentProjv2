@@ -89,6 +89,10 @@ export class TenantWizardComponent {
     this.currentStep--;
   }
 
+  // Spouse Logic
+  askSpouse = false;
+  spouseFilesRequested = false;
+
   onFileSelected(event: any) {
     const files = event.target.files;
     if (files) {
@@ -96,6 +100,30 @@ export class TenantWizardComponent {
         this.uploadedFiles.push(files[i]);
       }
     }
+
+    // Trigger spouse prompt if we have 3 files and haven't asked yet
+    if (this.uploadedFiles.length >= 3 && !this.spouseFilesRequested && !this.askSpouse) {
+      setTimeout(() => this.askSpouse = true, 500);
+    }
+  }
+
+  removeFile(index: number) {
+    this.uploadedFiles.splice(index, 1);
+
+    // Reset spouse logic if we drop below 3 files
+    if (this.uploadedFiles.length < 3) {
+      this.askSpouse = false;
+      this.spouseFilesRequested = false;
+    }
+  }
+
+  acceptSpouseUpload() {
+    this.askSpouse = false;
+    this.spouseFilesRequested = true;
+  }
+
+  declineSpouseUpload() {
+    this.askSpouse = false;
   }
 
   processRequest() {
@@ -105,10 +133,14 @@ export class TenantWizardComponent {
     // Simulate OCR delay then Call API
     setTimeout(() => {
       // Simulate "Ai Extraction" from the uploaded documents
+      // Base income 12,000. If spouse (more than 3 files), assume combined income is higher (e.g., 20,000)
+      const isSpouseIncluded = this.uploadedFiles.length > 3;
+      const calculatedIncome = isSpouseIncluded ? 20000 : 12000;
+
       const mockOcrData = {
-        netIncome: 12000,
+        netIncome: calculatedIncome,
         numChildren: 2,
-        isMarried: true,
+        isMarried: true, // Assuming married if asking for spouse, or read from Step 1 if we had it there
         seniorityYears: 5,
         pensionGrossAmount: 50000
       };
@@ -116,7 +148,7 @@ export class TenantWizardComponent {
       // Create the request in the backend with all selected cities
       const requestDto = {
         desiredRent: this.requestData.desiredRent!,
-        cityName: this.requestData.cities.join(', '), // Save all cities to allow searching by any of them
+        cityName: this.requestData.cities.join(', '),
         ...mockOcrData
       };
 
@@ -125,9 +157,9 @@ export class TenantWizardComponent {
           this.isProcessing = false;
           this.finalScore = result.finalScore;
           // Capture Max Affordable Rent from backend
-          this.maxAffordableRent = result.maxAffordableRent || 0; 
+          this.maxAffordableRent = result.maxAffordableRent || 0;
           this.createdRequestId = result.requestId;
-          
+
           // Initialize slider and calculation
           this.sliderValue = Math.round(this.finalScore);
           this.updateRentCalculation();
@@ -138,7 +170,9 @@ export class TenantWizardComponent {
         error: (err) => {
           console.error('Error creating request:', err);
           this.isProcessing = false;
-          alert('אירעה שגיאה בעיבוד הבקשה. אנא נסה שנית.');
+          // Show more detailed error if available
+          const errorMessage = err.error?.title || err.error || err.message || 'שגיאה לא ידועה';
+          alert(`אירעה שגיאה בעיבוד הבקשה: ${JSON.stringify(errorMessage)}`);
           this.currentStep = 2; // Go back
         }
       });
