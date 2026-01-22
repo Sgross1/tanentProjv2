@@ -1,31 +1,34 @@
 <div class="hero-section">
-    <div class="hero-content">
-        <h1 class="fade-in-up">השכרת דירה בראש שקט</h1>
-        <p class="subtitle fade-in-up delay-1">מערכת דירוג הדיירים המתקדמת בישראל. שקיפות, אמינות וביטחון לכולם.</p>
+    <!-- Animated Gradients -->
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
 
-        <div class="cta-group fade-in-up delay-2">
-            <button class="btn-card tenant" (click)="handleRoleClick('Tenant')">
-                <span class="icon">🏠</span>
-                <span class="text">אני שוכר</span>
-                <span class="sub">קבל דירוג אשראי</span>
-            </button>
-            <button class="btn-card landlord" (click)="handleRoleClick('Landlord')">
-                <span class="icon">🔑</span>
-                <span class="text">אני משכיר</span>
-                <span class="sub">חפש דיירים</span>
-            </button>
+    <div class="hero-content">
+        <h1>השכרת דירה בראש שקט</h1>
+        <p class="subtitle">מערכת דירוג הדיירים המתקדמת בישראל. שקיפות, אמינות וביטחון לכולם.</p>
+
+        <div class="cards-container">
+            <div class="role-card tenant" (click)="handleRoleClick('Tenant')">
+                <span class="card-icon">🏠</span>
+                <span class="card-title">אני שוכר</span>
+                <span class="card-desc">קבל דירוג אשראי היום</span>
+            </div>
+
+            <div class="role-card landlord" (click)="handleRoleClick('Landlord')">
+                <span class="card-icon">🔑</span>
+                <span class="card-title">אני משכיר</span>
+                <span class="card-desc">מצא דיירים אמינים בבטחה</span>
+            </div>
         </div>
     </div>
-
-    <!-- Animated Background Elements -->
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
 </div>
 
-<div class="scroll-reveal-section" #scrollSection id="how-it-works" [class.visible]="isVisible">
+<div class="scroll-reveal-section" #scrollSection id="how-it-works">
     <div class="half-circle-container">
-        <div class="half-circle">
-            <div class="circle-content">
+        <div class="half-circle" [style.height.%]="curveProgress" [style.width.%]="120 - (curveProgress * 0.2)"
+            [style.border-radius]="'50% 50% 0 0'">
+
+            <div class="circle-content" [class.visible]="showContent">
                 <h2>איך זה עובד?</h2>
                 <div class="steps">
                     <div class="step">

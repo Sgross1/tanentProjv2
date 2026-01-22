@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using TenantRating.API.Data;
 using TenantRating.API.Data.Entities;
 
@@ -7,10 +8,10 @@ namespace TenantRating.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class AdminController : ControllerBase
 {
     private readonly AppDbContext _context;
-
     public AdminController(AppDbContext context)
     {
         _context = context;

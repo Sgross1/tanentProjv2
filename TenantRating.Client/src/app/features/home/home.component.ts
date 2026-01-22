@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -13,7 +13,9 @@ import { AppComponent } from '../../app.component';
 })
 export class HomeComponent implements AfterViewInit {
   @ViewChild('scrollSection') scrollSection!: ElementRef;
-  isVisible = false;
+
+  curveProgress = 0; // 0 to 100
+  showContent = false;
 
   constructor(
     private authService: AuthService,
@@ -22,16 +24,34 @@ export class HomeComponent implements AfterViewInit {
   ) { }
 
   ngAfterViewInit() {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          this.isVisible = true;
-        }
-      });
-    }, { threshold: 0.3 });
+    this.onWindowScroll(); // Initial check
+  }
 
-    if (this.scrollSection) {
-      observer.observe(this.scrollSection.nativeElement);
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    if (!this.scrollSection) return;
+
+    const rect = this.scrollSection.nativeElement.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+
+    // Calculate how much of the section is visible
+    // When rect.top == windowHeight, progress is 0.
+    // When rect.top <= windowHeight / 2, progress approaches 100.
+
+    // Start animating when the top of the section enters the bottom of the viewport
+    const startOffset = windowHeight;
+    const endOffset = windowHeight * 0.2; // Finish when it's much higher up
+
+    let progress = (startOffset - rect.top) / (startOffset - endOffset);
+
+    // Clamp between 0 and 1
+    progress = Math.max(0, Math.min(1, progress));
+
+    this.curveProgress = progress * 100;
+
+    // Show content only when fully expanded
+    if (this.curveProgress > 80) {
+      this.showContent = true;
     }
   }
 
@@ -43,7 +63,6 @@ export class HomeComponent implements AfterViewInit {
       return;
     }
 
-    // Logged in -> Navigate based on role
     if (role === 'Tenant') {
       this.router.navigate(['/tenant/wizard']);
     } else if (role === 'Landlord') {
