@@ -16,11 +16,33 @@ public class RequestsController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IScoringService _scoringService;
+    private readonly IOcrService _ocrService;
 
-    public RequestsController(AppDbContext context, IScoringService scoringService)
+    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService)
     {
         _context = context;
         _scoringService = scoringService;
+        _ocrService = ocrService;
+    }
+
+    [HttpPost("analyze")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<CreateRequestDto>> AnalyzePayslips([FromForm] List<IFormFile> files)
+    {
+        if (files == null || (files.Count != 3 && files.Count != 6))
+        {
+            return BadRequest("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+        }
+
+        try
+        {
+            var result = await _ocrService.AnalyzePayslipsAsync(files);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"שגיאה בפענוח הקבצים: {ex.Message}");
+        }
     }
 
     [HttpPost]

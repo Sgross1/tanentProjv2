@@ -48,6 +48,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Services
 builder.Services.AddScoped<TenantRating.API.Services.IAuthService, TenantRating.API.Services.AuthService>();
 builder.Services.AddScoped<TenantRating.API.Services.IScoringService, TenantRating.API.Services.ScoringService>();
+builder.Services.AddScoped<TenantRating.API.Services.IOcrService, TenantRating.API.Services.OcrService>();
 
 var app = builder.Build();
 

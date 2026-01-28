@@ -15,6 +15,9 @@ public class CreateRequestDto
     public bool IsMarried { get; set; }
     public decimal SeniorityYears { get; set; }
     public decimal PensionGrossAmount { get; set; }
+    
+    // Debug Data
+    public object? RawData { get; set; }
 }
 
 public class RequestResultDto

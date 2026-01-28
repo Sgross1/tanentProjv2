@@ -42,6 +42,14 @@ export class RequestService {
         );
     }
 
+    analyzePayslip(files: File[]): Observable<CreateRequestDto> {
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+        return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
+    }
+
     sendSms(requestId: number): Observable<any> {
         return this.http.post(`${this.apiUrl}/${requestId}/notify-sms`, {});
     }
