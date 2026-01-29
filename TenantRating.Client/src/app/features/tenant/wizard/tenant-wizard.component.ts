@@ -162,62 +162,79 @@ export class TenantWizardComponent implements OnInit {
     this.currentStep = 3; // Processing view
     this.isProcessing = true;
 
-    // 1. Analyze Payslips (Real OCR)
-    this.requestService.analyzePayslip(this.uploadedFiles).subscribe({
-      next: (ocrResult) => {
-        // Debug Phase: Show result
-        this.debugOcrData = ocrResult;
-        this.showDebugModal = true;
+    // 1. Analyze Payslips (Real OCR) + Debug Data
+    this.requestService
+      .analyzePayslip(this.uploadedFiles, this.requestData.desiredRent || 0)
+      .subscribe({
+        next: (ocrResult) => {
+          // Debug Phase: Show result
+          this.debugOcrData = ocrResult;
+          this.showDebugModal = true;
 
-        // 2. Create the request in the backend with analyzed data AND user inputs
-        const requestDto = {
-          // Spread the results from OCR first
-          ...ocrResult,
-          // Then overwrite with user inputs
-          desiredRent: this.requestData.desiredRent!,
-          cityName: this.requestData.cities.join(", "),
-        };
+          // 2. Create the request in the backend with analyzed data AND user inputs
+          const requestDto = {
+            // Spread the results from OCR first
+            ...ocrResult,
+            // Then overwrite with user inputs
+            desiredRent: this.requestData.desiredRent!,
+            cityName: this.requestData.cities.join(", "),
+          };
 
-        this.requestService.createRequest(requestDto).subscribe({
-          next: (result) => {
-            this.isProcessing = false;
-            this.finalScore = result.finalScore;
-            // Capture Max Affordable Rent from backend
-            this.maxAffordableRent = result.maxAffordableRent || 0;
-            this.createdRequestId = result.requestId;
+          this.requestService.createRequest(requestDto).subscribe({
+            next: (result) => {
+              this.isProcessing = false;
+              this.finalScore = result.finalScore;
+              // Capture Max Affordable Rent from backend
+              this.maxAffordableRent = result.maxAffordableRent || 0;
+              this.createdRequestId = result.requestId;
 
-            // Initialize slider and calculation
-            this.sliderValue = Math.round(this.finalScore);
-            this.updateRentCalculation();
+              // Initialize slider and calculation
+              this.sliderValue = Math.round(this.finalScore);
+              this.updateRentCalculation();
 
-            this.generatePercentileGraph(this.finalScore);
-            this.currentStep = 4; // Result view
-          },
-          error: (err) => {
-            console.error("Error creating request:", err);
-            this.isProcessing = false;
-            const errorMessage =
+              this.generatePercentileGraph(this.finalScore);
+              this.currentStep = 4; // Result view
+            },
+            error: (err) => {
+              console.error("Error creating request:", err);
+              this.isProcessing = false;
+              const errorMessage =
+                err.error?.title ||
+                err.error ||
+                err.message ||
+                "שגיאה ביצירת הבקשה";
+              alert(
+                `אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`,
+              );
+              this.currentStep = 2; // Go back
+            },
+          });
+        },
+        error: (err) => {
+          console.error("Error analyzing payslips:", err);
+          this.isProcessing = false;
+
+          let errorMessage = "שגיאה בפענוח התלושים";
+          if (err.error instanceof ProgressEvent) {
+            errorMessage = "שגיאת תקשורת עם השרת (האם השרת דולק?)";
+          } else {
+            errorMessage =
               err.error?.title ||
               err.error ||
               err.message ||
-              "שגיאה ביצירת הבקשה";
-            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
-            this.currentStep = 2; // Go back
-          },
-        });
-      },
-      error: (err) => {
-        console.error("Error analyzing payslips:", err);
-        this.isProcessing = false;
-        const errorMessage =
-          err.error?.title ||
-          err.error ||
-          err.message ||
-          "שגיאה בפענוח התלושים";
-        alert(`אירעה שגיאה בפענוח התלושים: ${JSON.stringify(errorMessage)}`);
-        this.currentStep = 2; // Go back
-      },
-    });
+              JSON.stringify(err) ||
+              errorMessage;
+          }
+
+          // Handle object error message
+          if (typeof errorMessage === "object") {
+            errorMessage = JSON.stringify(errorMessage);
+          }
+
+          alert(`אירעה שגיאה: ${errorMessage}`);
+          this.currentStep = 2; // Go back
+        },
+      });
   }
 
   // Dynamic Rent Calculation Logic

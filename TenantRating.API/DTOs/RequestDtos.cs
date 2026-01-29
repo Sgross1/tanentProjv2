@@ -18,6 +18,8 @@ public class CreateRequestDto
     
     // Debug Data
     public object? RawData { get; set; }
+    public string? ScoreFormula { get; set; }
+    public List<string>? CalculationDetails { get; set; }
 }
 
 public class RequestResultDto
