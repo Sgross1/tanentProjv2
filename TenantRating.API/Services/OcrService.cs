@@ -15,9 +15,18 @@ public class OcrService : IOcrService
 
     public OcrService(IConfiguration config, ILogger<OcrService> logger)
     {
-        _endpoint = config["AzureDocumentIntelligence:Endpoint"]!;
-        _apiKey = config["AzureDocumentIntelligence:ApiKey"]!;
-        _modelId = config["AzureDocumentIntelligence:ModelId"]!;
+        _endpoint = config["AzureDocumentIntelligence:Endpoint"] 
+            ?? throw new InvalidOperationException("Azure Document Intelligence Endpoint is not configured");
+        _apiKey = config["AzureDocumentIntelligence:ApiKey"] 
+            ?? throw new InvalidOperationException("Azure Document Intelligence ApiKey is not configured");
+        _modelId = config["AzureDocumentIntelligence:ModelId"] 
+            ?? throw new InvalidOperationException("Azure Document Intelligence ModelId is not configured");
+        
+        if (_apiKey == "YOUR_AZURE_API_KEY_HERE")
+        {
+            throw new InvalidOperationException("Azure Document Intelligence ApiKey must be configured with a valid API key");
+        }
+        
         _logger = logger;
     }
 

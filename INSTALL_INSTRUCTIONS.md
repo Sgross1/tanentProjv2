@@ -12,6 +12,13 @@
 *   **קישור להורדה:** [https://dotnet.microsoft.com/en-us/download/dotnet/9.0](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 *   *חשוב:* בחר את הגרסה של **Windows x64**.
 
+## 3. Azure Document Intelligence API Key (עבור OCR)
+*   **מה זה:** מפתח API לשירות OCR של Azure לזיהוי טקסט בתלושי שכר
+*   **איפה להגדיר:** ערוך את הקובץ `TenantRating.API/appsettings.json`
+*   במקום `"YOUR_AZURE_API_KEY_HERE"` הכנס את מפתח ה-API שלך
+*   אם אין לך מפתח, אפשר להשיג אחד ב-[Azure Portal](https://portal.azure.com)
+*   **חשוב:** אל תשתף את מפתח ה-API בגיט או במקומות ציבוריים!
+
 ---
 
 ## מה עושים אחרי ההתקנה?

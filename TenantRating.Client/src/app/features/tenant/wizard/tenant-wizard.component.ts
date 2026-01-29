@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { RequestService } from '../../../core/services/request.service';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tenant-wizard',
@@ -140,10 +141,9 @@ export class TenantWizardComponent {
     this.currentStep = 3; // Processing view
     this.isProcessing = true;
 
-    // 1. Analyze Payslips (Real OCR) + Debug Data
-    this.requestService.analyzePayslip(this.uploadedFiles, this.requestData.desiredRent || 0).subscribe({
-      next: (ocrResult) => {
-
+    // 1. Analyze Payslips (Real OCR) then 2. Create Request using RxJS switchMap
+    this.requestService.analyzePayslip(this.uploadedFiles, this.requestData.desiredRent || 0).pipe(
+      switchMap((ocrResult) => {
         // Debug Phase: Show result
         this.debugOcrData = ocrResult;
         this.showDebugModal = true;
@@ -157,44 +157,36 @@ export class TenantWizardComponent {
           cityName: this.requestData.cities.join(', ')
         };
 
-        this.requestService.createRequest(requestDto).subscribe({
-          next: (result) => {
-            this.isProcessing = false;
-            this.finalScore = result.finalScore;
-            // Capture Max Affordable Rent from backend
-            this.maxAffordableRent = result.maxAffordableRent || 0;
-            this.createdRequestId = result.requestId;
+        return this.requestService.createRequest(requestDto);
+      })
+    ).subscribe({
+      next: (result) => {
+        this.isProcessing = false;
+        this.finalScore = result.finalScore;
+        // Capture Max Affordable Rent from backend
+        this.maxAffordableRent = result.maxAffordableRent || 0;
+        this.createdRequestId = result.requestId;
 
-            // Initialize slider and calculation
-            this.sliderValue = Math.round(this.finalScore);
-            this.updateRentCalculation();
+        // Initialize slider and calculation
+        this.sliderValue = Math.round(this.finalScore);
+        this.updateRentCalculation();
 
-            this.generatePercentileGraph(this.finalScore);
-            this.currentStep = 4; // Result view
-          },
-          error: (err) => {
-            console.error('Error creating request:', err);
-            this.isProcessing = false;
-            const errorMessage = err.error?.title || err.error || err.message || 'שגיאה ביצירת הבקשה';
-            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
-            this.currentStep = 2; // Go back
-          }
-        });
+        this.generatePercentileGraph(this.finalScore);
+        this.currentStep = 4; // Result view
       },
       error: (err) => {
-        console.error('Error analyzing payslips:', err);
+        console.error('Error processing request:', err);
         this.isProcessing = false;
 
-        let errorMessage = 'שגיאה בפענוח התלושים';
+        let errorMessage = 'שגיאה בעיבוד הבקשה';
         if (err.error instanceof ProgressEvent) {
           errorMessage = 'שגיאת תקשורת עם השרת (האם השרת דולק?)';
-        } else {
-          errorMessage = err.error?.title || err.error || err.message || JSON.stringify(err) || errorMessage;
-        }
-
-        // Handle object error message
-        if (typeof errorMessage === 'object') {
-          errorMessage = JSON.stringify(errorMessage);
+        } else if (typeof err.error === 'string') {
+          errorMessage = err.error;
+        } else if (err.error?.title) {
+          errorMessage = err.error.title;
+        } else if (err.message) {
+          errorMessage = err.message;
         }
 
         alert(`אירעה שגיאה: ${errorMessage}`);
