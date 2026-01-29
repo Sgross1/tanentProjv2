@@ -159,4 +159,46 @@
             </div>
         </div>
     </div>
+    <!-- Debug Modal -->
+    <div class="debug-modal-overlay" *ngIf="showDebugModal">
+        <div class="debug-modal">
+            <h3>🔍 נתוני סריקה (Debug)</h3>
+            <p>התקבלו הנתונים הבאים ממערכת ה-OCR:</p>
+            <ul>
+                <li><strong>הכנסה נטו:</strong> {{ debugOcrData?.netIncome | number }} ₪</li>
+                <li><strong>מספר ילדים:</strong> {{ debugOcrData?.numChildren }}</li>
+                <li><strong>שנות ותק:</strong> {{ debugOcrData?.seniorityYears }}</li>
+                <li><strong>קופת פנסיה:</strong> {{ debugOcrData?.pensionGrossAmount | number }} ₪</li>
+                <li><strong>נשוי/אה:</strong> {{ debugOcrData?.isMarried ? 'כן' : 'לא' }}</li>
+            </ul>
+
+            <div *ngIf="debugOcrData?.scoreFormula"
+                style="margin: 1rem 0; background: #dfe6e9; padding: 10px; border-radius: 8px;">
+                <h4 style="margin-top: 0; color: #2d3436;">נוסחת החישוב:</h4>
+                <pre
+                    style="white-space: pre-wrap; font-family: monospace; font-weight: bold; color: #2d3436;">{{ debugOcrData?.scoreFormula }}</pre>
+
+                <details>
+                    <summary style="cursor: pointer; color: #0984e3; font-weight: bold;">פירוט מלא של החישוב</summary>
+                    <ul style="list-style-type: none; padding: 0; margin-top: 5px;">
+                        <li *ngFor="let line of debugOcrData?.calculationDetails"
+                            style="padding: 2px 0; border-bottom: 1px dashed #b2bec3; color: #2d3436;">
+                            {{ line }}
+                        </li>
+                    </ul>
+                </details>
+            </div>
+
+            <details style="margin-bottom: 1rem;">
+                <summary style="cursor:pointer; color: #fab1a0;">הצג JSON מלא (Raw Data)</summary>
+                <div
+                    style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 5px; max-height: 200px; overflow: auto; text-align: left; direction: ltr;">
+                    <pre
+                        style="margin: 0; font-size: 0.8rem; white-space: pre-wrap; color: #fff;">{{ debugOcrData | json }}</pre>
+                </div>
+            </details>
+
+            <button class="btn-primary" (click)="showDebugModal = false">סגור והמשך לתוצאות</button>
+        </div>
+    </div>
 </div>

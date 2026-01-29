@@ -37,9 +37,13 @@
             </div>
         </div>
 
-        <a routerLink="/tenant/dashboard" *ngIf="(authService.currentUser$ | async)?.role === 'Tenant'" class="nav-item personal-area">איזור אישי</a>
-        <a routerLink="/landlord/search" *ngIf="(authService.currentUser$ | async)?.role === 'Landlord'" class="nav-item personal-area">איזור אישי</a>
-        <a routerLink="/admin" *ngIf="(authService.currentUser$ | async)?.role === 'Admin'" class="nav-item admin-area" style="background: #ef4444;">ניהול מערכת</a>
+        <a routerLink="/tenant/dashboard"
+            *ngIf="(authService.currentUser$ | async)?.role === 'Tenant' || (authService.currentUser$ | async)?.role === 'Both'"
+            class="nav-item personal-area">איזור אישי</a>
+        <a routerLink="/landlord/search" *ngIf="(authService.currentUser$ | async)?.role === 'Landlord'"
+            class="nav-item personal-area">איזור אישי</a>
+        <a routerLink="/admin" *ngIf="(authService.currentUser$ | async)?.role === 'Admin'" class="nav-item admin-area"
+            style="background: #ef4444;">ניהול מערכת</a>
     </div>
 
     <div class="auth-buttons">
