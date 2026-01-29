@@ -22,8 +22,8 @@ A comprehensive tenant rating platform that allows landlords to check tenant rat
 - **SQLite** - Database
 
 ### Frontend
-- **Angular** (latest version)
-- **TypeScript**
+- **Angular 19**
+- **TypeScript 5.6**
 - **SCSS** for styling
 
 ## Installation / התקנה
