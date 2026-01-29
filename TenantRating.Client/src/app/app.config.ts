@@ -12,12 +12,13 @@ import { LandlordSearchComponent } from './features/landlord/search/landlord-sea
 import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 
 import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 // Routes Configuration
 const routes: Routes = [
     { path: '', component: HomeComponent },
-    { path: 'tenant/dashboard', component: TenantDashboardComponent, canActivate: [] },
-    { path: 'tenant/wizard', component: TenantWizardComponent, canActivate: [] },
+    { path: 'tenant/dashboard', component: TenantDashboardComponent, canActivate: [authGuard] },
+    { path: 'tenant/wizard', component: TenantWizardComponent, canActivate: [authGuard] },
     { path: 'landlord/search', component: LandlordSearchComponent, canActivate: [] },
     { path: 'admin', component: AdminDashboardComponent, canActivate: [adminGuard] },
     { path: '**', redirectTo: '' }
