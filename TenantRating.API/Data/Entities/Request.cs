@@ -15,6 +15,8 @@ public class Request
     public decimal DesiredRent { get; set; }
     
     public string CityName { get; set; } = string.Empty;
+
+    public string TenantIdNumber { get; set; } = string.Empty;
     
     [Column(TypeName = "decimal(18,2)")]
     public decimal TempScore { get; set; }

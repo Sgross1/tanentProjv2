@@ -100,17 +100,33 @@ import { AuthService } from '../../core/services/auth.service';
                     <button class="action-btn primary" (click)="goToSearch()">חפש דיירים</button>
                 </div>
 
-                <div class="request-row" *ngFor="let saved of savedList">
-                    <div class="req-info">
-                        <span class="req-name">{{ saved.tenantName }}</span>
-                        <span class="req-city">{{ saved.cityName }} - {{ saved.desiredRent }} ₪</span>
-                        <span class="req-phone" *ngIf="saved.phoneNumber">{{ saved.phoneNumber }}</span>
+                <div class="request-row" *ngFor="let saved of savedList" style="flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div class="req-info">
+                            <span class="req-name">{{ saved.tenantName }}</span>
+                            <span class="req-city">{{ saved.cityName }} - {{ saved.desiredRent }} ₪</span>
+                            <span class="req-phone" *ngIf="saved.phoneNumber">{{ saved.phoneNumber }}</span>
+                        </div>
+                        <div class="req-score" [style.color]="getScoreColor(saved.finalScore)">
+                            {{ saved.finalScore | number: '1.0-1' }}
+                        </div>
+                        <div class="req-status" style="display: flex; gap: 10px;">
+                            <button class="action-btn small" style="background: #0984e3; color: white; border: none; border-radius: 8px; cursor: pointer;" (click)="startVerification(saved.requestId)">
+                                {{ verifyingRequestId === saved.requestId ? 'סגור' : 'אמת זהות' }}
+                            </button>
+                            <button class="action-btn small warning" (click)="unsave(saved.requestId)">הסר</button>
+                        </div>
                     </div>
-                    <div class="req-score" [style.color]="getScoreColor(saved.finalScore)">
-                        {{ saved.finalScore | number: '1.0-1' }}
-                    </div>
-                    <div class="req-status">
-                        <button class="action-btn small warning" (click)="unsave(saved.requestId)">הסר</button>
+                    
+                    <!-- Verification Panel -->
+                    <div *ngIf="verifyingRequestId === saved.requestId" style="width: 100%; margin-top: 15px; background: #dfe6e9; padding: 15px; border-radius: 8px; animation: fadeIn 0.3s;">
+                        <p style="margin-bottom: 5px; font-weight: bold;">הקלד ת.ז של הדייר לאימות:</p>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" [(ngModel)]="verificationInput" placeholder="מספר ת.ז..." style="padding: 8px; border-radius: 4px; border: 1px solid #b2bec3; flex: 1;">
+                            <button class="action-btn small" style="background: #00b894; color: white;" (click)="submitVerification(saved.requestId)" [disabled]="isVerifying">
+                                {{ isVerifying ? 'בודק...' : 'בדוק' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,28 +255,28 @@ export class TenantDashboardComponent implements OnInit {
     this.viewState$ = combineLatest([this.requests$, this.savedRequests$, this.authService.currentUser$]).pipe(
       map(([requests, saved, user]) => {
         const userRole = user?.role; // 'Tenant', 'Landlord', 'Both'
-
-        // Strict Role View
-        if (userRole === 'Both') {
-          return { viewType: 'combined', showTabs: true };
-        } else if (userRole === 'Tenant') {
-          return { viewType: 'tenant-only', showTabs: false };
-        } else if (userRole === 'Landlord') {
-          return { viewType: 'landlord-only', showTabs: false };
-        }
-
-        // Fallback (e.g. Admin or glitch) - use data
         const hasRequests = requests.length > 0;
         const hasSaved = saved.length > 0;
 
-        if (hasRequests && hasSaved) {
+        // Smart View Logic:
+        // 1. If user has data for BOTH sides (or role is explicitly Both) -> Show Combined Tabs
+        if (userRole === 'Both' || (hasRequests && hasSaved)) {
           return { viewType: 'combined', showTabs: true };
-        } else if (hasRequests) {
+        }
+
+        // 2. If user explicitly acts as one side via data, show that side
+        if (hasRequests && !hasSaved) {
           return { viewType: 'tenant-only', showTabs: false };
-        } else if (hasSaved) {
+        }
+        if (hasSaved && !hasRequests) {
           return { viewType: 'landlord-only', showTabs: false };
         }
 
+        // 3. Fallback to Role if no data yet
+        if (userRole === 'Tenant') return { viewType: 'tenant-only', showTabs: false };
+        if (userRole === 'Landlord') return { viewType: 'landlord-only', showTabs: false };
+
+        // 4. Fresh user
         return { viewType: 'empty', showTabs: false };
       })
     );
@@ -295,5 +311,41 @@ export class TenantDashboardComponent implements OnInit {
       return;
     }
     this.calculatedRent = Math.round((this.currentMaxAffordableRent * 100) / this.sliderValue);
+  }
+
+  // Verification Logic
+  verifyingRequestId: number | null = null;
+  verificationInput = '';
+  isVerifying = false;
+
+  startVerification(id: number) {
+    if (this.verifyingRequestId === id) {
+      this.verifyingRequestId = null; // Toggle off
+    } else {
+      this.verifyingRequestId = id;
+      this.verificationInput = '';
+    }
+  }
+
+  submitVerification(requestId: number) {
+    if (!this.verificationInput.trim()) return;
+
+    this.isVerifying = true;
+    this.requestService.verifyTenantId(requestId, this.verificationInput).subscribe({
+      next: (res) => {
+        this.isVerifying = false;
+        if (res.isMatch) {
+          alert('✅ אימות הצליח! תעודת הזהות תואמת.');
+          this.verifyingRequestId = null;
+        } else {
+          alert('❌ אימות נכשל! תעודת הזהות אינה תואמת.');
+        }
+      },
+      error: (err) => {
+        this.isVerifying = false;
+        console.error(err);
+        alert('שגיאה בתהליך האימות.');
+      }
+    });
   }
 }

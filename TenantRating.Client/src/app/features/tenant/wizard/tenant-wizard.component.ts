@@ -1,18 +1,18 @@
-import { Component, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { Router, RouterModule } from "@angular/router";
-import { RequestService } from "../../../core/services/request.service";
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { RequestService } from '../../../core/services/request.service';
 import { CitiesService } from "../../../core/services/cities.service";
 
 @Component({
-  selector: "app-tenant-wizard",
+  selector: 'app-tenant-wizard',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: "./tenant-wizard.component.html",
-  styleUrls: ["./tenant-wizard.component.scss"],
+  templateUrl: './tenant-wizard.component.html',
+  styleUrls: ['./tenant-wizard.component.scss']
 })
-export class TenantWizardComponent implements OnInit {
+export class TenantWizardComponent {
   currentStep = 1;
   isProcessing = false;
 
@@ -20,13 +20,19 @@ export class TenantWizardComponent implements OnInit {
   requestData = {
     cities: [] as string[],
     desiredRent: null as number | null,
-    idNumber: "",
+    idNumber: ''
   };
 
   // Autocomplete Data
-  citySearchQuery = "";
+  citySearchQuery = '';
   filteredCities: string[] = [];
-  availableCities: string[] = []; // Will be loaded from service
+  availableCities = [
+    'תל אביב - יפו', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד',
+    'נתניה', 'באר שבע', 'חולון', 'בני ברק', 'רמת גן', 'רחובות', 'אשקלון',
+    'בת ים', 'הרצליה', 'כפר סבא', 'חדרה', 'מודיעין-מכבים-רעות', 'לוד',
+    'רעננה', 'רמלה', 'בית שמש', 'גבעתיים', 'הוד השרון', 'נהריה', 'קריית גת',
+    'עפולה', 'אילת', 'קריית אתא', 'עכו', 'טבריה'
+  ];
 
   // Step 2 Data
   uploadedFiles: File[] = [];
@@ -46,7 +52,11 @@ export class TenantWizardComponent implements OnInit {
   constructor(
     private router: Router,
     private requestService: RequestService,
+<<<<<<< HEAD
     private citiesService: CitiesService,
+=======
+    private citiesService: CitiesService
+>>>>>>> 0b1c7cd (Feature: Landlord ID Verification & Dashboard Fixes. Restore MyGov Cities.)
   ) { }
 
   ngOnInit() {
@@ -79,23 +89,19 @@ export class TenantWizardComponent implements OnInit {
     if (!this.requestData.cities.includes(city)) {
       this.requestData.cities.push(city);
     }
-    this.citySearchQuery = "";
+    this.citySearchQuery = '';
     this.filteredCities = [];
   }
 
   removeCity(city: string) {
-    this.requestData.cities = this.requestData.cities.filter((c) => c !== city);
+    this.requestData.cities = this.requestData.cities.filter(c => c !== city);
   }
 
   nextStep() {
     if (this.currentStep === 1) {
       // Validate Step 1
-      if (
-        this.requestData.cities.length === 0 ||
-        !this.requestData.desiredRent ||
-        !this.requestData.idNumber
-      ) {
-        alert("אנא מלא את כל שדות החובה");
+      if (this.requestData.cities.length === 0 || !this.requestData.desiredRent || !this.requestData.idNumber) {
+        alert('אנא מלא את כל שדות החובה');
         return;
       }
     }
@@ -124,12 +130,8 @@ export class TenantWizardComponent implements OnInit {
     }
 
     // Trigger spouse prompt if we have 3 files and haven't asked yet
-    if (
-      this.uploadedFiles.length >= 3 &&
-      !this.spouseFilesRequested &&
-      !this.askSpouse
-    ) {
-      setTimeout(() => (this.askSpouse = true), 500);
+    if (this.uploadedFiles.length >= 3 && !this.spouseFilesRequested && !this.askSpouse) {
+      setTimeout(() => this.askSpouse = true, 500);
     }
   }
 
@@ -155,7 +157,7 @@ export class TenantWizardComponent implements OnInit {
   processRequest() {
     // Validation: 3 or 6 files
     if (this.uploadedFiles.length !== 3 && this.uploadedFiles.length !== 6) {
-      alert("אנא העלה בדיוק 3 או 6 תלושי שכר (3 עבור יחיד, 6 עבור זוג).");
+      alert('אנא העלה בדיוק 3 או 6 תלושי שכר (3 עבור יחיד, 6 עבור זוג).');
       return;
     }
 
@@ -176,6 +178,7 @@ export class TenantWizardComponent implements OnInit {
           // Then overwrite with user inputs
           desiredRent: this.requestData.desiredRent!,
           cityName: this.requestData.cities.join(", "),
+          idNumber: this.requestData.idNumber,
         };
 
         this.requestService.createRequest(requestDto).subscribe({
@@ -194,6 +197,7 @@ export class TenantWizardComponent implements OnInit {
             this.currentStep = 4; // Result view
           },
           error: (err) => {
+<<<<<<< HEAD
             console.error("Error creating request:", err);
             this.isProcessing = false;
             const errorMessage =
@@ -224,6 +228,23 @@ export class TenantWizardComponent implements OnInit {
         alert(`אירעה שגיאה: ${errorMessage}`);
         this.currentStep = 2; // Go back
       },
+=======
+            console.error('Error creating request:', err);
+            this.isProcessing = false;
+            const errorMessage = err.error?.title || err.error || err.message || 'שגיאה ביצירת הבקשה';
+            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
+            this.currentStep = 2; // Go back
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error analyzing payslips:', err);
+        this.isProcessing = false;
+        const errorMessage = err.error?.title || err.error || err.message || 'שגיאה בפענוח התלושים';
+        alert(`אירעה שגיאה בפענוח התלושים: ${JSON.stringify(errorMessage)}`);
+        this.currentStep = 2; // Go back
+      }
+>>>>>>> 0b1c7cd (Feature: Landlord ID Verification & Dashboard Fixes. Restore MyGov Cities.)
     });
   }
 
@@ -239,9 +260,7 @@ export class TenantWizardComponent implements OnInit {
     }
     // Formula: Score = (MaxRent / RequestRent) * 100
     // Therefore: RequestRent = (MaxRent * 100) / Score
-    this.calculatedRent = Math.round(
-      (this.maxAffordableRent * 100) / this.sliderValue,
-    );
+    this.calculatedRent = Math.round((this.maxAffordableRent * 100) / this.sliderValue);
   }
 
   generatePercentileGraph(score: number) {
@@ -256,27 +275,27 @@ export class TenantWizardComponent implements OnInit {
     this.percentileBars = bars;
 
     // Calculate where the user sits (0 to 49)
-    // Assuming score range 0-1000.
+    // Assuming score range 0-1000. 
     // Map 0-1000 to 0-49 index.
     const index = Math.floor((score / 1000) * 50);
     this.userPercentileIndex = Math.min(Math.max(index, 0), 49);
   }
 
   finish() {
-    this.router.navigate(["/tenant/dashboard"]);
+    this.router.navigate(['/tenant/dashboard']);
   }
 
   sendSms() {
     if (!this.createdRequestId) return;
     this.requestService.sendSms(this.createdRequestId).subscribe(() => {
-      alert("הודעת SMS נשלחה בהצלחה!");
+      alert('הודעת SMS נשלחה בהצלחה!');
     });
   }
 
   sendEmail() {
     if (!this.createdRequestId) return;
     this.requestService.sendEmail(this.createdRequestId).subscribe(() => {
-      alert("הודעת אימייל נשלחה בהצלחה!");
+      alert('הודעת אימייל נשלחה בהצלחה!');
     });
   }
 }
