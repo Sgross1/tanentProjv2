@@ -22,6 +22,7 @@ export interface CreateRequestDto {
     pensionGrossAmount: number;
     scoreFormula?: string;
     calculationDetails?: string[];
+    idNumber: string;
 }
 
 @Injectable({
@@ -61,6 +62,10 @@ export class RequestService {
 
     sendEmail(requestId: number): Observable<any> {
         return this.http.post(`${this.apiUrl}/${requestId}/notify-email`, {});
+    }
+
+    verifyTenantId(requestId: number, idNumber: string): Observable<{ isMatch: boolean }> {
+        return this.http.post<{ isMatch: boolean }>(`${this.apiUrl}/verify-id`, { requestId, idNumber });
     }
 
     getMyRequests(): Observable<RequestResultDto[]> {

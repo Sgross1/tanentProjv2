@@ -9,6 +9,9 @@ public class CreateRequestDto
     [Required]
     public string CityName { get; set; } = string.Empty;
     
+    [Required]
+    public string IdNumber { get; set; } = string.Empty;
+    
     // Input for scoring simulation (mocking the file upload parsing)
     public decimal NetIncome { get; set; }
     public int NumChildren { get; set; }

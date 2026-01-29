@@ -72,6 +72,7 @@ public class RequestsController : ControllerBase
             UserId = userId,
             DesiredRent = dto.DesiredRent,
             CityName = dto.CityName,
+            TenantIdNumber = dto.IdNumber,
             DateCreated = DateTime.UtcNow
         };
 
@@ -97,6 +98,28 @@ public class RequestsController : ControllerBase
             DateCreated = request.DateCreated,
             MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
         };
+    }
+
+    [HttpPost("verify-id")]
+    public async Task<IActionResult> VerifyId([FromBody] VerifyIdDto dto)
+    {
+        var request = await _context.Requests.FindAsync(dto.RequestId);
+        if (request == null) return NotFound("בקשה לא נמצאה");
+
+        // Logic: Clean both strings (trim, remove hyphens) just in case
+        var storedId = request.TenantIdNumber?.Trim().Replace("-", "") ?? "";
+        var inputId = dto.IdNumber?.Trim().Replace("-", "") ?? "";
+
+        // Blind Match
+        bool match = storedId == inputId;
+
+        return Ok(new { isMatch = match });
+    }
+
+    public class VerifyIdDto
+    {
+        public int RequestId { get; set; }
+        public string IdNumber { get; set; } = string.Empty;
     }
 
     [HttpGet("my-requests")]
