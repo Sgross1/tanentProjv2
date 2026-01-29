@@ -27,7 +27,7 @@ public class RequestsController : ControllerBase
 
     [HttpPost("analyze")]
     [Consumes("multipart/form-data")]
-    public async Task<ActionResult<CreateRequestDto>> AnalyzePayslips([FromForm] List<IFormFile> files)
+    public async Task<ActionResult<CreateRequestDto>> AnalyzePayslips([FromForm] List<IFormFile> files, [FromForm] decimal? desiredRent)
     {
         if (files == null || (files.Count != 3 && files.Count != 6))
         {
@@ -37,6 +37,23 @@ public class RequestsController : ControllerBase
         try
         {
             var result = await _ocrService.AnalyzePayslipsAsync(files);
+            
+            // Calculate Debug Info if rent is provided
+            if (desiredRent.HasValue)
+            {
+                var calcDetails = TenantRating.API.Logic.RentabilityScoreCalculator.GetCalculationDetails(
+                    result.NetIncome,
+                    result.NumChildren,
+                    result.IsMarried,
+                    result.SeniorityYears,
+                    result.PensionGrossAmount,
+                    desiredRent.Value
+                );
+                
+                result.ScoreFormula = calcDetails.Formula;
+                result.CalculationDetails = calcDetails.Details;
+            }
+
             return Ok(result);
         }
         catch (Exception ex)

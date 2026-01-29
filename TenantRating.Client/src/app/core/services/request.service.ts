@@ -20,6 +20,8 @@ export interface CreateRequestDto {
     isMarried: boolean;
     seniorityYears: number;
     pensionGrossAmount: number;
+    scoreFormula?: string;
+    calculationDetails?: string[];
 }
 
 @Injectable({
@@ -42,11 +44,14 @@ export class RequestService {
         );
     }
 
-    analyzePayslip(files: File[]): Observable<CreateRequestDto> {
+    analyzePayslip(files: File[], desiredRent?: number): Observable<CreateRequestDto> {
         const formData = new FormData();
         files.forEach(file => {
             formData.append('files', file);
         });
+        if (desiredRent) {
+            formData.append('desiredRent', desiredRent.toString());
+        }
         return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
     }
 

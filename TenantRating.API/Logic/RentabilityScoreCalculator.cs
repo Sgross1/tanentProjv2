@@ -57,4 +57,83 @@ public static class RentabilityScoreCalculator
         
         return Math.Min(Math.Max(finalScore, 0m), 100m);
     }
+
+    public static (string Formula, List<string> Details) GetCalculationDetails(
+        decimal netIncome,
+        int numChildren,
+        bool isMarried,
+        decimal seniorityYears,
+        decimal pensionGrossAmount,
+        decimal desiredRent)
+    {
+        var details = new List<string>();
+        
+        // A: Base Income
+        details.Add($"[A] הכנסה התחלתית (נטו): {netIncome:N0} ₪");
+
+        decimal tempScore = netIncome;
+
+        // B: Children Haircut
+        decimal childReduction = 0;
+        if (numChildren > 0)
+        {
+            childReduction = numChildren * KidExpenseFactor;
+            tempScore -= childReduction;
+        }
+        details.Add($"[B] הפחתה בגין {numChildren} ילדים: {childReduction:N0} ₪");
+
+        // C: Spouse Haircut
+        decimal spouseReduction = 0;
+        if (isMarried)
+        {
+            spouseReduction = MarriedExpenseFactor;
+            tempScore -= spouseReduction;
+        }
+        details.Add($"[C] הפחתה בגין בן/בת זוג: {spouseReduction:N0} ₪");
+
+        // D: Seniority Bonus
+        decimal seniorityBonus = 0;
+        if (seniorityYears > 0)
+        {
+            if (seniorityYears >= 9) seniorityBonus = seniorityYears * 35m;
+            else if (seniorityYears >= 4) seniorityBonus = seniorityYears * 25m;
+            else seniorityBonus = seniorityYears * 15m;
+            tempScore += seniorityBonus;
+        }
+        details.Add($"[D] תוספת בגין {seniorityYears} שנות ותק: {seniorityBonus:N0} ₪");
+
+        // E: Pension Bonus
+        decimal pensionBonus = 0;
+        if (pensionGrossAmount >= 400m)
+        {
+            pensionBonus = pensionGrossAmount >= 700m ? 50m : 20m;
+            tempScore += pensionBonus;
+        }
+        details.Add($"[E] תוספת עבור חיסכון פנסיוני: {pensionBonus:N0} ₪");
+
+        // F: Temp Score
+        tempScore = Math.Max(0, tempScore);
+        details.Add($"[F] הכנסה פנויה מותאמת (A - B - C + D + E): {tempScore:N0} ₪");
+
+        // Final Calculation
+        if (desiredRent <= 0)
+        {
+            return ("לא ניתן לחשב (שכר דירה 0)", details);
+        }
+
+        // G: Max Affordable
+        decimal maxAffordableRent = tempScore * RentToIncomeRatio;
+        details.Add($"[G] שכר דירה מקסימלי מומלץ (F * 0.35): {maxAffordableRent:N0} ₪");
+        
+        // H: Requested Rent
+        details.Add($"[H] שכר דירה מבוקש: {desiredRent:N0} ₪");
+        
+        // Formula
+        string formula = $$"""
+        נוסחה: (G / H) * 100
+        הצבה: ({{maxAffordableRent:N0}} / {{desiredRent:N0}}) * 100
+        """;
+
+        return (formula, details);
+    }
 }

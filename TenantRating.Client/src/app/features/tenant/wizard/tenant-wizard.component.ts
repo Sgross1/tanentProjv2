@@ -140,8 +140,8 @@ export class TenantWizardComponent {
     this.currentStep = 3; // Processing view
     this.isProcessing = true;
 
-    // 1. Analyze Payslips (Real OCR)
-    this.requestService.analyzePayslip(this.uploadedFiles).subscribe({
+    // 1. Analyze Payslips (Real OCR) + Debug Data
+    this.requestService.analyzePayslip(this.uploadedFiles, this.requestData.desiredRent || 0).subscribe({
       next: (ocrResult) => {
 
         // Debug Phase: Show result
@@ -184,8 +184,20 @@ export class TenantWizardComponent {
       error: (err) => {
         console.error('Error analyzing payslips:', err);
         this.isProcessing = false;
-        const errorMessage = err.error?.title || err.error || err.message || 'שגיאה בפענוח התלושים';
-        alert(`אירעה שגיאה בפענוח התלושים: ${JSON.stringify(errorMessage)}`);
+
+        let errorMessage = 'שגיאה בפענוח התלושים';
+        if (err.error instanceof ProgressEvent) {
+          errorMessage = 'שגיאת תקשורת עם השרת (האם השרת דולק?)';
+        } else {
+          errorMessage = err.error?.title || err.error || err.message || JSON.stringify(err) || errorMessage;
+        }
+
+        // Handle object error message
+        if (typeof errorMessage === 'object') {
+          errorMessage = JSON.stringify(errorMessage);
+        }
+
+        alert(`אירעה שגיאה: ${errorMessage}`);
         this.currentStep = 2; // Go back
       }
     });
