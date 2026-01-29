@@ -1,4 +1,5 @@
 @echo off
+if exist secrets.bat call secrets.bat
 echo ===================================================
 echo   Tenant Rating - One Click Setup & Run
 echo ===================================================
