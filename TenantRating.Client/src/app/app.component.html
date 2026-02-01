@@ -1,9 +1,18 @@
 <!-- Navbar -->
 <nav class="navbar" (mouseleave)="closeDropdown()">
-    <div class="logo" routerLink="/">Tenant Rating</div>
+    <div class="logo" routerLink="/">KaLiScore</div>
 
-    <div class="nav-links">
-        <a routerLink="/" class="nav-item">דף הבית</a>
+    <!-- Hamburger Button (Mobile Only) -->
+    <div class="hamburger-wrapper" (click)="toggleMenu()">
+        <div class="hamburger" [class.active]="isMenuOpen">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <div class="nav-links" [class.active]="isMenuOpen">
+        <a routerLink="/" class="nav-item" (click)="closeMenu()">דף הבית</a>
 
         <div class="nav-item-container">
             <span class="nav-item" (click)="toggleDropdown('howItWorks')"
@@ -37,11 +46,11 @@
             </div>
         </div>
 
-        <a routerLink="/tenant/dashboard"
+        <a routerLink="/tenant/dashboard" (click)="closeMenu()"
             *ngIf="(authService.currentUser$ | async)?.role && (authService.currentUser$ | async)?.role !== 'Admin'"
             class="nav-item personal-area">איזור אישי</a>
         <a routerLink="/admin" *ngIf="(authService.currentUser$ | async)?.role === 'Admin'" class="nav-item admin-area"
-            style="background: #ef4444;">ניהול מערכת</a>
+            (click)="closeMenu()" style="background: #ef4444;">ניהול מערכת</a>
     </div>
 
     <div class="auth-buttons">

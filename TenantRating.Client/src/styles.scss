@@ -1,32 +1,31 @@
 /* CSS Reset & Variables */
 :root {
-  --primary: #6c5ce7;
-  /* Light Theme Palette */
-  --bg-color: #f8f9fa;
-  /* Light Gray Background */
-  --card-bg: #ffffff;
-  --text-color: #2d3436;
-  --text-muted: #636e72;
-  --primary-color: #6c5ce7;
-  --primary-gradient: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-  --secondary-color: #00cec9;
-  --accent-color: #fdcb6e;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.05);
-  --nav-bg: #ffffff;
+  /* KaLiScore "Quiet Head" Palette */
+  --color-trust-blue: #002f6c;
+  --color-pure-white: #ffffff;
+  --color-action-blue: #2d7ef7;
+  --color-bg-mesh: #f0f4f8;
+  --color-text-main: #333333;
+  --color-text-muted: #666666;
+  --color-border-subtle: #e0e0e0;
 
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  background-image:
-    radial-gradient(at 0% 0%, rgba(108, 92, 231, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(0, 206, 201, 0.05) 0px, transparent 50%);
-  color: white;
+  /* Legacy / Functional mappings */
+  --primary: var(--color-action-blue);
+  --bg-color: var(--color-pure-white);
+  --text-color: var(--color-text-main);
+  
+  font-family: 'Rubik', 'Heebo', 'Segoe UI', sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: 'Heebo', sans-serif;
-  background-color: var(--bg-dark);
-  color: white;
+  font-family: 'Rubik', sans-serif;
+  background-color: var(--color-pure-white);
+  color: var(--color-text-main);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Rubik', sans-serif;
+  margin: 0;
 }

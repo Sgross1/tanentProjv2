@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { AppComponent } from '../../app.component';
+import { ThreeCubeComponent } from '../../shared/components/three-cube/three-cube.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ThreeCubeComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
