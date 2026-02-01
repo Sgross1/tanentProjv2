@@ -1,50 +1,58 @@
-<div class="hero-section">
-    <!-- Animated Gradients -->
-    <div class="bg-glow"></div>
-    <div class="bg-glow-2"></div>
-
-    <div class="hero-content">
-        <h1>השכרת דירה בראש שקט</h1>
-        <p class="subtitle">מערכת דירוג הדיירים המתקדמת בישראל. שקיפות, אמינות וביטחון לכולם.</p>
-
-        <div class="cards-container">
-            <div class="role-card tenant" (click)="handleRoleClick('Tenant')">
-                <span class="card-icon">🏠</span>
-                <span class="card-title">אני שוכר</span>
-                <span class="card-desc">קבל דירוג אשראי היום</span>
+<div class="home-container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="text-content">
+                <h1>KaLiScore</h1>
+                <p class="subtitle">השכרת דירה בראש שקט</p>
+                <p class="description">
+                    מערכת הדירוג המתקדמת בישראל המעניקה ביטחון, שקיפות ואמינות לשוכרים ולמשכירים כאחד.
+                </p>
+                <button class="cta-button">התחבר / הרשם ל-KaLiScore</button>
             </div>
 
-            <div class="role-card landlord" (click)="handleRoleClick('Landlord')">
-                <span class="card-icon">🔑</span>
-                <span class="card-title">אני משכיר</span>
-                <span class="card-desc">מצא דיירים אמינים בבטחה</span>
+            <div class="cube-container">
+                <app-three-cube mode="hero"></app-three-cube>
             </div>
         </div>
-    </div>
-</div>
+    </section>
 
-<div class="scroll-reveal-section" #scrollSection id="how-it-works">
-    <div class="half-circle-container">
-        <div class="half-circle" [style.height.%]="curveProgress" [style.width.%]="120 - (curveProgress * 0.2)"
-            [style.border-radius]="'50% 50% 0 0'">
+    <!-- Role Cards Overlay -->
+    <section class="cards-section">
+        <div class="card tenant-card" (click)="handleRoleClick('Tenant')">
+            <div class="icon-wrapper">🏠</div>
+            <h3>אני שוכר</h3>
+            <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
+        </div>
 
-            <div class="circle-content" [class.visible]="showContent">
-                <h2>איך זה עובד?</h2>
-                <div class="steps">
-                    <div class="step">
-                        <span class="num">1</span>
-                        <p>העלה תלושי שכר מאובטחים</p>
-                    </div>
-                    <div class="step">
-                        <span class="num">2</span>
-                        <p>קבל ציון אמינות חכם</p>
-                    </div>
-                    <div class="step">
-                        <span class="num">3</span>
-                        <p>הצג למשכירים וסגור חוזה</p>
-                    </div>
-                </div>
+        <div class="card landlord-card" (click)="handleRoleClick('Landlord')">
+            <div class="icon-wrapper">🔑</div>
+            <h3>אני משכיר</h3>
+            <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process-section">
+        <h2>איך זה עובד?</h2>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-icon">📝</div>
+                <h4>1. הרשמה מהירה</h4>
+                <p>העלה פרטים בסיסיים באופן מאובטח</p>
+            </div>
+            <div class="connector">➤</div>
+            <div class="step">
+                <div class="step-icon">🤝</div>
+                <h4>2. דירוג ואימות</h4>
+                <p>המערכת מחשבת ציון אמינות חכם</p>
+            </div>
+            <div class="connector">➤</div>
+            <div class="step">
+                <div class="step-icon">🛡️</div>
+                <h4>3. השכרה בטוחה</h4>
+                <p>שתף את הציון וחתום על חוזה בראש שקט</p>
             </div>
         </div>
-    </div>
+    </section>
 </div>

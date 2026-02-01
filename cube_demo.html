@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resend Style Cube Demo - Single</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #ffffff;
+            /* White background */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #111;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay {
+            position: absolute;
+            bottom: 50px;
+            text-align: center;
+            opacity: 0.6;
+            pointer-events: none;
+            letter-spacing: 2px;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+    <!-- Load Three.js and Tweening -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+    <div class="overlay">Processing Score...</div>
+
+    <script>
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+        scene.fog = new THREE.Fog(0xffffff, 10, 25);
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(6, 5, 8);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 3);
+        spotLight.position.set(-10, 5, 5);
+        spotLight.angle = 0.5;
+        spotLight.penumbra = 0.5;
+        scene.add(spotLight);
+
+        const rimLight = new THREE.PointLight(0x3b82f6, 2, 20);
+        rimLight.position.set(0, -5, -5);
+        scene.add(rimLight);
+
+        // --- TEXTURE GENERATION ---
+        function createTexture(type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, 512, 512);
+
+            if (type === 'mesh') {
+                ctx.fillStyle = '#222';
+                for (let i = 0; i < 512; i += 16) {
+                    for (let j = 0; j < 512; j += 16) {
+                        ctx.beginPath();
+                        ctx.arc(i, j, 6, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            } else if (type === 'brushed') {
+                ctx.strokeStyle = '#1a1a1a';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 500; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, Math.random() * 512);
+                    ctx.lineTo(512, Math.random() * 512);
+                    ctx.stroke();
+                }
+            } else if (type === 'noise') {
+                for (let i = 0; i < 50000; i++) {
+                    ctx.fillStyle = Math.random() > 0.5 ? '#1a1a1a' : '#0a0a0a';
+                    ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+                }
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            return tex;
+        }
+
+        const textures = {
+            mesh: createTexture('mesh'),
+            brushed: createTexture('brushed'),
+            noise: createTexture('noise')
+        };
+
+        // --- CUBE CLASS ---
+        class RubiksCube {
+            constructor() {
+                this.cubies = [];
+                this.isAnimating = false;
+                this.group = new THREE.Group();
+                scene.add(this.group);
+
+                // Inner Lights
+                const innerLight = new THREE.PointLight(0xffaa00, 3, 4);
+                innerLight.position.set(0, 0, 0);
+                this.group.add(innerLight);
+
+                const innerLight2 = new THREE.PointLight(0xaaccff, 3, 4);
+                innerLight2.position.set(0.1, 0.1, 0.1);
+                this.group.add(innerLight2);
+
+                this.initGeometry();
+                this.startAnimationLoop();
+            }
+
+            initGeometry() {
+                const size = 0.85;
+                const gap = 0.04;
+                const offset = size + gap;
+                const geometry = new THREE.BoxGeometry(size, size, size);
+
+                for (let x = -1; x <= 1; x++) {
+                    for (let y = -1; y <= 1; y++) {
+                        for (let z = -1; z <= 1; z++) {
+                            const material = this.getMaterial();
+                            const mesh = new THREE.Mesh(geometry, material);
+
+                            const edges = new THREE.EdgesGeometry(geometry);
+                            const line = new THREE.LineSegments(edges,
+                                new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1, transparent: true, opacity: 0.3 }));
+                            mesh.add(line);
+
+                            mesh.position.set(x * offset, y * offset, z * offset);
+                            mesh.userData = { initialX: x, initialY: y, initialZ: z };
+
+                            this.group.add(mesh);
+                            this.cubies.push(mesh);
+                        }
+                    }
+                }
+                this.offset = offset;
+            }
+
+            getMaterial() {
+                const rand = Math.random();
+                let map = null, roughness = 0.2, color = new THREE.Color(0.2, 0.2, 0.2);
+
+                if (rand < 0.25) {
+                    map = textures.mesh; roughness = 0.6; color = new THREE.Color(0.25, 0.25, 0.25);
+                } else if (rand < 0.5) {
+                    map = textures.brushed; roughness = 0.3; color = new THREE.Color(0.28, 0.28, 0.28);
+                } else if (rand < 0.75) {
+                    map = textures.noise; roughness = 0.8; color = new THREE.Color(0.35, 0.35, 0.35);
+                } else {
+                    roughness = 0.05; color = new THREE.Color(0.15, 0.15, 0.15);
+                }
+
+                return new THREE.MeshStandardMaterial({
+                    color: color, map: map, bumpMap: map, bumpScale: 0.02,
+                    roughness: roughness, metalness: 0.75, envMapIntensity: 2.0
+                });
+            }
+
+            roundPosition(mesh) {
+                const off = this.offset;
+                mesh.position.x = Math.round(mesh.position.x / off) * off;
+                mesh.position.y = Math.round(mesh.position.y / off) * off;
+                mesh.position.z = Math.round(mesh.position.z / off) * off;
+                mesh.rotation.x = Math.round(mesh.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+                mesh.rotation.y = Math.round(mesh.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
+                mesh.rotation.z = Math.round(mesh.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
+                mesh.updateMatrixWorld();
+            }
+
+            rotateLayer() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+
+                const axes = ['x', 'y', 'z'];
+
+                // Avoid repeating same axis if possible, or just random
+                if (!this.lastAxis) this.lastAxis = 'x';
+
+                let axisIdx;
+                do {
+                    axisIdx = Math.floor(Math.random() * 3);
+                } while (axes[axisIdx] === this.lastAxis);
+
+                this.lastAxis = axes[axisIdx];
+                const axis = this.lastAxis;
+                const slice = Math.floor(Math.random() * 3) - 1;
+
+                const targetCubies = this.cubies.filter(mesh => {
+                    const pos = mesh.position[axis];
+                    return Math.abs(pos - (slice * this.offset)) < 0.1;
+                });
+
+                const pivot = new THREE.Group();
+                this.group.add(pivot);
+                targetCubies.forEach(mesh => pivot.attach(mesh));
+
+                const dir = Math.random() > 0.5 ? 1 : -1;
+                const targetRotation = dir * (Math.PI / 2);
+
+                const tween = new TWEEN.Tween({ rot: 0 })
+                    .to({ rot: targetRotation }, 2000)
+                    .easing(TWEEN.Easing.Quintic.InOut)
+                    .onUpdate((obj) => pivot.rotation[axis] = obj.rot)
+                    .onComplete(() => {
+                        targetCubies.forEach(mesh => {
+                            this.group.attach(mesh);
+                            this.roundPosition(mesh);
+                        });
+                        this.group.remove(pivot);
+                        this.isAnimating = false;
+                        setTimeout(() => this.rotateLayer(), 1000);
+                    })
+                    .start();
+            }
+
+            startAnimationLoop() {
+                setTimeout(() => this.rotateLayer(), 1000);
+            }
+        }
+
+        // --- INSTANTIATE SINGLE CUBE ---
+        const cube = new RubiksCube();
+
+        // --- GLOBAL ANIMATION ---
+        function animateFrame(time) {
+            requestAnimationFrame(animateFrame);
+            TWEEN.update(time);
+
+            // Fast gyroscopic rotation (0.0001872)
+            const now = Date.now() * 0.0001872;
+            const radius = 9;
+
+            const theta = now * 2;
+            const phi = Math.sin(now * 1.5) * 1.2;
+
+            camera.position.x = radius * Math.sin(theta) * Math.cos(phi);
+            camera.position.y = radius * Math.sin(phi);
+            camera.position.z = radius * Math.cos(theta) * Math.cos(phi);
+
+            camera.up.set(Math.sin(now * 0.5) * 0.2, 1, Math.cos(now * 0.5) * 0.2);
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+        animateFrame();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>

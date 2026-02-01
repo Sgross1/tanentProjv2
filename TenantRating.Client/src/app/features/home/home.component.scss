@@ -2,310 +2,250 @@
     display: block;
     width: 100%;
     min-height: 100vh;
-    background: #000000;
-    color: #ffffff;
-    font-family: 'Inter', 'Heebo', sans-serif;
-    overflow-x: hidden;
+    background-color: var(--color-pure-white);
+    color: var(--color-text-main);
 }
 
-.hero-section {
-    position: relative;
-    min-height: 100vh;
+.home-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background: radial-gradient(circle at 50% 50%, #1a0b2e 0%, #000000 100%);
+}
+
+/* --- HERO SECTION --- */
+.hero-section {
+    background-color: var(--color-trust-blue);
+    color: var(--color-pure-white);
+    padding: 4rem 2rem 8rem 2rem;
+    /* Extra bottom padding for card overlap */
+    position: relative;
     overflow: hidden;
-    padding: 2rem;
-}
-
-/* Background Gradients/Blobs */
-.bg-glow {
-    position: absolute;
-    width: 60vw;
-    height: 60vw;
-    background: radial-gradient(circle, rgba(108, 92, 231, 0.4) 0%, rgba(0, 0, 0, 0) 70%);
-    top: -20%;
-    left: 20%;
-    filter: blur(100px);
-    z-index: 0;
-    animation: drift 10s infinite ease-in-out alternate;
-}
-
-.bg-glow-2 {
-    position: absolute;
-    width: 50vw;
-    height: 50vw;
-    background: radial-gradient(circle, rgba(238, 82, 83, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
-    bottom: -10%;
-    right: 10%;
-    filter: blur(80px);
-    z-index: 0;
-    animation: drift 15s infinite ease-in-out alternate-reverse;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hero-content {
-    position: relative;
-    z-index: 10;
     max-width: 1200px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    z-index: 10;
+}
+
+.text-content {
+    flex: 1;
+    text-align: right;
 }
 
 h1 {
-    font-size: 6rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, #ffffff 0%, #a29bfe 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-transform: uppercase;
-    letter-spacing: -2px;
-    animation: fadeInUp 1s ease-out;
+    font-size: 5rem;
+    /* Large Main Title */
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
 }
 
 .subtitle {
-    font-size: 1.5rem;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 4rem;
+    font-size: 2.5rem;
     font-weight: 300;
-    animation: fadeInUp 1s ease-out 0.2s backwards;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+.description {
+    font-size: 1.25rem;
+    margin-bottom: 2.5rem;
     max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
+    line-height: 1.6;
+    opacity: 0.8;
 }
 
-.cards-container {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeInUp 1s ease-out 0.4s backwards;
-}
-
-.role-card {
-    position: relative;
-    width: 300px;
-    height: 400px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.cta-button {
+    background-color: var(--color-action-blue);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.2rem;
+    border-radius: 50px;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    overflow: hidden;
+    font-weight: 600;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.role-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 100%);
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.3s;
+.cta-button:hover {
+    background-color: #4a90e2;
+    /* slightly lighter blue */
+    transform: translateY(-2px);
 }
 
-.role-card:hover {
-    transform: translateY(-10px);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-}
-
-.role-card:hover::before {
-    opacity: 1;
-}
-
-.role-card.tenant:hover {
-    box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
-    border-color: #6c5ce7;
-}
-
-.role-card.landlord:hover {
-    box-shadow: 0 0 30px rgba(238, 82, 83, 0.3);
-    border-color: #ee5253;
-}
-
-.card-icon {
-    font-size: 4rem;
-    margin-bottom: 2rem;
-    z-index: 2;
-    transition: transform 0.3s;
-}
-
-.role-card:hover .card-icon {
-    transform: scale(1.1);
-}
-
-.card-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    z-index: 2;
-}
-
-.card-desc {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.5);
-    z-index: 2;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes drift {
-    0% {
-        transform: translate(0, 0);
-    }
-
-    100% {
-        transform: translate(30px, -30px);
-    }
-}
-
-/* Scroll Section - Dynamic Reveal */
-.scroll-reveal-section {
-    min-height: 80vh;
-    background: #000000;
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    /* Align to bottom for "rising" effect */
-    justify-content: center;
-    padding-bottom: 0;
-    overflow: hidden;
-}
-
-.half-circle-container {
-    width: 100%;
+/* Cube placement */
+.cube-container {
+    flex: 1;
+    height: 400px;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
-    height: 500px;
-    /* Fixed container height */
-    position: relative;
-}
-
-.half-circle {
-    /* Base styles, dimensions controlled by TS */
-    background: radial-gradient(circle at 50% 0%, #1a0b2e 0%, #000000 80%);
-    border: 1px solid rgba(108, 92, 231, 0.3);
-    border-bottom: none;
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    /* Content at top */
-    padding-top: 4rem;
-
-    /* We remove the transform transition so it follows scroll instantly */
-    /* Only animate things that aren't scroll-bound if needed */
-
     position: relative;
-    box-shadow: 0 -20px 100px rgba(108, 92, 231, 0.2);
-    overflow: hidden;
+    border: none;
+    /* Debug Removed */
+    /* ensure it doesn't block text on mobile */
 }
 
-.circle-content {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease-out;
-}
-
-.circle-content.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-h2 {
-    font-size: 3rem;
-    margin-bottom: 3rem;
-    background: linear-gradient(to bottom, #fff, #999);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Steps Styling */
-.steps {
+/* --- CARDS SECTION --- */
+.cards-section {
     display: flex;
-    gap: 4rem;
     justify-content: center;
+    gap: 2rem;
+    margin-top: -6rem;
+    /* Negative margin to overlap Hero */
+    padding: 0 2rem;
+    z-index: 20;
+    margin-bottom: 4rem;
+}
+
+.card {
+    background: var(--color-pure-white);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--color-border-subtle);
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.icon-wrapper {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.card h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--color-trust-blue);
+}
+
+.card p {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+}
+
+/* --- PROCESS SECTION --- */
+.process-section {
+    background-color: var(--color-bg-mesh);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.process-section h2 {
+    color: var(--color-trust-blue);
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+.steps-container {
+    display: flex;
+    align-items: flex-start;
+    /* Align tops */
+    justify-content: center;
+    gap: 1rem;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .step {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    padding: 1rem;
 }
 
-.num {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    width: 60px;
-    height: 60px;
+.step-icon {
+    font-size: 3rem;
+    background: white;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    color: var(--color-action-blue);
+}
+
+.step h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--color-trust-blue);
 }
 
 .step p {
-    color: #ccc;
-    font-size: 1.1rem;
-    max-width: 150px;
+    color: var(--color-text-muted);
+    font-size: 1rem;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    h1 {
-        font-size: 3.5rem;
+.connector {
+    font-size: 2rem;
+    color: var(--color-border-subtle);
+    margin-top: 2rem;
+    /* Align with icons approximately */
+    transform: scaleX(-1);
+    /* Flip arrow for Hebrew LTR visual flow if needed, but Hebrew reads RTL so arrows should point Left? */
+    /* Actually for Hebrew RTL: Step 1 is Rightmost. Arrow should point Left. 
+       "➤" points Right. So rotating 180deg makes it point Left. */
+    transform: rotate(180deg);
+}
+
+
+/* --- RESPONSIVE --- */
+@media (max-width: 900px) {
+    .hero-content {
+        flex-direction: column-reverse;
+        /* Text on top on mobile? Or Cube on top? Usually text first. */
+        text-align: center;
     }
 
-    .subtitle {
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
+    .text-content {
+        text-align: center;
     }
 
-    .role-card {
+    .cube-container {
+        height: 300px;
         width: 100%;
-        height: 250px;
     }
 
-    .half-circle {
-        width: 100%;
-        height: auto;
-        border-radius: 20px;
-        padding: 3rem 1rem;
-    }
-
-    .steps {
+    .cards-section {
         flex-direction: column;
-        gap: 3rem;
+        align-items: center;
+        margin-top: -3rem;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 350px;
+    }
+
+    .steps-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .connector {
+        transform: rotate(90deg);
+        /* Point down */
+        margin: 1rem 0;
     }
 }

@@ -1,186 +1,175 @@
-<div class="wizard-container">
-    <h1 class="page-title">צור פניה חדשה</h1>
-    <div class="wizard-card">
-        <!-- Progress Bar -->
-        <div class="progress-container">
-            <div class="step-indicator" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">1</div>
-            <div class="line" [class.active]="currentStep > 1"></div>
-            <div class="step-indicator" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">2</div>
-            <div class="line" [class.active]="currentStep > 2"></div>
-            <div class="step-indicator" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">3</div>
-        </div>
+<div class="wizard-page-container">
+    <div class="wizard-layout centered-layout">
+        <!-- Form Side (Now Centered container) -->
+        <div class="form-side">
+            <h1 class="page-title">KaLiScore - פניה חדשה</h1>
 
-        <!-- Step 1: Details -->
-        <div class="step-content fade-in" *ngIf="currentStep === 1">
-            <h2>פרטים בסיסיים</h2>
-            <p>בוא נתחיל עם הפרטים על הדירה שאתה מחפש.</p>
+            <div class="wizard-card">
 
-            <div class="form-group">
-                <label>תעודת זהות</label>
-                <input type="text" [(ngModel)]="requestData.idNumber" placeholder="מספר תעודת זהות תקין (9 ספרות)">
-            </div>
+                <!-- Result Step (Full Width) -->
+                <div class="step-content result fade-in" *ngIf="currentStep === 4">
+                    <h2>הדירוג שלך מוכן!</h2>
 
-            <div class="form-group relative">
-                <label>יישובים מבוקשים (ניתן לבחור כמה)</label>
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-value">{{finalScore | number:'1.0-1'}}</span>
+                            <span class="score-label">ציון אמינות</span>
+                        </div>
+                    </div>
 
-                <div class="city-chips">
-                    <div class="chip" *ngFor="let city of requestData.cities">
-                        {{city}}
-                        <span class="remove" (click)="removeCity(city)">×</span>
+                    <p class="score-desc">עבור שכ"ד {{ requestData.desiredRent | number }} ₪</p>
+
+                    <div class="distribution-graph-container">
+                        <h3>איפה אתה ביחס לאחרים?</h3>
+                        <div class="graph-wrapper">
+                            <div class="y-axis-label">כמות אנשים</div>
+                            <div class="distribution-graph">
+                                <div class="bar-wrapper" *ngFor="let bar of distributionBars">
+                                    <div class="label-you" *ngIf="bar.isUser">אתה כאן!</div>
+                                    <div class="bar" [style.height.%]="bar.height" [class.highlight]="bar.isUser"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="x-axis">
+                            <span class="range-val">0</span>
+                            <span class="x-label-text">ציון אמינות</span>
+                            <span class="range-val">100</span>
+                        </div>
+                        <p class="graph-note">הציון שלך גבוה מ-{{ userPercentile }}% מהמחפשים בתקציב זה.</p>
+                    </div>
+
+                    <div class="slider-box">
+                        <h4>רוצה לשפר ל-{{ sliderValue }}?</h4>
+                        <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
+                            (input)="updateRentCalculation()">
+                        <p>תקציב מומלץ: <strong>{{ calculatedRent | number }} ₪</strong></p>
+                    </div>
+
+                    <div class="notification-actions">
+                        <button class="btn-outline" (click)="sendSms()">📱 SMS</button>
+                        <button class="btn-outline" (click)="sendEmail()">📧 מייל</button>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn-primary full-width" (click)="finish()">סיום וחזרה</button>
                     </div>
                 </div>
 
-                <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()" placeholder="הקלד שם ישוב..."
-                    [disabled]="requestData.cities.length >= 5">
+                <!-- Wizard Steps (Columns Layout) -->
+                <div class="wizard-columns" *ngIf="currentStep !== 4">
+                    <!-- Wheel / Visual Column -->
+                    <div class="wheel-column">
+                        <!-- Wheel for Steps 1, 2 -->
+                        <div class="wheel-wrapper-inline" *ngIf="currentStep !== 3">
+                            <app-wheel [percent]="calculateProgress()" [statusText]="getProgressText()" size="small">
+                            </app-wheel>
+                        </div>
 
-                <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
-                    <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
-                        {{city}}
+                        <!-- Cube for Step 3 (Processing) -->
+                        <div class="cube-wrapper-inline" *ngIf="currentStep === 3">
+                            <app-three-cube mode="loading"></app-three-cube>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="form-group">
-                <label>שכר דירה רצוי (₪)</label>
-                <input type="number" [(ngModel)]="requestData.desiredRent" placeholder="לדוגמה: 6000">
-            </div>
+                    <!-- Content Column -->
+                    <div class="content-column">
 
-            <div class="actions">
-                <button class="btn-secondary" routerLink="/tenant/dashboard">ביטול</button>
-                <button class="btn-primary" (click)="nextStep()"
-                    [disabled]="requestData.cities.length === 0 || !requestData.desiredRent || !requestData.idNumber">
-                    המשך
-                </button>
-            </div>
-        </div>
+                        <!-- Step 1: Details -->
+                        <div class="step-content fade-in" *ngIf="currentStep === 1">
+                            <h2>פרטים בסיסיים</h2>
+                            <p>בוא נתחיל עם הפרטים על הדירה שאתה מחפש.</p>
 
-        <!-- Step 2: Upload -->
-        <div class="step-content fade-in" *ngIf="currentStep === 2">
-            <h2>העלאת מסמכים</h2>
-            <p>{{ spouseFilesRequested ? 'העלה 3 תלושים של בן/בת הזוג' : 'העלה 3 תלושי שכר אחרונים ותדפיס עו"ש.' }}</p>
+                            <div class="form-group">
+                                <label>תעודת זהות</label>
+                                <input type="text" [(ngModel)]="requestData.idNumber"
+                                    placeholder="מספר תעודת זהות תקין (9 ספרות)">
+                            </div>
 
-            <!-- Spouse Prompt Modal/Card -->
-            <div class="spouse-promo" *ngIf="askSpouse"
-                style="background: rgba(108, 92, 231, 0.1); border: 2px solid var(--primary-color); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; animation: fadeIn 0.3s;">
-                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">🎉 העלית 3 תלושים בהצלחה!</h3>
-                <p style="margin-bottom: 1rem;">האם תרצה להעלות גם את התלושים של בן/בת הזוג? <br> הוספת הכנסה נוספת
-                    יכולה לשפר משמעותית את הדירוג שלך!</p>
-                <div style="display: flex; gap: 1rem; justify-content: center;">
-                    <button class="btn-primary" (click)="acceptSpouseUpload()">כן, אני רוצה</button>
-                    <button class="btn-secondary" (click)="declineSpouseUpload()">לא, תודה</button>
-                </div>
-            </div>
+                            <div class="form-group relative">
+                                <label>יישובים מבוקשים</label>
+                                <div class="city-chips">
+                                    <div class="chip" *ngFor="let city of requestData.cities">
+                                        {{city}} <span class="remove" (click)="removeCity(city)">×</span>
+                                    </div>
+                                </div>
+                                <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()"
+                                    placeholder="הקלד שם ישוב..." [disabled]="requestData.cities.length >= 5">
+                                <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
+                                    <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
+                                        {{city}}
+                                    </div>
+                                </div>
+                            </div>
 
-            <div class="privacy-note">
-                🔒 <strong>פרטיות מעל לכל:</strong> המסמכים משמשים לחישוב הדירוג בלבד אינם נשמרים בשרת לאחר העיבוד.
-            </div>
+                            <div class="form-group">
+                                <label>שכר דירה רצוי (₪)</label>
+                                <input type="number" [(ngModel)]="requestData.desiredRent" placeholder="לדוגמה: 6000">
+                            </div>
 
-            <div class="upload-zone" (click)="fileInput.click()">
-                <input #fileInput type="file" multiple style="display: none" (change)="onFileSelected($event)">
-                <div class="icon">📂</div>
-                <p>לחץ כאן לבחירת קבצים</p>
-                <div class="file-list" *ngFor="let file of uploadedFiles; let i = index">
-                    <span style="flex: 1;">{{file.name}}</span>
-                    <span style="color: #ff7675; cursor: pointer; font-weight: bold; margin-left: 10px;"
-                        (click)="removeFile(i); $event.stopPropagation()">✕</span>
-                </div>
-            </div>
+                            <div class="actions">
+                                <button class="btn-secondary" routerLink="/tenant/dashboard">ביטול</button>
+                                <button class="btn-primary" (click)="nextStep()"
+                                    [disabled]="requestData.cities.length === 0 || !requestData.desiredRent || !requestData.idNumber">
+                                    המשך
+                                </button>
+                            </div>
+                        </div>
 
-            <div class="actions">
-                <button class="btn-secondary" (click)="prevStep()">חזור</button>
-                <button class="btn-primary" (click)="nextStep()" [disabled]="uploadedFiles.length === 0">נתח
-                    מסמכים</button>
-            </div>
-        </div>
+                        <!-- Step 2: Upload -->
+                        <div class="step-content fade-in" *ngIf="currentStep === 2">
+                            <h2>העלאת מסמכים</h2>
+                            <p>{{ spouseFilesRequested ? 'העלה 3 תלושים של בן/בת הזוג' : 'העלה 3 תלושי שכר אחרונים
+                                ותדפיס עו"ש.' }}</p>
 
-        <!-- Step 3: Processing -->
-        <div class="step-content processing" *ngIf="currentStep === 3">
-            <div class="scanner-animation">
-                <div class="scan-line"></div>
-                <div class="doc-icon">📄</div>
-            </div>
-            <h2>מנתח נתונים...</h2>
-            <p>ה-AI שלנו סורק את המסמכים שלך ומחשב דירוג.</p>
-        </div>
+                            <div class="spouse-promo" *ngIf="askSpouse">
+                                <h3>🎉 כל הכבוד!</h3>
+                                <p>העלית 3 מסמכים. רוצה להעלות גם את של בן/בת הזוג לשיפור הדירוג?</p>
+                                <div class="promo-actions">
+                                    <button class="btn-primary small" (click)="acceptSpouseUpload()">כן, הוסף</button>
+                                    <button class="btn-secondary small" (click)="declineSpouseUpload()">לא,
+                                        תודה</button>
+                                </div>
+                            </div>
 
-        <!-- Step 4: Result -->
-        <div class="step-content result fade-in" *ngIf="currentStep === 4">
-            <h2>הדירוג שלך מוכן!</h2>
+                            <div class="upload-zone" (click)="fileInput.click()">
+                                <input #fileInput type="file" multiple style="display: none"
+                                    (change)="onFileSelected($event)">
+                                <div class="icon">📂</div>
+                                <p>לחץ לבחירת קבצים</p>
+                                <div class="files-preview">
+                                    <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+                                        {{file.name}} <span class="remove"
+                                            (click)="removeFile(i); $event.stopPropagation()">✕</span>
+                                    </div>
+                                </div>
+                            </div>
 
-            <div class="score-display">
-                <div class="score-circle">
-                    <span class="score-value">{{finalScore | number:'1.0-1'}}</span>
-                    <span class="score-label">ציון אמינות</span>
-                </div>
-            </div>
+                            <div class="actions">
+                                <button class="btn-secondary" (click)="prevStep()">חזור</button>
+                                <button class="btn-primary" (click)="nextStep()"
+                                    [disabled]="uploadedFiles.length === 0">
+                                    נתח מסמכים
+                                </button>
+                            </div>
+                        </div>
 
-            <p class="score-desc">
-                עבור שכ"ד {{ requestData.desiredRent | number }} ₪, הציון שלך הוא {{ finalScore | number:'1.0-1' }}
-            </p>
+                        <!-- Step 3: Processing -->
+                        <div class="step-content processing" *ngIf="currentStep === 3">
+                            <h2>מנתח נתונים...</h2>
+                            <p>ה-AI שלנו סורק את המסמכים ואת ההיסטוריה הפיננסית.</p>
 
-            <!-- Dynamic Slider Section -->
-            <div class="slider-container"
-                style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                <h4>מה צריך לקרות כדי להגיע לציון {{ sliderValue }}?</h4>
-                <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
-                    (input)="updateRentCalculation()" style="width: 100%;">
+                            <div class="scanner-animation">
+                                <div class="doc-icon">📄</div>
+                                <div class="scan-line"></div>
+                            </div>
 
-                <p style="margin-top: 10px; font-weight: bold; color: #0078d4;">
-                    כדי לקבל ציון <span style="font-size: 1.2em;">{{ sliderValue }}</span>, עליך לבקש שכירות של עד:
-                    <br>
-                    <span style="font-size: 1.5em;">{{ calculatedRent | number }} ₪</span>
-                </p>
-            </div>
-
-            <div class="distribution-graph-container">
-                <h3>אתה באחוזון ה-{{ (finalScore / 1000) * 100 | number:'1.0-0' }} מבין המשתמשים בארץ</h3>
-                <div class="distribution-graph">
-                    <div class="bar-wrapper" *ngFor="let bar of percentileBars; let i = index">
-                        <div class="label-you" *ngIf="i === userPercentileIndex">בדיוק כאן</div>
-                        <div class="bar" [class.highlight]="i === userPercentileIndex"
-                            [style.height.%]="(bar / percentileBars[percentileBars.length-1]) * 100">
+                            <p class="status-blink">מבצע הצלבת נתונים...</p>
                         </div>
                     </div>
                 </div>
-                <p class="graph-note">מותאם ליוקר המחייה בישראל</p>
+
             </div>
-
-            <div class="notification-actions">
-                <button class="btn-outline" (click)="sendSms()">
-                    📱 שלח לי SMS
-                </button>
-                <button class="btn-outline" (click)="sendEmail()">
-                    📧 שלח לי למייל
-                </button>
-            </div>
-
-            <div class="actions">
-                <button class="btn-primary full-width" (click)="finish()">חזור לאיזור האישי</button>
-            </div>
-        </div>
-    </div>
-    <!-- Debug Modal -->
-    <div class="debug-modal-overlay" *ngIf="showDebugModal">
-        <div class="debug-modal">
-            <h3>🔍 נתוני סריקה (Debug)</h3>
-            <p>התקבלו הנתונים הבאים ממערכת ה-OCR:</p>
-            <ul>
-                <li><strong>הכנסה נטו:</strong> {{ debugOcrData?.netIncome | number }} ₪</li>
-                <li><strong>מספר ילדים:</strong> {{ debugOcrData?.numChildren }}</li>
-                <li><strong>שנות ותק:</strong> {{ debugOcrData?.seniorityYears }}</li>
-                <li><strong>קופת פנסיה:</strong> {{ debugOcrData?.pensionGrossAmount | number }} ₪</li>
-                <li><strong>נשוי/אה:</strong> {{ debugOcrData?.isMarried ? 'כן' : 'לא' }}</li>
-            </ul>
-
-            <details style="margin-bottom: 1rem;">
-                <summary style="cursor:pointer; color: #fab1a0;">הצג JSON מלא (Raw Data)</summary>
-                <div
-                    style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 5px; max-height: 200px; overflow: auto; text-align: left; direction: ltr;">
-                    <pre style="margin: 0; font-size: 0.8rem; white-space: pre-wrap;">{{ debugOcrData | json }}</pre>
-                </div>
-            </details>
-
-            <button class="btn-primary" (click)="showDebugModal = false">סגור והמשך לתוצאות</button>
         </div>
     </div>
 </div>

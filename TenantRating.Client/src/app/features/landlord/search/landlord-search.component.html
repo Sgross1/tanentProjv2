@@ -29,8 +29,8 @@
     </div>
 
     <div class="loading" *ngIf="isLoading">
-        <div class="spinner"></div>
-        מחפש דיירים מתאימים...
+        <app-wheel [percent]="0" statusText="מחפש..." size="mini"></app-wheel>
+        <p style="margin-top: 1rem;">סורק את מאגר הדיירים...</p>
     </div>
 
     <div class="results-grid" *ngIf="!isLoading && results.length > 0">

@@ -16,14 +16,26 @@ export class AppComponent {
     showAuthModal = false;
     activeDropdown: string | null = null;
 
+    isMenuOpen = false;
+
     constructor(public authService: AuthService) { }
 
     openAuth() {
         this.showAuthModal = true;
+        this.closeMenu(); // Close menu if auth opens
     }
 
     closeAuth() {
         this.showAuthModal = false;
+    }
+
+    toggleMenu() {
+        this.isMenuOpen = !this.isMenuOpen;
+    }
+
+    closeMenu() {
+        this.isMenuOpen = false;
+        this.activeDropdown = null; // Also close dropdowns
     }
 
     toggleDropdown(menuName: string) {
