@@ -21,6 +21,7 @@ const routes: Routes = [
     { path: 'tenant/wizard', component: TenantWizardComponent, canActivate: [authGuard] },
     { path: 'landlord/search', component: LandlordSearchComponent, canActivate: [] },
     { path: 'admin', component: AdminDashboardComponent, canActivate: [adminGuard] },
+    { path: 'reset-password', loadComponent: () => import('./features/auth/reset-password.component').then(m => m.ResetPasswordComponent) },
     { path: '**', redirectTo: '' }
 ];
 

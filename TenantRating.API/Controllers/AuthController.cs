@@ -63,4 +63,38 @@ public class AuthController : ControllerBase
             FirstName = user?.FirstName ?? "User"
         };
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+    {
+        Console.WriteLine($"[DEBUG] Received forgot password request for: {dto.Email}");
+        var token = await _authService.GeneratePasswordResetToken(dto.Email);
+        
+        if (token != null)
+        {
+            var resetLink = $"http://localhost:4200/reset-password?token={token}";
+            
+            Console.WriteLine("=================================================");
+            Console.WriteLine($"[EMAIL SIMULATION] To: {dto.Email}");
+            Console.WriteLine($"[EMAIL SIMULATION] Subject: Password Reset Request");
+            Console.WriteLine($"[EMAIL SIMULATION] Body: Click here to reset: {resetLink}");
+            Console.WriteLine($"[EMAIL SIMULATION] Token Code: {token}");
+            Console.WriteLine("=================================================");
+        }
+        else
+        {
+             Console.WriteLine($"[DEBUG] User not found for email: {dto.Email}");
+        }
+
+        return Ok(new { message = "If the email exists, a reset link has been sent." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+    {
+        var success = await _authService.ResetPassword(dto.Token, dto.NewPassword);
+        if (!success) return BadRequest("Invalid or expired token.");
+
+        return Ok(new { message = "Password has been reset successfully." });
+    }
 }

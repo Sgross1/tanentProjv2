@@ -57,6 +57,12 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.EnsureCreated();
+    
+    // --- Manual Schema Update (Safe) ---
+    try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetToken TEXT NULL"); } catch { }
+    try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetTokenExpiration TEXT NULL"); } catch { }
+    // -----------------------------------
+
     await DataSeeder.SeedAsync(context);
 }
 

@@ -35,6 +35,9 @@ public class User
     
     public DateTime DateJoined { get; set; } = DateTime.UtcNow;
 
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpiration { get; set; }
+
     [InverseProperty("User")]
     public List<Request> Requests { get; set; } = new();
     
