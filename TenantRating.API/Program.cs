@@ -71,7 +71,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseSwagger();
+app.UseSwaggerUI();
 // app.UseHttpsRedirection(); // Disabled for local dev stability
 app.UseCors("AllowAngular");
 
