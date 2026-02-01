@@ -15,6 +15,8 @@ public interface IAuthService
     Task<string?> Login(string email, string password);
     Task<User?> GetUser(string email);
     Task<bool> UserExists(string email);
+    Task<string?> GeneratePasswordResetToken(string email);
+    Task<bool> ResetPassword(string token, string newPassword);
 }
 
 public class AuthService : IAuthService
@@ -82,6 +84,42 @@ public class AuthService : IAuthService
     public async Task<bool> UserExists(string email)
     {
         return await _context.Users.AnyAsync(x => x.Email == email);
+    }
+
+    public async Task<string?> GeneratePasswordResetToken(string email)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user == null) return null;
+
+        // Generate simple 6-digit code for "Mock" simulation ease
+        // In real life, could be a Guid or cryptographically secure string
+        var token = new Random().Next(100000, 999999).ToString();
+
+        user.ResetToken = token;
+        user.ResetTokenExpiration = DateTime.UtcNow.AddMinutes(15); // Valid for 15 mins
+
+        await _context.SaveChangesAsync();
+        return token;
+    }
+
+    public async Task<bool> ResetPassword(string token, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.ResetToken == token);
+        
+        if (user == null) return false;
+        if (user.ResetTokenExpiration < DateTime.UtcNow) return false; // Expired
+
+        CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
+
+        user.PasswordHash = passwordHash;
+        user.PasswordSalt = passwordSalt;
+        
+        // Clear token
+        user.ResetToken = null;
+        user.ResetTokenExpiration = null;
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)

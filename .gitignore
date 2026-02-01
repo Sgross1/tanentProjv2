@@ -23,3 +23,9 @@ Thumbs.db
 
 # Secrets
 secrets.bat
+
+# Database
+*.db
+
+# Database
+*.db

@@ -3,15 +3,17 @@
         <button class="close-btn" (click)="close()">✕</button>
 
         <div class="modal-header">
-            <h2 *ngIf="isLogin">ברוכים הבאים</h2>
-            <h2 *ngIf="!isLogin">צור חשבון חדש</h2>
-            <p>המערכת הבטוחה לניהול שכירויות</p>
+            <h2 *ngIf="isForgot">שחזור סיסמה</h2>
+            <h2 *ngIf="isLogin && !isForgot">ברוכים הבאים</h2>
+            <h2 *ngIf="!isLogin && !isForgot">צור חשבון חדש</h2>
+            <p *ngIf="!isForgot">המערכת הבטוחה לניהול שכירויות</p>
+            <p *ngIf="isForgot">אנא הזן את האימייל שלך לקבלת קישור לאיפוס</p>
         </div>
 
         <form [formGroup]="authForm" (ngSubmit)="onSubmit()">
 
             <!-- Register Fields -->
-            <div class="form-group-row" *ngIf="!isLogin">
+            <div class="form-group-row" *ngIf="!isLogin && !isForgot">
                 <div class="input-group">
                     <input type="text" formControlName="firstName" placeholder="שם פרטי">
                 </div>
@@ -24,16 +26,16 @@
                 <input type="email" formControlName="email" placeholder="כתובת אימייל">
             </div>
 
-            <div class="input-group">
+            <div class="input-group" *ngIf="!isForgot">
                 <input type="password" formControlName="password" placeholder="סיסמה">
             </div>
 
-            <div class="input-group" *ngIf="!isLogin">
+            <div class="input-group" *ngIf="!isLogin && !isForgot">
                 <input type="tel" formControlName="phoneNumber" placeholder="מספר טלפון">
             </div>
 
             <!-- Role Selection (Register Only) -->
-            <div class="role-selector" *ngIf="!isLogin">
+            <div class="role-selector" *ngIf="!isLogin && !isForgot">
                 <label>
                     <input type="radio" formControlName="role" value="Tenant">
                     <div class="role-card">
@@ -50,17 +52,26 @@
                 </label>
             </div>
 
-            <button type="submit" class="btn-premium submit-btn" [disabled]="authForm.invalid || isLoading">
-                <span *ngIf="!isLoading">{{ isLogin ? 'התחבר' : 'הרשמה מהירה' }}</span>
+            <button type="submit" class="btn-premium submit-btn" [disabled]="isLoading">
+                <span *ngIf="isForgot && !isLoading">שלח קישור ליפוס</span>
+                <span *ngIf="isLogin && !isForgot && !isLoading">התחבר</span>
+                <span *ngIf="!isLogin && !isForgot && !isLoading">הרשמה מהירה</span>
                 <span *ngIf="isLoading" class="loader">...</span>
             </button>
         </form>
 
         <div class="modal-footer">
-            <p *ngIf="isLogin">
+            <p *ngIf="isLogin && !isForgot">
+                שכחת סיסמה? <a (click)="toggleForgot()">לחץ כאן</a>
+            </p>
+            <p *ngIf="isForgot">
+                נזכרת בסיסמה? <a (click)="toggleForgot()">חזרה להתחברות</a>
+            </p>
+
+            <p *ngIf="isLogin && !isForgot">
                 אין לך חשבון? <a (click)="toggleMode()">הירשם עכשיו</a>
             </p>
-            <p *ngIf="!isLogin">
+            <p *ngIf="!isLogin && !isForgot">
                 כבר רשום? <a (click)="toggleMode()">התחבר</a>
             </p>
         </div>
