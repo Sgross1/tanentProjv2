@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { RequestService } from '../../../core/services/request.service';
 import { CitiesService } from "../../../core/services/cities.service";
+import { ThreeCubeComponent } from '../../../shared/components/three-cube/three-cube.component';
+import { WheelComponent } from '../../../shared/components/wheel/wheel.component';
 
 @Component({
   selector: 'app-tenant-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ThreeCubeComponent, WheelComponent],
   templateUrl: './tenant-wizard.component.html',
   styleUrls: ['./tenant-wizard.component.scss']
 })
@@ -46,8 +48,8 @@ export class TenantWizardComponent {
   showDebugModal = false;
 
   // Graph Data
-  percentileBars: number[] = [];
-  userPercentileIndex = -1;
+  distributionBars: { height: number, isUser: boolean }[] = [];
+  userPercentile = 0;
 
   constructor(
     private router: Router,
@@ -169,7 +171,7 @@ export class TenantWizardComponent {
       next: (ocrResult) => {
         // Debug Phase: Show result
         this.debugOcrData = ocrResult;
-        this.showDebugModal = true;
+        // this.showDebugModal = true; // Removed to prevent popup
 
         // 2. Create the request in the backend with analyzed data AND user inputs
         const requestDto = {
@@ -265,20 +267,35 @@ export class TenantWizardComponent {
 
   generatePercentileGraph(score: number) {
     // Generate a mock distribution (bell curve-ish)
-    const bars = [];
-    for (let i = 0; i < 50; i++) {
-      // Create a curve that rises sharply at the end (like the example provided by user)
-      // The example graph is exponential.
-      const value = Math.pow(1.15, i);
-      bars.push(value);
-    }
-    this.percentileBars = bars;
+    const bars: { height: number, isUser: boolean }[] = [];
 
     // Calculate where the user sits (0 to 49)
     // Assuming score range 0-1000. 
     // Map 0-1000 to 0-49 index.
-    const index = Math.floor((score / 1000) * 50);
-    this.userPercentileIndex = Math.min(Math.max(index, 0), 49);
+    const userIndex = Math.min(Math.max(Math.floor((score / 1000) * 50), 0), 49);
+
+    // Calculate strict percentile based on score (mock logic: score/10)
+    // Real logic would require backend stats.
+    this.userPercentile = Math.min(99, Math.round(score / 10));
+
+    for (let i = 0; i < 50; i++) {
+      // Create a bell curve shape
+      // Center at 25 (50/2)
+      const x = i - 25;
+      // Gaussian function: e^(-x^2 / (2*sigma^2))
+      // sigma = 10
+      const height = Math.exp(-(x * x) / (2 * 100)) * 100;
+
+      // Add some localized randomness
+      const randomHeight = height * (0.8 + Math.random() * 0.4);
+
+      bars.push({
+        height: Math.max(5, randomHeight), // Min height 5%
+        isUser: i === userIndex
+      });
+    }
+
+    this.distributionBars = bars;
   }
 
   finish() {
@@ -297,5 +314,41 @@ export class TenantWizardComponent {
     this.requestService.sendEmail(this.createdRequestId).subscribe(() => {
       alert('הודעת אימייל נשלחה בהצלחה!');
     });
+  }
+
+  // --- Wheel Progress Logic ---
+  calculateProgress(): number {
+    let progress = 0;
+
+    // Step 1: 50% max
+    if (this.currentStep >= 1) {
+      let step1Points = 0;
+      if (this.requestData.idNumber && this.requestData.idNumber.length >= 8) step1Points += 15;
+      if (this.requestData.cities.length > 0) step1Points += 15;
+      if (this.requestData.desiredRent) step1Points += 20;
+
+      progress = step1Points;
+    }
+
+    // Step 2: 50% -> 100%
+    if (this.currentStep >= 2) {
+      progress = 50;
+      if (this.uploadedFiles.length > 0) {
+        progress += (this.uploadedFiles.length / 3) * 50;
+        if (progress > 100) progress = 100;
+      }
+    }
+
+    if (this.currentStep >= 3) return 100;
+
+    return Math.round(progress);
+  }
+
+  getProgressText(): string {
+    if (this.currentStep === 1) return 'הזנת פרטים';
+    if (this.currentStep === 2) return 'העלאת מסמכים';
+    if (this.currentStep === 3) return 'מעבד נתונים';
+    if (this.currentStep === 4) return 'הושלם';
+    return '';
   }
 }

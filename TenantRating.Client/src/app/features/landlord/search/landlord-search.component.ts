@@ -9,10 +9,12 @@ import {
 import { CitiesService } from "../../../core/services/cities.service";
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from "rxjs";
 
+import { WheelComponent } from "../../../shared/components/wheel/wheel.component";
+
 @Component({
   selector: "app-landlord-search",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WheelComponent],
   templateUrl: "./landlord-search.component.html",
   styleUrls: ["./landlord-search.component.scss"],
 })
@@ -35,7 +37,7 @@ export class LandlordSearchComponent implements OnInit {
     private landlordService: LandlordService,
     private router: Router,
     private citiesService: CitiesService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Load cities from MyGov API on component init
