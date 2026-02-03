@@ -61,7 +61,7 @@ public class LandlordsController : ControllerBase
                 r.DesiredRent,
                 r.CityName,
                 DateOfRating = r.DateCreated,
-                PhoneNumber = r.User.PhoneNumber
+                PhoneNumber = r.User != null ? r.User.PhoneNumber : ""
             })
             .ToListAsync();
             
@@ -132,10 +132,10 @@ public class LandlordsController : ControllerBase
             .Select(sr => new 
             {
                 sr.Request.RequestId,
-                TenantName = sr.Request.User.FirstName + " " + sr.Request.User.LastName, 
+                TenantName = $"{sr.Request.User!.FirstName} {sr.Request.User!.LastName}", 
                 sr.Request.CityName,
                 sr.Request.FinalScore,
-                PhoneNumber = sr.Request.User.PhoneNumber,
+                PhoneNumber = sr.Request.User!.PhoneNumber,
                 sr.Request.DesiredRent,
                 sr.Request.DateCreated
             })

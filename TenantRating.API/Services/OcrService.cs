@@ -162,9 +162,9 @@ public class OcrService : IOcrService
             return true;
         }
         
-        if (field.Type == DocumentFieldType.Double)
+        if (field.Type == DocumentFieldType.Double && field.ValueDouble.HasValue)
         {
-            value = (decimal)field.ValueDouble;
+            value = (decimal)field.ValueDouble.Value;
             return true;
         }
         
