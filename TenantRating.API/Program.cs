@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using TenantRating.API.Data;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -59,8 +60,9 @@ using (var scope = app.Services.CreateScope())
     context.Database.EnsureCreated();
     
     // --- Manual Schema Update (Safe) ---
-    try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetToken TEXT NULL"); } catch { }
-    try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetTokenExpiration TEXT NULL"); } catch { }
+    // Removed: Columns already exist in DB
+    // try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetToken TEXT NULL"); } catch { }
+    // try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetTokenExpiration TEXT NULL"); } catch { }
     // -----------------------------------
 
     await DataSeeder.SeedAsync(context);
@@ -71,8 +73,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseSwagger();
-app.UseSwaggerUI();
+
 // app.UseHttpsRedirection(); // Disabled for local dev stability
 app.UseCors("AllowAngular");
 

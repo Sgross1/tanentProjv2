@@ -54,11 +54,7 @@ export class TenantWizardComponent {
   constructor(
     private router: Router,
     private requestService: RequestService,
-<<<<<<< HEAD
     private citiesService: CitiesService,
-=======
-    private citiesService: CitiesService
->>>>>>> 0b1c7cd (Feature: Landlord ID Verification & Dashboard Fixes. Restore MyGov Cities.)
   ) { }
 
   ngOnInit() {

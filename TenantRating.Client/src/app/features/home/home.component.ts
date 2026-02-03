@@ -1,19 +1,25 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { AppComponent } from '../../app.component';
-import { ThreeCubeComponent } from '../../shared/components/three-cube/three-cube.component';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  HostListener,
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { Router } from "@angular/router";
+import { AuthService } from "../../core/services/auth.service";
+import { AppComponent } from "../../app.component";
+import { ThreeCubeComponent } from "../../shared/components/three-cube/three-cube.component";
 
 @Component({
-  selector: 'app-home',
+  selector: "app-home",
   standalone: true,
   imports: [CommonModule, ThreeCubeComponent],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  templateUrl: "./home.component.html",
+  styleUrls: ["./home.component.scss"],
 })
 export class HomeComponent implements AfterViewInit {
-  @ViewChild('scrollSection') scrollSection!: ElementRef;
+  @ViewChild("scrollSection") scrollSection!: ElementRef;
 
   curveProgress = 0; // 0 to 100
   showContent = false;
@@ -21,15 +27,15 @@ export class HomeComponent implements AfterViewInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private appComponent: AppComponent
-  ) { }
+    private appComponent: AppComponent,
+  ) {}
 
   ngAfterViewInit() {
     this.onWindowScroll(); // Initial check
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onWindowScroll() {
+  @HostListener("window:scroll", ["$event"])
+  onWindowScroll(event?: Event) {
     if (!this.scrollSection) return;
 
     const rect = this.scrollSection.nativeElement.getBoundingClientRect();
@@ -56,7 +62,7 @@ export class HomeComponent implements AfterViewInit {
     }
   }
 
-  handleRoleClick(role: 'Tenant' | 'Landlord') {
+  handleRoleClick(role: "Tenant" | "Landlord") {
     const currentUser = this.authService.getCurrentUserValue();
 
     if (!currentUser) {
@@ -64,10 +70,10 @@ export class HomeComponent implements AfterViewInit {
       return;
     }
 
-    if (role === 'Tenant') {
-      this.router.navigate(['/tenant/wizard']);
-    } else if (role === 'Landlord') {
-      this.router.navigate(['/landlord/search']);
+    if (role === "Tenant") {
+      this.router.navigate(["/tenant/wizard"]);
+    } else if (role === "Landlord") {
+      this.router.navigate(["/landlord/search"]);
     }
   }
 }
