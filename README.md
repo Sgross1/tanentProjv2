@@ -83,5 +83,5 @@ The system follows a **Layered Architecture (N-Tier)**:
 
 ## 👨‍💻 Author
 
-Developed by **Shlomם Gross** and **Azriel Roitman** as a Final Project (Mahat).
+Developed by **Shlomo Gross** and **Azriel Roitman** as a Final Project (Mahat).
 For inquiries: [GitHub Profile](https://github.com/Sgross1)
