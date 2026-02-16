@@ -190,6 +190,10 @@ export class TenantWizardComponent implements OnInit {
 
     this.requestService.analyzePayslip(this.uploadedFiles).subscribe({
       next: (ocrResult) => {
+        // Debug Phase: Show result
+        this.debugOcrData = ocrResult;
+        // this.showDebugModal = true; // Optional: show debug modal if needed
+
         const requestDto = {
           ...ocrResult,
           desiredRent: this.requestData.desiredRent!,
@@ -217,10 +221,25 @@ export class TenantWizardComponent implements OnInit {
 
   private handleError(err: any, defaultMsg: string) {
     this.isProcessing = false;
-    const errorMessage =
-      err.error?.title || err.error || err.message || defaultMsg;
-    alert(`אירעה שגיאה: ${JSON.stringify(errorMessage)}`);
-    this.currentStep = 2;
+    let errorMessage = defaultMsg;
+    if (err.error instanceof ProgressEvent) {
+      errorMessage = "שגיאת תקשורת עם השרת (האם השרת דולק?)";
+    } else {
+      errorMessage =
+        err.error?.title ||
+        err.error ||
+        err.message ||
+        JSON.stringify(err) ||
+        defaultMsg;
+    }
+
+    // Handle object error message
+    if (typeof errorMessage === "object") {
+      errorMessage = JSON.stringify(errorMessage);
+    }
+
+    alert(`אירעה שגיאה: ${errorMessage}`);
+    this.currentStep = 2; // Go back
   }
 
   updateRentCalculation() {
