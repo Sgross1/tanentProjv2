@@ -63,6 +63,7 @@ public class RequestsController : ControllerBase
         }
     }
 
+    // ⚠️ FOR TESTING ONLY - Use /submit endpoint from client UI
     [HttpPost]
     public async Task<ActionResult<RequestResultDto>> CreateRequest(CreateRequestDto dto)
     {
@@ -109,6 +110,76 @@ public class RequestsController : ControllerBase
             DateCreated = request.DateCreated,
             MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
         };
+    }
+
+    // ✅ SECURE ENDPOINT - For production client UI
+    [HttpPost("submit")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<RequestResultDto>> SubmitRequest(
+        [FromForm] List<IFormFile> files,
+        [FromForm] string idNumber,
+        [FromForm] decimal desiredRent,
+        [FromForm] string cityName)
+    {
+        if (files == null || (files.Count != 3 && files.Count != 6))
+        {
+            return BadRequest("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+        }
+
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+        try
+        {
+            // Extract data from files (server-side OCR)
+            var extracted = await _ocrService.AnalyzePayslipsAsync(files);
+
+            // Verify ID match between user input and extracted IDs
+            var inputId = idNumber?.Trim().Replace("-", "").Replace(" ", "");
+            var extractedIds = extracted.IdNumbers.Select(id => id.Trim().Replace("-", "").Replace(" ", "")).ToList();
+
+            if (string.IsNullOrEmpty(inputId) || !extractedIds.Contains(inputId))
+            {
+                return BadRequest("מספר הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
+            }
+
+            // Create request entity
+            var request = new Request
+            {
+                UserId = userId,
+                DesiredRent = desiredRent,
+                CityName = cityName,
+                TenantIdNumbers = string.Join(",", extracted.IdNumbers),
+                DateCreated = DateTime.UtcNow
+            };
+
+            // Calculate score using extracted data (not from client!)
+            _scoringService.CalculateScoreForRequest(
+                request,
+                extracted.NetIncome,
+                extracted.NumChildren,
+                extracted.IsMarried,
+                extracted.SeniorityYears,
+                extracted.PensionGrossAmount,
+                extracted.PensionDeductionPercent
+            );
+
+            _context.Requests.Add(request);
+            await _context.SaveChangesAsync();
+
+            return new RequestResultDto
+            {
+                RequestId = request.RequestId,
+                FinalScore = request.FinalScore,
+                TempScore = request.TempScore,
+                CityName = request.CityName,
+                DateCreated = request.DateCreated,
+                MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
+            };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"שגיאה בעיבוד הבקשה: {ex.Message}");
+        }
     }
 
     [HttpPost("verify-id")]
