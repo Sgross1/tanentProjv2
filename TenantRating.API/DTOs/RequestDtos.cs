@@ -14,7 +14,6 @@ public class CreateRequestDto
 
     // Input for scoring simulation (mocking the file upload parsing)
     public decimal NetIncome { get; set; }
-    public bool HasMinus { get; set; } // True if payslip has minus/deductions
     public int NumChildren { get; set; }
     public bool IsMarried { get; set; }
     public decimal SeniorityYears { get; set; }

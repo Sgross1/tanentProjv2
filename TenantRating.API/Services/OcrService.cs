@@ -69,11 +69,8 @@ public class OcrService : IOcrService
 
                     // Map Hebrew fields - robust checking
 
-                    // Net Income: "שכר נטו", "נטו לתשלום", "נטו"
-                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField) ||
-                        validFields.TryGetValue("נטו לתשלום", out netIncomeField) ||
-                        validFields.TryGetValue("נטו", out netIncomeField) ||
-                        validFields.TryGetValue("NetIncome", out netIncomeField))
+                    // Net Income: "שכר נטו"
+                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
                     {
                         if (TryGetDecimal(netIncomeField, out var val))
                         {
@@ -93,10 +90,7 @@ public class OcrService : IOcrService
                     }
 
                     // Apply Net Income with minus logic if exists
-                    if (validFields.TryGetValue("שכר נטו", out netIncomeField) ||
-                        validFields.TryGetValue("נטו לתשלום", out netIncomeField) ||
-                        validFields.TryGetValue("נטו", out netIncomeField) ||
-                        validFields.TryGetValue("NetIncome", out netIncomeField))
+                    if (validFields.TryGetValue("שכר נטו", out netIncomeField))
                     {
                         if (TryGetDecimal(netIncomeField, out var val))
                         {
@@ -108,11 +102,9 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // ID Number: "מספר זהות", "ת.ז.", "ID" - allow lower confidence
+                    // ID Number: "מספר זהות"
                     string? extractedId = null;
-                    if (document.Fields.TryGetValue("מספר זהות", out var idField) ||
-                        document.Fields.TryGetValue("ת.ז.", out idField) ||
-                        document.Fields.TryGetValue("ID", out idField))
+                    if (document.Fields.TryGetValue("מספר זהות", out var idField))
                     {
                         var idContent = idField.Content?.Replace(" ", "").Replace("-", "");
                         if (!string.IsNullOrEmpty(idContent) && Regex.IsMatch(idContent, @"^\d{9}$"))
@@ -126,11 +118,9 @@ public class OcrService : IOcrService
                         idMissing = true;
                     }
 
-                    // Children: "ילדים", "מספר ילדים", "Children"
+                    // Children: "מספר ילדים"
                     // Parse as decimal first to safely handle "2.0", then cast to int
-                    if (validFields.TryGetValue("ילדים", out var childrenField) ||
-                        validFields.TryGetValue("מספר ילדים", out childrenField) ||
-                        validFields.TryGetValue("NumChildren", out childrenField))
+                    if (validFields.TryGetValue("מספר ילדים", out var childrenField))
                     {
                         if (TryGetDecimal(childrenField, out var val))
                         {
@@ -139,14 +129,9 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Seniority: "ותק בעבודה", "ותק מוכר", "ותק", "שנות ותק", "וותק"
+                    // Seniority: "וותק"
                     bool seniorityFound = false;
-                    if (validFields.TryGetValue("ותק בעבודה", out var seniorityField) ||
-                        validFields.TryGetValue("ותק מוכר", out seniorityField) ||
-                        validFields.TryGetValue("ותק", out seniorityField) ||
-                        validFields.TryGetValue("וותק", out seniorityField) ||
-                        validFields.TryGetValue("שנות ותק", out seniorityField) ||
-                        validFields.TryGetValue("SeniorityYears", out seniorityField))
+                    if (validFields.TryGetValue("וותק", out var seniorityField))
                     {
                         if (TryGetDecimal(seniorityField, out var val))
                         {
@@ -158,8 +143,7 @@ public class OcrService : IOcrService
                     // If seniority not found, try to calculate from dates
                     if (!seniorityFound)
                     {
-                        if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField) ||
-                            validFields.TryGetValue("תחילת עבודה", out startDateField))
+                        if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField))
                         {
                             if (TryGetDate(startDateField, out var startDate))
                             {
@@ -169,11 +153,9 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Pension: "ברוטו לפנסיה", "פנסיה"
+                    // Pension: "ברוטו לפנסיה"
                     decimal currentGross = 0;
-                    if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField) ||
-                        validFields.TryGetValue("פנסיה", out pensionField) ||
-                        validFields.TryGetValue("PensionGrossAmount", out pensionField))
+                    if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField))
                     {
                         if (TryGetDecimal(pensionField, out var val))
                         {
@@ -193,8 +175,7 @@ public class OcrService : IOcrService
                     }
 
                     // Marital Status: "מצב משפחתי"
-                    if ((validFields.TryGetValue("מצב משפחתי", out var maritalField) ||
-                         validFields.TryGetValue("MaritalStatus", out maritalField)) && maritalField != null)
+                    if (validFields.TryGetValue("מצב משפחתי", out var maritalField) && maritalField != null)
                     {
                         var maritalContent = maritalField.Content;
                         if (!string.IsNullOrEmpty(maritalContent))
@@ -214,10 +195,8 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Pay Date: "חודש ושנה", "תאריך"
-                    if (validFields.TryGetValue("חודש ושנה", out var dateField) ||
-                        validFields.TryGetValue("תאריך", out dateField) ||
-                        validFields.TryGetValue("PayDate", out dateField))
+                    // Pay Date: "חודש ושנה"
+                    if (validFields.TryGetValue("חודש ושנה", out var dateField))
                     {
                         if (TryGetDate(dateField, out var payDate))
                         {
@@ -283,14 +262,11 @@ public class OcrService : IOcrService
         }
 
         // Calculation Logic
-        // If HasMinus, we need to apply minus logic during calculation
-        // For now, if hasMinus is true, we flag it in the DTO
         decimal averageMonthlyIncome = countNetIncome > 0 ? totalNetIncome / countNetIncome : 0;
 
         return new CreateRequestDto
         {
             NetIncome = Math.Round(averageMonthlyIncome, 2),
-            HasMinus = hasMinus,
             NumChildren = maxChildren,
             SeniorityYears = Math.Round(maxSeniority, 1),
             PensionGrossAmount = maxPension,
