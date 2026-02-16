@@ -1,78 +1,87 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { BehaviorSubject, Observable, tap } from "rxjs";
 
 export interface RequestResultDto {
-    requestId: number;
-    finalScore: number;
-    tempScore: number;
-    cityName: string;
+  requestId: number;
+  finalScore: number;
+  tempScore: number;
+  cityName: string;
 
-    dateCreated: string;
-    maxAffordableRent?: number;
+  dateCreated: string;
+  maxAffordableRent?: number;
 }
 
 export interface CreateRequestDto {
-    desiredRent: number;
-    cityName: string;
-    netIncome: number;
-    numChildren: number;
-    isMarried: boolean;
-    seniorityYears: number;
-    pensionGrossAmount: number;
-    scoreFormula?: string;
-    calculationDetails?: string[];
-    idNumber: string;
+  desiredRent: number;
+  cityName: string;
+  netIncome: number;
+  numChildren: number;
+  isMarried: boolean;
+  seniorityYears: number;
+  pensionGrossAmount: number;
+  scoreFormula?: string;
+  calculationDetails?: string[];
+  idNumbers: string[];
 }
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: "root",
 })
 export class RequestService {
-    private apiUrl = 'http://localhost:5000/api/requests';
+  private apiUrl = "http://localhost:5000/api/requests";
 
-    private requestsSubject = new BehaviorSubject<RequestResultDto[]>([]);
-    public requests$ = this.requestsSubject.asObservable();
+  private requestsSubject = new BehaviorSubject<RequestResultDto[]>([]);
+  public requests$ = this.requestsSubject.asObservable();
 
-    constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-    createRequest(dto: CreateRequestDto): Observable<RequestResultDto> {
-        return this.http.post<RequestResultDto>(this.apiUrl, dto).pipe(
-            tap(newRequest => {
-                const currentRequests = this.requestsSubject.value;
-                this.requestsSubject.next([...currentRequests, newRequest]);
-            })
-        );
+  createRequest(dto: CreateRequestDto): Observable<RequestResultDto> {
+    return this.http.post<RequestResultDto>(this.apiUrl, dto).pipe(
+      tap((newRequest) => {
+        const currentRequests = this.requestsSubject.value;
+        this.requestsSubject.next([...currentRequests, newRequest]);
+      }),
+    );
+  }
+
+  analyzePayslip(
+    files: File[],
+    desiredRent?: number,
+  ): Observable<CreateRequestDto> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    if (desiredRent) {
+      formData.append("desiredRent", desiredRent.toString());
     }
+    return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
+  }
 
-    analyzePayslip(files: File[], desiredRent?: number): Observable<CreateRequestDto> {
-        const formData = new FormData();
-        files.forEach(file => {
-            formData.append('files', file);
-        });
-        if (desiredRent) {
-            formData.append('desiredRent', desiredRent.toString());
-        }
-        return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
-    }
+  sendSms(requestId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${requestId}/notify-sms`, {});
+  }
 
-    sendSms(requestId: number): Observable<any> {
-        return this.http.post(`${this.apiUrl}/${requestId}/notify-sms`, {});
-    }
+  sendEmail(requestId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${requestId}/notify-email`, {});
+  }
 
-    sendEmail(requestId: number): Observable<any> {
-        return this.http.post(`${this.apiUrl}/${requestId}/notify-email`, {});
-    }
+  verifyTenantId(
+    requestId: number,
+    idNumber: string,
+  ): Observable<{ isMatch: boolean }> {
+    return this.http.post<{ isMatch: boolean }>(`${this.apiUrl}/verify-id`, {
+      requestId,
+      idNumber,
+    });
+  }
 
-    verifyTenantId(requestId: number, idNumber: string): Observable<{ isMatch: boolean }> {
-        return this.http.post<{ isMatch: boolean }>(`${this.apiUrl}/verify-id`, { requestId, idNumber });
-    }
-
-    getMyRequests(): Observable<RequestResultDto[]> {
-        return this.http.get<RequestResultDto[]>(`${this.apiUrl}/my-requests`).pipe(
-            tap(requests => {
-                this.requestsSubject.next(requests);
-            })
-        );
-    }
+  getMyRequests(): Observable<RequestResultDto[]> {
+    return this.http.get<RequestResultDto[]>(`${this.apiUrl}/my-requests`).pipe(
+      tap((requests) => {
+        this.requestsSubject.next(requests);
+      }),
+    );
+  }
 }

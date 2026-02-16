@@ -4,7 +4,6 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using TenantRating.API.Data;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -58,7 +57,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.EnsureCreated();
-    
+
     // --- Manual Schema Update (Safe) ---
     // Removed: Columns already exist in DB
     // try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetToken TEXT NULL"); } catch { }

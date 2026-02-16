@@ -29,12 +29,19 @@ public class AuthController : ControllerBase
             return BadRequest("Invalid Role");
         }
 
+        // בדיקת תקינות מספר פלאפון
+        var phone = dto.PhoneNumber?.Trim().Replace("-", "").Replace(" ", "");
+        if (string.IsNullOrEmpty(phone) || phone.Length != 10 || !phone.All(char.IsDigit) || !phone.StartsWith("05") || phone[2] == '9')
+        {
+            return BadRequest("מספר הפלאפון אינו תקין. יש להזין מספר סלולרי ישראלי תקני (10 ספרות, מתחיל ב-05, הספרה השלישית אינה 9).");
+        }
+
         var user = new User
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber,
+            PhoneNumber = phone,
             Role = role
         };
 

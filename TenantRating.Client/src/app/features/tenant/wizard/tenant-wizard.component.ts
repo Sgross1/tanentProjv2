@@ -1,76 +1,99 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { RequestService } from '../../../core/services/request.service';
+import { Component, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterModule } from "@angular/router";
+import { RequestService } from "../../../core/services/request.service";
 import { CitiesService } from "../../../core/services/cities.service";
-import { ThreeCubeComponent } from '../../../shared/components/three-cube/three-cube.component';
-import { WheelComponent } from '../../../shared/components/wheel/wheel.component';
+import { ThreeCubeComponent } from "../../../shared/components/three-cube/three-cube.component";
+import { WheelComponent } from "../../../shared/components/wheel/wheel.component";
 
 @Component({
-  selector: 'app-tenant-wizard',
+  selector: "app-tenant-wizard",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ThreeCubeComponent, WheelComponent],
-  templateUrl: './tenant-wizard.component.html',
-  styleUrls: ['./tenant-wizard.component.scss']
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ThreeCubeComponent,
+    WheelComponent,
+  ],
+  templateUrl: "./tenant-wizard.component.html",
+  styleUrls: ["./tenant-wizard.component.scss"],
 })
-export class TenantWizardComponent {
+export class TenantWizardComponent implements OnInit {
+  // --- משתני מצב (State) ---
   currentStep = 1;
   isProcessing = false;
+  askSpouse = false;
+  spouseFilesRequested = false;
+  idNumberError: string = "";
 
-  // Step 1 Data
+  // --- נתוני שלב 1 ---
   requestData = {
     cities: [] as string[],
     desiredRent: null as number | null,
-    idNumber: ''
+    idNumbers: [""] as string[],
   };
 
-  // Autocomplete Data
-  citySearchQuery = '';
+  // --- נתוני Autocomplete ---
+  citySearchQuery = "";
   filteredCities: string[] = [];
-  availableCities = [
-    'תל אביב - יפו', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד',
-    'נתניה', 'באר שבע', 'חולון', 'בני ברק', 'רמת גן', 'רחובות', 'אשקלון',
-    'בת ים', 'הרצליה', 'כפר סבא', 'חדרה', 'מודיעין-מכבים-רעות', 'לוד',
-    'רעננה', 'רמלה', 'בית שמש', 'גבעתיים', 'הוד השרון', 'נהריה', 'קריית גת',
-    'עפולה', 'אילת', 'קריית אתא', 'עכו', 'טבריה'
-  ];
+  availableCities: string[] = [];
 
-  // Step 2 Data
+  // --- נתוני שלב 2 (קבצים) ---
   uploadedFiles: File[] = [];
 
-  // Step 3 Data (Result)
+  // --- נתוני שלבים 3 ו-4 (תוצאות) ---
   finalScore = 0;
-  createdRequestId = 0; // For notifications
-
-  // Debug Modal Data
+  createdRequestId = 0;
+  maxAffordableRent = 0;
+  sliderValue = 0;
+  calculatedRent = 0;
   debugOcrData: any = null;
   showDebugModal = false;
 
-  // Graph Data
-  distributionBars: { height: number, isUser: boolean }[] = [];
+  // --- נתוני גרף ---
+  distributionBars: { height: number; isUser: boolean }[] = [];
   userPercentile = 0;
 
   constructor(
     private router: Router,
     private requestService: RequestService,
-    private citiesService: CitiesService,
+    private citiesService: CitiesService
   ) { }
 
-  ngOnInit() {
-    // Load cities from MyGov API on component init
+  ngOnInit(): void {
     this.citiesService.getCities().subscribe({
-      next: (cities) => {
-        this.availableCities = cities;
-      },
-      error: (err) => {
-        console.error("Failed to load cities:", err);
-        this.availableCities = [];
-      },
+      next: (cities) => (this.availableCities = cities),
+      error: (err) => console.error("Failed to load cities:", err),
     });
   }
 
-  // City Logic
+  // --- לוגיקת אימות תעודת זהות ---
+  onIdNumberInput() {
+    const id = this.requestData.idNumbers[0];
+    if (!id) {
+      this.idNumberError = "";
+      return;
+    }
+    this.idNumberError = !this.isValidIsraeliId(id)
+      ? "מספר תעודת זהות לא תקין"
+      : "";
+  }
+
+  isValidIsraeliId(id: string): boolean {
+    if (!/^[0-9]{5,9}$/.test(id)) return false;
+    id = id.padStart(9, "0");
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      let num = Number(id[i]) * ((i % 2) + 1);
+      if (num > 9) num -= 9;
+      sum += num;
+    }
+    return sum % 10 === 0;
+  }
+
+  // --- לוגיקת ערים ---
   searchCities() {
     if (!this.citySearchQuery.trim()) {
       this.filteredCities = [];
@@ -87,19 +110,25 @@ export class TenantWizardComponent {
     if (!this.requestData.cities.includes(city)) {
       this.requestData.cities.push(city);
     }
-    this.citySearchQuery = '';
+    this.citySearchQuery = "";
     this.filteredCities = [];
   }
 
   removeCity(city: string) {
-    this.requestData.cities = this.requestData.cities.filter(c => c !== city);
+    this.requestData.cities = this.requestData.cities.filter((c) => c !== city);
   }
 
+  // --- ניווט ---
   nextStep() {
     if (this.currentStep === 1) {
-      // Validate Step 1
-      if (this.requestData.cities.length === 0 || !this.requestData.desiredRent || !this.requestData.idNumber) {
-        alert('אנא מלא את כל שדות החובה');
+      this.onIdNumberInput(); // וודא בדיקה אחרונה לפני מעבר
+      if (
+        this.requestData.cities.length === 0 ||
+        !this.requestData.desiredRent ||
+        !this.requestData.idNumbers[0] ||
+        this.idNumberError
+      ) {
+        alert("אנא וודא שכל השדות מלאים ותקינים");
         return;
       }
     }
@@ -112,13 +141,10 @@ export class TenantWizardComponent {
   }
 
   prevStep() {
-    this.currentStep--;
+    if (this.currentStep > 1) this.currentStep--;
   }
 
-  // Spouse Logic
-  askSpouse = false;
-  spouseFilesRequested = false;
-
+  // --- קבצים ---
   onFileSelected(event: any) {
     const files = event.target.files;
     if (files) {
@@ -126,17 +152,17 @@ export class TenantWizardComponent {
         this.uploadedFiles.push(files[i]);
       }
     }
-
-    // Trigger spouse prompt if we have 3 files and haven't asked yet
-    if (this.uploadedFiles.length >= 3 && !this.spouseFilesRequested && !this.askSpouse) {
-      setTimeout(() => this.askSpouse = true, 500);
+    if (
+      this.uploadedFiles.length >= 3 &&
+      !this.spouseFilesRequested &&
+      !this.askSpouse
+    ) {
+      setTimeout(() => (this.askSpouse = true), 500);
     }
   }
 
   removeFile(index: number) {
     this.uploadedFiles.splice(index, 1);
-
-    // Reset spouse logic if we drop below 3 files
     if (this.uploadedFiles.length < 3) {
       this.askSpouse = false;
       this.spouseFilesRequested = false;
@@ -152,14 +178,14 @@ export class TenantWizardComponent {
     this.askSpouse = false;
   }
 
+  // --- עיבוד נתונים (OCR ושרת) ---
   processRequest() {
-    // Validation: 3 or 6 files
     if (this.uploadedFiles.length !== 3 && this.uploadedFiles.length !== 6) {
-      alert('אנא העלה בדיוק 3 או 6 תלושי שכר (3 עבור יחיד, 6 עבור זוג).');
+      alert("אנא העלה בדיוק 3 או 6 תלושי שכר.");
       return;
     }
 
-    this.currentStep = 3; // Processing view
+    this.currentStep = 3;
     this.isProcessing = true;
 
     // 1. Analyze Payslips (Real OCR) + Debug Data
@@ -167,184 +193,115 @@ export class TenantWizardComponent {
       next: (ocrResult) => {
         // Debug Phase: Show result
         this.debugOcrData = ocrResult;
-        // this.showDebugModal = true; // Removed to prevent popup
+        // this.showDebugModal = true; // Optional: show debug modal if needed
 
-        // 2. Create the request in the backend with analyzed data AND user inputs
         const requestDto = {
-          // Spread the results from OCR first
           ...ocrResult,
-          // Then overwrite with user inputs
           desiredRent: this.requestData.desiredRent!,
           cityName: this.requestData.cities.join(", "),
-          idNumber: this.requestData.idNumber,
+          idNumbers: this.requestData.idNumbers.filter((id) => id),
         };
 
         this.requestService.createRequest(requestDto).subscribe({
           next: (result) => {
             this.isProcessing = false;
             this.finalScore = result.finalScore;
-            // Capture Max Affordable Rent from backend
             this.maxAffordableRent = result.maxAffordableRent || 0;
             this.createdRequestId = result.requestId;
-
-            // Initialize slider and calculation
             this.sliderValue = Math.round(this.finalScore);
             this.updateRentCalculation();
-
             this.generatePercentileGraph(this.finalScore);
-            this.currentStep = 4; // Result view
+            this.currentStep = 4;
           },
-          error: (err) => {
-<<<<<<< HEAD
-            console.error("Error creating request:", err);
-            this.isProcessing = false;
-            const errorMessage =
-              err.error?.title ||
-              err.error ||
-              err.message ||
-              "שגיאה ביצירת הבקשה";
-            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
-            this.currentStep = 2; // Go back
-          },
+          error: (err) => this.handleError(err, "שגיאה ביצירת הבקשה"),
         });
       },
-      error: (err) => {
-        console.error("Error analyzing payslips:", err);
-        this.isProcessing = false;
-        let errorMessage = 'שגיאה בפענוח התלושים';
-        if (err.error instanceof ProgressEvent) {
-          errorMessage = 'שגיאת תקשורת עם השרת (האם השרת דולק?)';
-        } else {
-          errorMessage = err.error?.title || err.error || err.message || JSON.stringify(err) || errorMessage;
-        }
-
-        // Handle object error message
-        if (typeof errorMessage === 'object') {
-          errorMessage = JSON.stringify(errorMessage);
-        }
-
-        alert(`אירעה שגיאה: ${errorMessage}`);
-        this.currentStep = 2; // Go back
-      },
-=======
-            console.error('Error creating request:', err);
-            this.isProcessing = false;
-            const errorMessage = err.error?.title || err.error || err.message || 'שגיאה ביצירת הבקשה';
-            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
-            this.currentStep = 2; // Go back
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Error analyzing payslips:', err);
-        this.isProcessing = false;
-        const errorMessage = err.error?.title || err.error || err.message || 'שגיאה בפענוח התלושים';
-        alert(`אירעה שגיאה בפענוח התלושים: ${JSON.stringify(errorMessage)}`);
-        this.currentStep = 2; // Go back
-      }
->>>>>>> 0b1c7cd (Feature: Landlord ID Verification & Dashboard Fixes. Restore MyGov Cities.)
+      error: (err) => this.handleError(err, "שגיאה בפענוח התלושים"),
     });
   }
 
-  // Dynamic Rent Calculation Logic
-  maxAffordableRent = 0;
-  sliderValue = 0;
-  calculatedRent = 0;
+  private handleError(err: any, defaultMsg: string) {
+    this.isProcessing = false;
+    let errorMessage = defaultMsg;
+    if (err.error instanceof ProgressEvent) {
+      errorMessage = 'שגיאת תקשורת עם השרת (האם השרת דולק?)';
+    } else {
+      errorMessage = err.error?.title || err.error || err.message || JSON.stringify(err) || defaultMsg;
+    }
+
+    // Handle object error message
+    if (typeof errorMessage === 'object') {
+      errorMessage = JSON.stringify(errorMessage);
+    }
+
+    alert(`אירעה שגיאה: ${errorMessage}`);
+    this.currentStep = 2; // Go back
+  }
 
   updateRentCalculation() {
     if (this.sliderValue <= 0) {
       this.calculatedRent = 0;
       return;
     }
-    // Formula: Score = (MaxRent / RequestRent) * 100
-    // Therefore: RequestRent = (MaxRent * 100) / Score
-    this.calculatedRent = Math.round((this.maxAffordableRent * 100) / this.sliderValue);
+    this.calculatedRent = Math.round(
+      (this.maxAffordableRent * 100) / this.sliderValue,
+    );
   }
 
   generatePercentileGraph(score: number) {
-    // Generate a mock distribution (bell curve-ish)
-    const bars: { height: number, isUser: boolean }[] = [];
-
-    // Calculate where the user sits (0 to 49)
-    // Assuming score range 0-1000. 
-    // Map 0-1000 to 0-49 index.
-    const userIndex = Math.min(Math.max(Math.floor((score / 1000) * 50), 0), 49);
-
-    // Calculate strict percentile based on score (mock logic: score/10)
-    // Real logic would require backend stats.
+    const bars: { height: number; isUser: boolean }[] = [];
+    const userIndex = Math.min(
+      Math.max(Math.floor((score / 1000) * 50), 0),
+      49,
+    );
     this.userPercentile = Math.min(99, Math.round(score / 10));
 
     for (let i = 0; i < 50; i++) {
-      // Create a bell curve shape
-      // Center at 25 (50/2)
       const x = i - 25;
-      // Gaussian function: e^(-x^2 / (2*sigma^2))
-      // sigma = 10
       const height = Math.exp(-(x * x) / (2 * 100)) * 100;
-
-      // Add some localized randomness
-      const randomHeight = height * (0.8 + Math.random() * 0.4);
-
       bars.push({
-        height: Math.max(5, randomHeight), // Min height 5%
-        isUser: i === userIndex
+        height: Math.max(5, height * (0.8 + Math.random() * 0.4)),
+        isUser: i === userIndex,
       });
     }
-
     this.distributionBars = bars;
   }
 
   finish() {
-    this.router.navigate(['/tenant/dashboard']);
+    this.router.navigate(["/tenant/dashboard"]);
   }
 
   sendSms() {
-    if (!this.createdRequestId) return;
-    this.requestService.sendSms(this.createdRequestId).subscribe(() => {
-      alert('הודעת SMS נשלחה בהצלחה!');
-    });
+    if (this.createdRequestId) {
+      this.requestService
+        .sendSms(this.createdRequestId)
+        .subscribe(() => alert("SMS נשלח!"));
+    }
   }
 
   sendEmail() {
-    if (!this.createdRequestId) return;
-    this.requestService.sendEmail(this.createdRequestId).subscribe(() => {
-      alert('הודעת אימייל נשלחה בהצלחה!');
-    });
+    if (this.createdRequestId) {
+      this.requestService
+        .sendEmail(this.createdRequestId)
+        .subscribe(() => alert("אימייל נשלח!"));
+    }
   }
 
-  // --- Wheel Progress Logic ---
   calculateProgress(): number {
-    let progress = 0;
-
-    // Step 1: 50% max
-    if (this.currentStep >= 1) {
-      let step1Points = 0;
-      if (this.requestData.idNumber && this.requestData.idNumber.length >= 8) step1Points += 15;
-      if (this.requestData.cities.length > 0) step1Points += 15;
-      if (this.requestData.desiredRent) step1Points += 20;
-
-      progress = step1Points;
-    }
-
-    // Step 2: 50% -> 100%
-    if (this.currentStep >= 2) {
-      progress = 50;
-      if (this.uploadedFiles.length > 0) {
-        progress += (this.uploadedFiles.length / 3) * 50;
-        if (progress > 100) progress = 100;
-      }
-    }
-
     if (this.currentStep >= 3) return 100;
-
+    let progress = 0;
+    if (this.currentStep === 1) {
+      if (this.requestData.idNumbers[0]?.length >= 8) progress += 15;
+      if (this.requestData.cities.length > 0) progress += 15;
+      if (this.requestData.desiredRent) progress += 20;
+    } else if (this.currentStep === 2) {
+      progress = 50 + Math.min((this.uploadedFiles.length / 3) * 50, 50);
+    }
     return Math.round(progress);
   }
 
   getProgressText(): string {
-    if (this.currentStep === 1) return 'הזנת פרטים';
-    if (this.currentStep === 2) return 'העלאת מסמכים';
-    if (this.currentStep === 3) return 'מעבד נתונים';
-    if (this.currentStep === 4) return 'הושלם';
-    return '';
+    const texts = ["הזנת פרטים", "העלאת מסמכים", "מעבד נתונים", "הושלם"];
+    return texts[this.currentStep - 1] || "";
   }
 }
