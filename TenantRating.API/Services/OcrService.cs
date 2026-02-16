@@ -28,6 +28,7 @@ public class OcrService : IOcrService
 
         decimal totalNetIncome = 0;
         int countNetIncome = 0;
+        bool hasMinus = false; // Flag if any payslip has minus
 
         decimal maxPension = 0;
         decimal maxSeniority = 0;
@@ -76,8 +77,34 @@ public class OcrService : IOcrService
                     {
                         if (TryGetDecimal(netIncomeField, out var val))
                         {
-                            totalNetIncome += val;
                             countNetIncome++;
+                        }
+                    }
+
+                    // Check for Minus field
+                    bool currentHasMinus = false;
+                    if (validFields.TryGetValue("מינוס", out var minusField))
+                    {
+                        if (minusField != null && !string.IsNullOrWhiteSpace(minusField.Content))
+                        {
+                            currentHasMinus = true;
+                            hasMinus = true;
+                        }
+                    }
+
+                    // Apply Net Income with minus logic if exists
+                    if (validFields.TryGetValue("שכר נטו", out netIncomeField) ||
+                        validFields.TryGetValue("נטו לתשלום", out netIncomeField) ||
+                        validFields.TryGetValue("נטו", out netIncomeField) ||
+                        validFields.TryGetValue("NetIncome", out netIncomeField))
+                    {
+                        if (TryGetDecimal(netIncomeField, out var val))
+                        {
+                            // If this payslip has minus, subtract from total; otherwise add
+                            if (currentHasMinus)
+                                totalNetIncome -= val;
+                            else
+                                totalNetIncome += val;
                         }
                     }
 
@@ -256,11 +283,14 @@ public class OcrService : IOcrService
         }
 
         // Calculation Logic
+        // If HasMinus, we need to apply minus logic during calculation
+        // For now, if hasMinus is true, we flag it in the DTO
         decimal averageMonthlyIncome = countNetIncome > 0 ? totalNetIncome / countNetIncome : 0;
 
         return new CreateRequestDto
         {
             NetIncome = Math.Round(averageMonthlyIncome, 2),
+            HasMinus = hasMinus,
             NumChildren = maxChildren,
             SeniorityYears = Math.Round(maxSeniority, 1),
             PensionGrossAmount = maxPension,
