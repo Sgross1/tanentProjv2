@@ -60,7 +60,7 @@ public class AuthService : IAuthService
         if (user.Requests.Any() && user.SavedRequests.Any()) user.Role = UserRole.Both;
         else if (user.Requests.Any()) user.Role = UserRole.Tenant;
         else if (user.SavedRequests.Any()) user.Role = UserRole.Landlord;
-        
+
         return CreateToken(user);
     }
 
@@ -105,7 +105,7 @@ public class AuthService : IAuthService
     public async Task<bool> ResetPassword(string token, string newPassword)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.ResetToken == token);
-        
+
         if (user == null) return false;
         if (user.ResetTokenExpiration < DateTime.UtcNow) return false; // Expired
 
@@ -113,7 +113,7 @@ public class AuthService : IAuthService
 
         user.PasswordHash = passwordHash;
         user.PasswordSalt = passwordSalt;
-        
+
         // Clear token
         user.ResetToken = null;
         user.ResetTokenExpiration = null;

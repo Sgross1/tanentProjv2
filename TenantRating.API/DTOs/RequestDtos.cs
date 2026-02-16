@@ -8,17 +8,18 @@ public class CreateRequestDto
     public decimal DesiredRent { get; set; }
     [Required]
     public string CityName { get; set; } = string.Empty;
-    
+
     [Required]
-    public string IdNumber { get; set; } = string.Empty;
-    
+    public List<string> IdNumbers { get; set; } = new();
+
     // Input for scoring simulation (mocking the file upload parsing)
     public decimal NetIncome { get; set; }
     public int NumChildren { get; set; }
     public bool IsMarried { get; set; }
     public decimal SeniorityYears { get; set; }
     public decimal PensionGrossAmount { get; set; }
-    
+    public decimal PensionDeductionPercent { get; set; }
+
     // Debug Data
     public object? RawData { get; set; }
     public string? ScoreFormula { get; set; }

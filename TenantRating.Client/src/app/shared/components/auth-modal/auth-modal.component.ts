@@ -1,14 +1,19 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
+import { Component, EventEmitter, Output } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from "@angular/forms";
+import { AuthService } from "../../../core/services/auth.service";
 
 @Component({
-  selector: 'app-auth-modal',
+  selector: "app-auth-modal",
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './auth-modal.component.html',
-  styleUrls: ['./auth-modal.component.scss']
+  templateUrl: "./auth-modal.component.html",
+  styleUrls: ["./auth-modal.component.scss"],
 })
 export class AuthModalComponent {
   @Output() closeEvent = new EventEmitter<void>();
@@ -19,15 +24,42 @@ export class AuthModalComponent {
   isLoading = false;
   authForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
+  phoneError: string = "";
+  emailError: string = "";
+  loginError: string = "";
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+  ) {
     this.authForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: [''], // Removed Validators.required to handle dynamic validation manually or via safe check
-      // Register only fields
-      firstName: [''],
-      lastName: [''],
-      phoneNumber: [''],
-      role: ['Tenant']
+      email: ["", [Validators.required, Validators.email]],
+      password: [""],
+      firstName: [""],
+      lastName: [""],
+      phoneNumber: [""],
+      role: ["Tenant"],
+    });
+
+    // בדיקת תקינות פלאפון תוך כדי הקלדה
+    this.authForm.get("phoneNumber")?.valueChanges.subscribe((val) => {
+      this.phoneError = "";
+      if (!val) return;
+      const phone = val.trim().replace(/[-\s]/g, "");
+      if (phone.length !== 10 || !/^05[0-8][0-9]{7}$/.test(phone)) {
+        this.phoneError = "מספר פלאפון לא תקין";
+      }
+    });
+
+    // בדיקת תקינות אימייל תוך כדי הקלדה (Regex מחמיר)
+    this.authForm.get("email")?.valueChanges.subscribe((val) => {
+      this.emailError = "";
+      if (!val) return;
+      const strictEmailRegex =
+        /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!strictEmailRegex.test(val)) {
+        this.emailError = "כתובת אימייל לא תקינה";
+      }
     });
   }
 
@@ -47,13 +79,18 @@ export class AuthModalComponent {
   }
 
   onSubmit() {
+    this.loginError = "";
     if (this.authForm.invalid) {
       // Allow partial validation for Forgot Password (only email needed)
-      if (this.isForgot && this.authForm.get('email')?.valid) {
+      if (this.isForgot && this.authForm.get("email")?.valid) {
         // Continue
       } else if (this.isForgot) {
         return;
-      } else if (this.isLogin && this.authForm.get('email')?.valid && this.authForm.get('password')?.value) {
+      } else if (
+        this.isLogin &&
+        this.authForm.get("email")?.valid &&
+        this.authForm.get("password")?.value
+      ) {
         // Simple login check
       } else if (this.isLogin) {
         return;
@@ -64,13 +101,19 @@ export class AuthModalComponent {
 
     this.isLoading = true;
     const val = this.authForm.value;
-
+    // המרת אימייל ל-lowercase לפני שליחה לשרת
+    if (val.email) {
+      val.email = val.email.trim().toLowerCase();
+    }
     let request$;
 
     if (this.isForgot) {
       request$ = this.authService.forgotPassword(val.email);
     } else if (this.isLogin) {
-      request$ = this.authService.login({ email: val.email, password: val.password });
+      request$ = this.authService.login({
+        email: val.email,
+        password: val.password,
+      });
     } else {
       this.authService.logout();
       request$ = this.authService.register(val);
@@ -80,21 +123,21 @@ export class AuthModalComponent {
       next: (res) => {
         this.isLoading = false;
         if (this.isForgot) {
-          alert('אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.');
+          alert("אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.");
           this.toggleForgot(); // Go back to login
         } else {
-          console.log('Auth success', res);
+          console.log("Auth success", res);
           this.close();
         }
       },
       error: (err) => {
-        console.error('Auth error', err);
+        console.error("Auth error", err);
         this.isLoading = false;
         // Handle regular errors
-        if (!this.isForgot) {
-          alert('שגיאה: ' + (err.error?.message || 'פרטים שגויים'));
+        if (this.isLogin && !this.isForgot) {
+          this.loginError = "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
         }
-      }
+      },
     });
   }
 }

@@ -38,7 +38,7 @@ public class LandlordsController : ControllerBase
         {
             query = query.Where(r => r.DesiredRent >= minRent.Value);
         }
-        
+
         if (maxRent.HasValue)
         {
             query = query.Where(r => r.DesiredRent <= maxRent.Value);
@@ -53,7 +53,7 @@ public class LandlordsController : ControllerBase
 
         // Return anonymous object for search results (hiding sensitive data)
         var results = await query
-            .Select(r => new 
+            .Select(r => new
             {
                 r.RequestId,
                 TenantName = (r.User != null ? r.User.FirstName : "Unknown"), // Show first name only
@@ -64,9 +64,10 @@ public class LandlordsController : ControllerBase
                 PhoneNumber = r.User != null ? r.User.PhoneNumber : ""
             })
             .ToListAsync();
-            
+
         // Map to include IsSaved (post-query calculation to avoid complex EF translation if possible, or simple enough to do in memory for small datasets)
-        var finalResults = results.Select(r => new {
+        var finalResults = results.Select(r => new
+        {
             r.RequestId,
             r.TenantName,
             r.FinalScore,
@@ -129,13 +130,13 @@ public class LandlordsController : ControllerBase
             .Include(sr => sr.Request)
                 .ThenInclude(r => r.User) // Need to include User to access TenantName
             .Where(sr => sr.LandlordUserId == userId)
-            .Select(sr => new 
+            .Select(sr => new
             {
                 sr.Request.RequestId,
-                TenantName = $"{sr.Request.User!.FirstName} {sr.Request.User!.LastName}", 
+                TenantName = sr.Request.User != null ? $"{sr.Request.User!.FirstName} {sr.Request.User!.LastName}" : "Unknown",
                 sr.Request.CityName,
                 sr.Request.FinalScore,
-                PhoneNumber = sr.Request.User!.PhoneNumber,
+                PhoneNumber = sr.Request.User != null ? sr.Request.User!.PhoneNumber : "Unknown",
                 sr.Request.DesiredRent,
                 sr.Request.DateCreated
             })

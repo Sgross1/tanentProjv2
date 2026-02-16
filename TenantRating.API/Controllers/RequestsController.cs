@@ -37,7 +37,7 @@ public class RequestsController : ControllerBase
         try
         {
             var result = await _ocrService.AnalyzePayslipsAsync(files);
-            
+
             // Calculate Debug Info if rent is provided
             if (desiredRent.HasValue)
             {
@@ -47,9 +47,10 @@ public class RequestsController : ControllerBase
                     result.IsMarried,
                     result.SeniorityYears,
                     result.PensionGrossAmount,
+                    result.PensionDeductionPercent,
                     desiredRent.Value
                 );
-                
+
                 result.ScoreFormula = calcDetails.Formula;
                 result.CalculationDetails = calcDetails.Details;
             }
@@ -66,24 +67,34 @@ public class RequestsController : ControllerBase
     public async Task<ActionResult<RequestResultDto>> CreateRequest(CreateRequestDto dto)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        
+
+        // בדיקת התאמת מספר זהות
+        // נניח שמספר הזהות של הלקוח מגיע ב-idNumbers[0] (או מה-DTO אם תעדיף שדה נפרד)
+        var inputId = dto.IdNumbers.FirstOrDefault()?.Trim().Replace("-", "");
+        var extractedIds = dto.IdNumbers.Select(id => id.Trim().Replace("-", "")).ToList();
+        if (string.IsNullOrEmpty(inputId) || !extractedIds.Contains(inputId))
+        {
+            return BadRequest("מספר הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
+        }
+
         var request = new Request
         {
             UserId = userId,
             DesiredRent = dto.DesiredRent,
             CityName = dto.CityName,
-            TenantIdNumber = dto.IdNumber,
+            TenantIdNumbers = string.Join(",", dto.IdNumbers),
             DateCreated = DateTime.UtcNow
         };
 
         // Calculate Score (Using the Logic from user spec)
         _scoringService.CalculateScoreForRequest(
-            request, 
-            dto.NetIncome, 
-            dto.NumChildren, 
-            dto.IsMarried, 
-            dto.SeniorityYears, 
-            dto.PensionGrossAmount
+            request,
+            dto.NetIncome,
+            dto.NumChildren,
+            dto.IsMarried,
+            dto.SeniorityYears,
+            dto.PensionGrossAmount,
+            dto.PensionDeductionPercent
         );
 
         _context.Requests.Add(request);
@@ -107,11 +118,11 @@ public class RequestsController : ControllerBase
         if (request == null) return NotFound("בקשה לא נמצאה");
 
         // Logic: Clean both strings (trim, remove hyphens) just in case
-        var storedId = request.TenantIdNumber?.Trim().Replace("-", "") ?? "";
+        var storedIds = request.TenantIdNumbers?.Split(',').Select(id => id.Trim().Replace("-", "")).ToList() ?? new List<string>();
         var inputId = dto.IdNumber?.Trim().Replace("-", "") ?? "";
 
-        // Blind Match
-        bool match = storedId == inputId;
+        // Check if inputId is one of the stored IDs
+        bool match = storedIds.Contains(inputId);
 
         return Ok(new { isMatch = match });
     }
@@ -155,7 +166,7 @@ public class RequestsController : ControllerBase
 
         // In real app: Send SMS via Twilio/etc using request.User.PhoneNumber
         Console.WriteLine($"[SMS SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
-        
+
         return Ok();
     }
 
@@ -171,7 +182,7 @@ public class RequestsController : ControllerBase
 
         // In real app: Send Email via SendGrid/SMTP using request.User.Email
         Console.WriteLine($"[EMAIL SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
-        
+
         return Ok();
     }
 }
