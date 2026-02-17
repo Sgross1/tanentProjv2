@@ -2,6 +2,12 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-content">
+            <!-- In RTL: First item is on the Right. User wants Cube on Right. -->
+            <div class="cube-container">
+                <app-three-cube mode="hero" [globalRotationSpeed]="0.5" [internalRotationSpeed]="0.8"
+                    [scale]="1.3"></app-three-cube>
+            </div>
+
             <div class="text-content">
                 <h1>KaLiScore</h1>
                 <p class="subtitle">השכרת דירה בראש שקט</p>
@@ -9,10 +15,6 @@
                     מערכת הדירוג המתקדמת בישראל המעניקה ביטחון, שקיפות ואמינות לשוכרים ולמשכירים כאחד.
                 </p>
                 <button class="cta-button">התחבר / הרשם ל-KaLiScore</button>
-            </div>
-
-            <div class="cube-container">
-                <app-three-cube mode="hero"></app-three-cube>
             </div>
         </div>
     </section>
@@ -38,20 +40,26 @@
         <div class="steps-container">
             <div class="step">
                 <div class="step-icon">📝</div>
-                <h4>1. הרשמה מהירה</h4>
-                <p>העלה פרטים בסיסיים באופן מאובטח</p>
+                <div class="step-content">
+                    <h4>1. הרשמה מהירה</h4>
+                    <p>העלה פרטים בסיסיים באופן מאובטח</p>
+                </div>
             </div>
             <div class="connector">➤</div>
             <div class="step">
                 <div class="step-icon">🤝</div>
-                <h4>2. דירוג ואימות</h4>
-                <p>המערכת מחשבת ציון אמינות חכם</p>
+                <div class="step-content">
+                    <h4>2. דירוג ואימות</h4>
+                    <p>המערכת מחשבת ציון אמינות חכם</p>
+                </div>
             </div>
             <div class="connector">➤</div>
             <div class="step">
                 <div class="step-icon">🛡️</div>
-                <h4>3. השכרה בטוחה</h4>
-                <p>שתף את הציון וחתום על חוזה בראש שקט</p>
+                <div class="step-content">
+                    <h4>3. השכרה בטוחה</h4>
+                    <p>שתף את הציון וחתום על חוזה בראש שקט</p>
+                </div>
             </div>
         </div>
     </section>
