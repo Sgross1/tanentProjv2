@@ -59,6 +59,30 @@ export class RequestService {
     return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
   }
 
+  submitRequest(
+    files: File[],
+    idNumber: string,
+    desiredRent: number,
+    cityName: string,
+  ): Observable<RequestResultDto> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    formData.append("idNumber", idNumber);
+    formData.append("desiredRent", desiredRent.toString());
+    formData.append("cityName", cityName);
+
+    return this.http
+      .post<RequestResultDto>(`${this.apiUrl}/submit`, formData)
+      .pipe(
+        tap((newRequest) => {
+          const currentRequests = this.requestsSubject.value;
+          this.requestsSubject.next([...currentRequests, newRequest]);
+        }),
+      );
+  }
+
   sendSms(requestId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${requestId}/notify-sms`, {});
   }
