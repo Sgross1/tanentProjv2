@@ -279,7 +279,15 @@ export class TenantWizardComponent implements OnInit {
     if (this.createdRequestId) {
       this.requestService
         .sendSms(this.createdRequestId)
-        .subscribe(() => alert("SMS נשלח!"));
+        .subscribe({
+          next: (response) => {
+            alert(response?.message ?? "SMS נשלח!");
+          },
+          error: (error) => {
+            const serverError = error?.error?.error ?? "שליחת SMS נכשלה";
+            alert(serverError);
+          },
+        });
     }
   }
 

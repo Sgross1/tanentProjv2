@@ -17,12 +17,14 @@ public class RequestsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly IScoringService _scoringService;
     private readonly IOcrService _ocrService;
+    private readonly ISmsService _smsService;
 
-    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService)
+    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService, ISmsService smsService)
     {
         _context = context;
         _scoringService = scoringService;
         _ocrService = ocrService;
+        _smsService = smsService;
     }
 
     [HttpPost("analyze")]
@@ -228,17 +230,32 @@ public class RequestsController : ControllerBase
     [HttpPost("{id}/notify-sms")]
     public async Task<IActionResult> NotifySms(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send SMS via Twilio/etc using request.User.PhoneNumber
-        Console.WriteLine($"[SMS SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var phoneNumber = request.User?.PhoneNumber?.Trim();
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return BadRequest(new { error = "לא נמצא מספר פלאפון עבור המשתמש." });
+        }
 
-        return Ok();
+        var message = $"ציון הבקשה שלך הוא {request.FinalScore}. שכר דירה רצוי: {request.DesiredRent}.";
+        var result = await _smsService.SendSmsAsync(phoneNumber, message);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[SMS SENT] Request #{id} to {phoneNumber}: {result.Status}");
+            return Ok(new { message = "ה-SMS נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[SMS FAILED] Request #{id} to {phoneNumber}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 
     [HttpPost("{id}/notify-email")]
