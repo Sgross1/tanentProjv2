@@ -2,6 +2,12 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-content">
+            <!-- In RTL: First item is on the Right. User wants Cube on Right. -->
+            <div class="cube-container">
+                <app-three-cube mode="hero" [globalRotationSpeed]="0.5" [internalRotationSpeed]="0.8"
+                    [scale]="1.3"></app-three-cube>
+            </div>
+
             <div class="text-content">
                 <h1>KaLiScore</h1>
                 <p class="subtitle">השכרת דירה בראש שקט</p>
@@ -10,25 +16,33 @@
                 </p>
                 <button class="cta-button">התחבר / הרשם ל-KaLiScore</button>
             </div>
-
-            <div class="cube-container">
-                <app-three-cube mode="hero"></app-three-cube>
-            </div>
         </div>
     </section>
 
     <!-- Role Cards Overlay -->
     <section class="cards-section">
         <div class="card tenant-card" (click)="handleRoleClick('Tenant')">
-            <div class="icon-wrapper">🏠</div>
+            <!-- Title stays static -->
             <h3>אני שוכר</h3>
-            <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
+
+            <!-- Animated Content -->
+            <div class="bounce-content">
+                <div class="icon-wrapper">🏠</div>
+                <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
+                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+            </div>
         </div>
 
         <div class="card landlord-card" (click)="handleRoleClick('Landlord')">
-            <div class="icon-wrapper">🔑</div>
+            <!-- Title stays static -->
             <h3>אני משכיר</h3>
-            <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+
+            <!-- Animated Content -->
+            <div class="bounce-content">
+                <div class="icon-wrapper">🔑</div>
+                <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+            </div>
         </div>
     </section>
 
@@ -38,21 +52,29 @@
         <div class="steps-container">
             <div class="step">
                 <div class="step-icon">📝</div>
-                <h4>1. הרשמה מהירה</h4>
-                <p>העלה פרטים בסיסיים באופן מאובטח</p>
+                <div class="step-content">
+                    <h4>1. הרשמה מהירה</h4>
+                    <p>העלה פרטים בסיסיים באופן מאובטח</p>
+                </div>
             </div>
             <div class="connector">➤</div>
             <div class="step">
                 <div class="step-icon">🤝</div>
-                <h4>2. דירוג ואימות</h4>
-                <p>המערכת מחשבת ציון אמינות חכם</p>
+                <div class="step-content">
+                    <h4>2. דירוג ואימות</h4>
+                    <p>המערכת מחשבת ציון אמינות חכם</p>
+                </div>
             </div>
             <div class="connector">➤</div>
             <div class="step">
                 <div class="step-icon">🛡️</div>
-                <h4>3. השכרה בטוחה</h4>
-                <p>שתף את הציון וחתום על חוזה בראש שקט</p>
+                <div class="step-content">
+                    <h4>3. השכרה בטוחה</h4>
+                    <p>שתף את הציון וחתום על חוזה בראש שקט</p>
+                </div>
             </div>
         </div>
     </section>
+
+
 </div>
