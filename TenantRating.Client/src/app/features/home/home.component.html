@@ -22,15 +22,27 @@
     <!-- Role Cards Overlay -->
     <section class="cards-section">
         <div class="card tenant-card" (click)="handleRoleClick('Tenant')">
-            <div class="icon-wrapper">🏠</div>
+            <!-- Title stays static -->
             <h3>אני שוכר</h3>
-            <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
+
+            <!-- Animated Content -->
+            <div class="bounce-content">
+                <div class="icon-wrapper">🏠</div>
+                <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
+                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+            </div>
         </div>
 
         <div class="card landlord-card" (click)="handleRoleClick('Landlord')">
-            <div class="icon-wrapper">🔑</div>
+            <!-- Title stays static -->
             <h3>אני משכיר</h3>
-            <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+
+            <!-- Animated Content -->
+            <div class="bounce-content">
+                <div class="icon-wrapper">🔑</div>
+                <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+            </div>
         </div>
     </section>
 
@@ -63,4 +75,6 @@
             </div>
         </div>
     </section>
+
+
 </div>

@@ -48,9 +48,9 @@
        - Uses a rich, moving gradient background (400% size)
        - Cycles between deep blues, teals, and subtle purples.
     */
-    background: linear-gradient(-45deg, #400a2b, #133b5c, #0e6e2b, #a17413);
+    background: linear-gradient(-45deg, #400a2b, #133b5c, #91257b, #a17413);
     background-size: 400% 400%;
-    animation: gradientBG 25s ease infinite;
+    animation: gradientBG 20s ease infinite;
 
     /* 
        MASKING LOGIC (Preserves image visibility):
@@ -167,6 +167,133 @@ h1 {
     margin-bottom: 1rem;
 }
 
+/* --- Bouncy Cards (CSS Version) --- */
+.card {
+    background: var(--color-pure-white);
+    border-radius: 12px;
+    padding: 1rem;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--color-border-subtle);
+
+    /* Bouncy Layout */
+    position: relative;
+    overflow: hidden;
+    /* Important for the effect */
+    height: 200px;
+    /* Taller to accommodate the peek */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.card h3 {
+    /* Stable Title */
+    position: relative;
+    z-index: 20;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-trust-blue);
+    /* Transition color if needed */
+    transition: color 0.3s;
+}
+
+/* Specific Colors for Roles */
+/* Specific Colors for Roles */
+/* Unified Blue Theme (Hero Color) */
+.tenant-card h3,
+.landlord-card h3 {
+    color: #4a90e2;
+}
+
+
+/* The bouncing content container */
+.bounce-content {
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    /* 
+       Updated: Fully visible by default.
+       Use a relative top or just let it sit at the bottom.
+       We'll position it so it fills the bottom part comfortably.
+    */
+    top: auto;
+    height: 30%;
+    /* Occupy bottom 60% */
+
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    padding: 1.5rem 1rem;
+
+    /* 
+       Updated Transitions:
+       No vertical translation (fully visible).
+       Only rotation on hover.
+    */
+    transform: translateY(0);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+/* Gradients - Unified Blue Scheme */
+.tenant-card .bounce-content,
+.landlord-card .bounce-content {
+    /* Linear gradient matching the Hero CTA roughly */
+    background: linear-gradient(135deg, #4a90e2 0%, #007bff 100%);
+}
+
+/* Hover Effects */
+.card:hover {
+    transform: translateY(-5px);
+    /* Lift card slightly */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card:hover .bounce-content {
+    /* 
+       On hover, just tilt. 
+       We removed the translateY(0) because it's already at 0.
+    */
+    transform: rotate(7deg) scale(1.02);
+}
+
+.icon-wrapper {
+    font-size: 2.5rem;
+    margin-bottom: 0;
+    /* text-shadow: 0 2px 4px rgba(0,0,0,0.2); */
+}
+
+.card p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.bounce-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+}
+
+/* --- OLD STYLES (Commented Out) --- */
+/*
 .card {
     background: var(--color-pure-white);
     border-radius: 12px;
@@ -201,6 +328,7 @@ h1 {
     margin-bottom: 0;
     line-height: 1.2;
 }
+*/
 
 /* --- PROCESS SECTION --- */
 .process-section {
@@ -326,4 +454,11 @@ h1 {
     .connector {
         display: none;
     }
+}
+
+/* Ensure content sections sit above the waves */
+.cards-section,
+.process-section {
+    position: relative;
+    z-index: 10;
 }
