@@ -13,7 +13,7 @@
             <div class="score-circle">
               <span class="score-value">{{
                 finalScore | number: "1.0-1"
-                }}</span>
+              }}</span>
               <span class="score-label">ציון אמינות</span>
             </div>
           </div>
@@ -29,7 +29,11 @@
               <div class="distribution-graph">
                 <div class="bar-wrapper" *ngFor="let bar of distributionBars">
                   <div class="label-you" *ngIf="bar.isUser">אתה כאן!</div>
-                  <div class="bar" [style.height.%]="bar.height" [class.highlight]="bar.isUser"></div>
+                  <div
+                    class="bar"
+                    [style.height.%]="bar.height"
+                    [class.highlight]="bar.isUser"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -46,8 +50,14 @@
 
           <div class="slider-box">
             <h4>רוצה לשפר ל-{{ sliderValue }}?</h4>
-            <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
-              (input)="updateRentCalculation()" />
+            <input
+              type="range"
+              min="10"
+              max="100"
+              step="1"
+              [(ngModel)]="sliderValue"
+              (input)="updateRentCalculation()"
+            />
             <p>
               תקציב מומלץ: <strong>{{ calculatedRent | number }} ₪</strong>
             </p>
@@ -71,7 +81,11 @@
           <div class="wheel-column">
             <!-- Wheel for Steps 1, 2 -->
             <div class="wheel-wrapper-inline" *ngIf="currentStep !== 3">
-              <app-wheel [percent]="calculateProgress()" [statusText]="getProgressText()" size="small">
+              <app-wheel
+                [percent]="calculateProgress()"
+                [statusText]="getProgressText()"
+                size="small"
+              >
               </app-wheel>
             </div>
 
@@ -90,8 +104,12 @@
 
               <div class="form-group">
                 <label>תעודת זהות</label>
-                <input type="text" [(ngModel)]="requestData.idNumber" (input)="onIdNumberInput()"
-                  (blur)="onIdNumberInput()" placeholder="מספר תעודת זהות תקין (9 ספרות)" />
+                <input
+                  type="text"
+                  [(ngModel)]="requestData.idNumber"
+                  (blur)="onIdNumberBlur()"
+                  placeholder="מספר תעודת זהות תקין (9 ספרות)"
+                />
                 <div class="error-message" *ngIf="idNumberError">
                   {{ idNumberError }}
                 </div>
@@ -105,10 +123,22 @@
                     <span class="remove" (click)="removeCity(city)">×</span>
                   </div>
                 </div>
-                <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()" placeholder="הקלד שם ישוב..."
-                  [disabled]="requestData.cities.length >= 5" />
-                <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
-                  <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
+                <input
+                  type="text"
+                  [(ngModel)]="citySearchQuery"
+                  (input)="searchCities()"
+                  placeholder="הקלד שם ישוב..."
+                  [disabled]="requestData.cities.length >= 5"
+                />
+                <div
+                  class="autocomplete-dropdown"
+                  *ngIf="filteredCities.length > 0"
+                >
+                  <div
+                    class="suggestion"
+                    *ngFor="let city of filteredCities"
+                    (click)="addCity(city)"
+                  >
                     {{ city }}
                   </div>
                 </div>
@@ -116,18 +146,28 @@
 
               <div class="form-group">
                 <label>שכר דירה רצוי (₪)</label>
-                <input type="number" [(ngModel)]="requestData.desiredRent" placeholder="לדוגמה: 6000" />
+                <input
+                  type="number"
+                  [(ngModel)]="requestData.desiredRent"
+                  (blur)="onDesiredRentBlur()"
+                  placeholder="לדוגמה: 6000"
+                />
               </div>
 
               <div class="actions">
                 <button class="btn-secondary" routerLink="/tenant/dashboard">
                   ביטול
                 </button>
-                <button class="btn-primary" (click)="nextStep()" [disabled]="
+                <button
+                  class="btn-primary"
+                  (click)="nextStep()"
+                  [disabled]="
                     requestData.cities.length === 0 ||
                     !requestData.desiredRent ||
-                    !requestData.idNumber
-                  ">
+                    !requestData.idNumber ||
+                    !isIdNumberValid
+                  "
+                >
                   המשך
                 </button>
               </div>
@@ -138,9 +178,9 @@
               <h2>העלאת מסמכים</h2>
               <p>
                 {{
-                spouseFilesRequested
-                ? "העלה 3 תלושים של בן/בת הזוג"
-                : 'העלה 3 תלושי שכר אחרונים
+                  spouseFilesRequested
+                    ? "העלה 3 תלושים של בן/בת הזוג"
+                    : 'העלה 3 תלושי שכר אחרונים
                 ותדפיס עו"ש.'
                 }}
               </p>
@@ -151,30 +191,53 @@
                   העלית 3 מסמכים. רוצה להעלות גם את של בן/בת הזוג לשיפור הדירוג?
                 </p>
                 <div class="promo-actions">
-                  <button class="btn-primary small" (click)="acceptSpouseUpload()">
+                  <button
+                    class="btn-primary small"
+                    (click)="acceptSpouseUpload()"
+                  >
                     כן, הוסף
                   </button>
-                  <button class="btn-secondary small" (click)="declineSpouseUpload()">
+                  <button
+                    class="btn-secondary small"
+                    (click)="declineSpouseUpload()"
+                  >
                     לא, תודה
                   </button>
                 </div>
               </div>
 
               <div class="upload-zone" (click)="fileInput.click()">
-                <input #fileInput type="file" multiple style="display: none" (change)="onFileSelected($event)" />
+                <input
+                  #fileInput
+                  type="file"
+                  multiple
+                  style="display: none"
+                  (change)="onFileSelected($event)"
+                />
                 <div class="icon">📂</div>
                 <p>לחץ לבחירת קבצים</p>
                 <div class="files-preview">
-                  <div class="file-item" *ngFor="let file of uploadedFiles; let i = index">
+                  <div
+                    class="file-item"
+                    *ngFor="let file of uploadedFiles; let i = index"
+                  >
                     {{ file.name }}
-                    <span class="remove" (click)="removeFile(i); $event.stopPropagation()">✕</span>
+                    <span
+                      class="remove"
+                      (click)="removeFile(i); $event.stopPropagation()"
+                      >✕</span
+                    >
                   </div>
                 </div>
               </div>
 
               <div class="actions">
                 <button class="btn-secondary" (click)="prevStep()">חזור</button>
-                <button class="btn-primary" (click)="nextStep()" [disabled]="uploadedFiles.length === 0">
+                <button
+                  class="btn-primary"
+                  (click)="nextStep()"
+                  [disabled]="uploadedFiles.length === 0"
+                >
                   נתח מסמכים
                 </button>
               </div>
