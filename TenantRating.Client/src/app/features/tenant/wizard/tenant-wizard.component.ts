@@ -46,6 +46,7 @@ export class TenantWizardComponent implements OnInit {
   // Step 3 Data (Result)
   finalScore = 0;
   createdRequestId = 0; // For notifications
+  smsMockMode = true; // למחוק או לעשות פולס כדי להחזיר שליחת SMS אמיתית
 
   // Graph Data
   percentileBars: number[] = [];
@@ -327,6 +328,16 @@ export class TenantWizardComponent implements OnInit {
   }
 
   sendSms() {
+    // מכאן נוסף רק כדי לעשות סימולציה של שליחת SMS בלי לקרוא לשרת.
+    if (this.smsMockMode) {
+      if (!this.createdRequestId) return;
+      console.log(
+        `[SMS MOCK] Skipped real SMS send for requestId=${this.createdRequestId}`,
+      );
+      alert("הודעת SMS סומנה כנשלחה (מצב סימולציה)");
+      return;
+    }
+    //ע ד כאן.
     if (this.createdRequestId) {
       this.requestService.sendSms(this.createdRequestId).subscribe({
         next: (response) => {

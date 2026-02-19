@@ -28,7 +28,6 @@ public class OcrService : IOcrService
 
         decimal totalNetIncome = 0;
         int countNetIncome = 0;
-        bool hasMinus = false; // Flag if any payslip has minus
 
         decimal maxPension = 0;
         decimal maxSeniority = 0;
@@ -69,15 +68,6 @@ public class OcrService : IOcrService
 
                     // Map Hebrew fields - robust checking
 
-                    // Net Income: "שכר נטו"
-                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
-                    {
-                        if (TryGetDecimal(netIncomeField, out var val))
-                        {
-                            countNetIncome++;
-                        }
-                    }
-
                     // Check for Minus field
                     bool currentHasMinus = false;
                     if (validFields.TryGetValue("מינוס", out var minusField))
@@ -85,15 +75,16 @@ public class OcrService : IOcrService
                         if (minusField != null && !string.IsNullOrWhiteSpace(minusField.Content))
                         {
                             currentHasMinus = true;
-                            hasMinus = true;
                         }
                     }
 
-                    // Apply Net Income with minus logic if exists
-                    if (validFields.TryGetValue("שכר נטו", out netIncomeField))
+                    // Net Income: "שכר נטו" with minus logic if exists
+                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
                     {
                         if (TryGetDecimal(netIncomeField, out var val))
                         {
+                            countNetIncome++;
+
                             // If this payslip has minus, subtract from total; otherwise add
                             if (currentHasMinus)
                                 totalNetIncome -= val;
@@ -196,14 +187,18 @@ public class OcrService : IOcrService
                     }
 
                     // Pay Date: "חודש ושנה"
-                    if (validFields.TryGetValue("חודש ושנה", out var dateField))
+                    // For this specific field, try high-confidence first, then fallback to raw field
+                    // because OCR often identifies month/year with lower confidence.
+                    if (!validFields.TryGetValue("חודש ושנה", out var dateField))
                     {
-                        if (TryGetDate(dateField, out var payDate))
-                        {
-                            // If d/m/y, take m/y
-                            payDate = new DateTime(payDate.Year, payDate.Month, 1);
-                            payDates.Add(payDate);
-                        }
+                        document.Fields.TryGetValue("חודש ושנה", out dateField);
+                    }
+
+                    if (dateField != null && TryGetDate(dateField, out var payDate))
+                    {
+                        // Normalize to first day of month
+                        payDate = new DateTime(payDate.Year, payDate.Month, 1);
+                        payDates.Add(payDate);
                     }
 
                     // Collect raw fields for debug
@@ -242,24 +237,35 @@ public class OcrService : IOcrService
             isMarriedInText = true;
         }
 
-        // Dates: Sort, check consecutiveness, last not >3 months old
+        // Dates: require 3 distinct detected months for 3 payslips,
+        // then enforce month-to-month consecutiveness and recency
         payDates = payDates.Distinct().OrderBy(d => d).ToList();
+
+        if (files.Count == 3 && payDates.Count != 3)
+        {
+            throw new InvalidOperationException("נדרשים 3 תאריכי תלוש שונים ומזוהים.");
+        }
+
         if (payDates.Count > 1)
         {
             for (int i = 1; i < payDates.Count; i++)
             {
-                var diff = (payDates[i] - payDates[i - 1]).TotalDays;
-                if (diff > 35 || diff < 25) // Approx monthly
+                var previous = payDates[i - 1];
+                var current = payDates[i];
+                var monthDiff = (current.Year - previous.Year) * 12 + (current.Month - previous.Month);
+
+                if (monthDiff != 1)
                 {
                     throw new InvalidOperationException("תאריכי התלושים אינם סמוכים.");
                 }
             }
         }
-        var lastDate = payDates.LastOrDefault();
-        if (lastDate != default && (DateTime.Now - lastDate).TotalDays > 90) // 3 months
-        {
-            throw new InvalidOperationException("התלוש האחרון ישן מדי.");
-        }
+        //מושבת זמנית לבדיקת תרחישים מרובים של תלושי שכר ישנים:
+        // var lastDate = payDates.LastOrDefault();
+        // if (lastDate != default && (DateTime.Now - lastDate).TotalDays > 90) // 3 months
+        // {
+        //     throw new InvalidOperationException("התלוש האחרון ישן מדי.");
+        // }
 
         // Calculation Logic
         decimal averageMonthlyIncome = countNetIncome > 0 ? totalNetIncome / countNetIncome : 0;
@@ -313,8 +319,35 @@ public class OcrService : IOcrService
             return true;
         }
 
-        var content = field.Content;
+        var content = field.Content?.Trim();
         if (string.IsNullOrWhiteSpace(content)) return false;
+
+        // Explicit month/year formats from payslips: MM/YY or MM/YYYY
+        if (Regex.IsMatch(content, @"^\d{1,2}\s*/\s*\d{2}$"))
+        {
+            var parts = content.Split('/');
+            if (int.TryParse(parts[0].Trim(), out var month) && int.TryParse(parts[1].Trim(), out var yy))
+            {
+                if (month >= 1 && month <= 12)
+                {
+                    value = new DateTime(2000 + yy, month, 1);
+                    return true;
+                }
+            }
+        }
+
+        if (Regex.IsMatch(content, @"^\d{1,2}\s*/\s*\d{4}$"))
+        {
+            var parts = content.Split('/');
+            if (int.TryParse(parts[0].Trim(), out var month) && int.TryParse(parts[1].Trim(), out var year))
+            {
+                if (month >= 1 && month <= 12 && year >= 1900 && year <= 2100)
+                {
+                    value = new DateTime(year, month, 1);
+                    return true;
+                }
+            }
+        }
 
         // Try parse common formats
         if (DateTime.TryParse(content, out value)) return true;
