@@ -1,66 +1,57 @@
-<!-- Navbar -->
-<nav class="navbar" (mouseleave)="closeDropdown()">
-    <div class="logo" routerLink="/">KaLiScore</div>
+<!-- 
+  OLD NAVBAR ARCHIVED IN COMMENTS 
+  <nav class="navbar" (mouseleave)="closeDropdown()">
+    ...
+  </nav>
+-->
 
-    <!-- Hamburger Button (Mobile Only) -->
-    <div class="hamburger-wrapper" (click)="toggleMenu()">
-        <div class="hamburger" [class.active]="isMenuOpen">
-            <span></span>
-            <span></span>
-            <span></span>
+<!-- REFINED NAVBAR -->
+<nav class="navbar-refined">
+    <!-- Right side: Logo -->
+    <div class="logo-side">
+        <div class="logo" routerLink="/">KaLiScore</div>
+    </div>
+
+    <!-- Center side: Navigation Pill -->
+    <div class="nav-center">
+        <div class="nav-pill" [class.mobile-active]="isMenuOpen">
+            <!-- <a routerLink="/" fragment="home" class="nav-pill-item" (click)="closeMenu()">דף הבית</a> -->
+            <a routerLink="/" fragment="how-it-works" class="nav-pill-item" (click)="closeMenu()">איך זה עובד</a>
+            <a routerLink="/" fragment="about" class="nav-pill-item" (click)="closeMenu()">אודות</a>
+            <a routerLink="/" fragment="faq" class="nav-pill-item" (click)="closeMenu()">שאלות נפוצות</a>
+            <a routerLink="/" fragment="contact" class="nav-pill-item" (click)="closeMenu()">צור קשר</a>
+
+        </div>
+
+        <!-- Hamburger Button (Mobile Only) -->
+        <div class="hamburger-wrapper" (click)="toggleMenu()">
+            <div class="hamburger" [class.active]="isMenuOpen">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
     </div>
 
-    <div class="nav-links" [class.active]="isMenuOpen">
-        <a routerLink="/" class="nav-item" (click)="closeMenu()">דף הבית</a>
+    <!-- Left side: Auth -->
+    <div class="auth-side">
+        <div class="restricted-links" *ngIf="authService.currentUser$ | async as user">
+            <a routerLink="/tenant/dashboard" (click)="closeMenu()" *ngIf="user.role !== 'Admin'"
+                class="secondary-link personal-area-link">איזור אישי</a>
 
-        <div class="nav-item-container">
-            <span class="nav-item" (click)="toggleDropdown('howItWorks')"
-                [class.active]="activeDropdown === 'howItWorks'">איך זה עובד</span>
-            <div class="dropdown-card" *ngIf="activeDropdown === 'howItWorks'">
-                <h3>🚀 תהליך פשוט ומהיר</h3>
-                <ul>
-                    <li>1. העלה תלושי שכר ותעודת זהות</li>
-                    <li>2. קבל ציון אשראי תוך שניות</li>
-                    <li>3. שתף את הדו"ח עם משכירים</li>
-                </ul>
-            </div>
+            <a routerLink="/admin" *ngIf="user.role === 'Admin'" class="secondary-link admin-link"
+                (click)="closeMenu()">ניהול מערכת</a>
         </div>
 
-        <div class="nav-item-container">
-            <span class="nav-item" (click)="toggleDropdown('about')"
-                [class.active]="activeDropdown === 'about'">אודות</span>
-            <div class="dropdown-card" *ngIf="activeDropdown === 'about'">
-                <h3>🤝 אנחנו פה בשבילך</h3>
-                <p>מטרתנו ליצור שקיפות ואמון בשוק השכירות בישראל באמצעות טכנולוגיה מתקדמת.</p>
-            </div>
+        <div class="auth-buttons">
+            <ng-container *ngIf="authService.currentUser$ | async as user; else loginButton">
+                <span class="user-greeting">שלום, {{user.firstName}}</span>
+                <button (click)="authService.logout()" class="logout-btn">התנתק</button>
+            </ng-container>
+            <ng-template #loginButton>
+                <button (click)="openAuth()" class="login-btn">כניסה / הרשמה</button>
+            </ng-template>
         </div>
-
-        <div class="nav-item-container">
-            <span class="nav-item" (click)="toggleDropdown('contact')" [class.active]="activeDropdown === 'contact'">צור
-                קשר</span>
-            <div class="dropdown-card" *ngIf="activeDropdown === 'contact'">
-                <h3>📞 דברו איתנו</h3>
-                <p>support&#64;tenantrating.co.il</p>
-                <p>050-1234567</p>
-            </div>
-        </div>
-
-        <a routerLink="/tenant/dashboard" (click)="closeMenu()"
-            *ngIf="(authService.currentUser$ | async)?.role && (authService.currentUser$ | async)?.role !== 'Admin'"
-            class="nav-item personal-area">איזור אישי</a>
-        <a routerLink="/admin" *ngIf="(authService.currentUser$ | async)?.role === 'Admin'" class="nav-item admin-area"
-            (click)="closeMenu()" style="background: #ef4444;">ניהול מערכת</a>
-    </div>
-
-    <div class="auth-buttons">
-        <ng-container *ngIf="authService.currentUser$ | async as user; else loginButton">
-            <span class="user-greeting">שלום, {{user.firstName}}</span>
-            <button (click)="authService.logout()" class="logout-btn">התנתק</button>
-        </ng-container>
-        <ng-template #loginButton>
-            <button (click)="openAuth()" class="login-btn">כניסה / הרשמה</button>
-        </ng-template>
     </div>
 </nav>
 

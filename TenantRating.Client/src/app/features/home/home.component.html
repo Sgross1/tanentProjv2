@@ -1,4 +1,4 @@
-<div class="home-container">
+<div class="home-container" id="home">
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-content">
@@ -14,7 +14,7 @@
                 <p class="description">
                     מערכת הדירוג המתקדמת בישראל המעניקה ביטחון, שקיפות ואמינות לשוכרים ולמשכירים כאחד.
                 </p>
-                <button class="cta-button">התחבר / הרשם ל-KaLiScore</button>
+                <!-- <button class="cta-button">התחבר / הרשם ל-KaLiScore</button> -->
             </div>
         </div>
     </section>
@@ -28,8 +28,9 @@
             <!-- Animated Content -->
             <div class="bounce-content">
                 <div class="icon-wrapper">🏠</div>
-                <p>קבל דירוג אשראי והוכח את האמינות שלך</p>
-                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+                <p>קבל דירוג
+                <p>והוכח אמינות ויציבות
+                    <!-- <div class="bounce-label">לחץ לכניסה</div> -->
             </div>
         </div>
 
@@ -40,41 +41,212 @@
             <!-- Animated Content -->
             <div class="bounce-content">
                 <div class="icon-wrapper">🔑</div>
-                <p>סנן דיירים בקלות ומצא שקט נפשי</p>
+                <p>סנן דיירים בקלות</p>
+                <p> ומצא שקט נפשי</p>
+
                 <!-- <div class="bounce-label">לחץ לכניסה</div> -->
             </div>
         </div>
     </section>
 
-    <!-- Process Section -->
-    <section class="process-section">
-        <h2>איך זה עובד?</h2>
-        <div class="steps-container">
-            <div class="step">
-                <div class="step-icon">📝</div>
-                <div class="step-content">
-                    <h4>1. הרשמה מהירה</h4>
-                    <p>העלה פרטים בסיסיים באופן מאובטח</p>
+    <!-- PIXEL-PERFECTION TIMELINE SECTION -->
+    <section class="how-it-works-section" id="how-it-works" dir="ltr">
+        <div class="section-capsule info-section-border">
+            <h2 class="pb-3 pt-2 timeline-title-main"
+                style="direction: rtl; text-align: center; display: block; margin-bottom: 3rem; color: var(--color-trust-blue);">
+                🚀 איך זה עובד?
+            </h2>
+
+            <!-- Step 1: Circle on RIGHT (col 6), Text on LEFT (cols 3-5) -->
+            <div class="timeline-grid how-it-works">
+                <div class="spacer-col" style="grid-column: span 2;"></div>
+                <div class="text-content-col" style="grid-column: span 3; text-align: right;">
+                    <div class="step-content-text">
+                        <h5>העלאת נתונים</h5>
+                        <p>מעלים 3 תלושי שכר <br> למערכת המאובטחת שלנו.</p>
+                    </div>
+                </div>
+                <div class="indicator-col bottom" style="grid-column: span 1;">
+                    <div class="circle">1</div>
                 </div>
             </div>
-            <div class="connector">➤</div>
-            <div class="step">
-                <div class="step-icon">🤝</div>
-                <div class="step-content">
-                    <h4>2. דירוג ואימות</h4>
-                    <p>המערכת מחשבת ציון אמינות חכם</p>
+
+            <!-- Path 1-2: Right-to-Left Snake Curve -->
+            <div class="timeline-grid timeline">
+                <div class="corner-col" style="grid-column: span 1;">
+                    <div class="corner ml-curve"></div>
+                </div>
+                <div class="path-col" style="grid-column: span 4;">
+                    <hr>
+                </div>
+                <div class="corner-col" style="grid-column: span 1;">
+                    <div class="corner tr-curve"></div>
                 </div>
             </div>
-            <div class="connector">➤</div>
-            <div class="step">
-                <div class="step-icon">🛡️</div>
-                <div class="step-content">
-                    <h4>3. השכרה בטוחה</h4>
-                    <p>שתף את הציון וחתום על חוזה בראש שקט</p>
+
+            <!-- Step 2: Circle on LEFT (col 1), Text on RIGHT (cols 2-4) -->
+            <div class="timeline-grid how-it-works">
+                <div class="indicator-col full" style="grid-column: span 1;">
+                    <div class="circle">2</div>
+                </div>
+                <div class="text-content-col" style="grid-column: span 3; text-align: left;">
+                    <div class="step-content-text">
+                        <h5>ניתוח אלגוריתמי</h5>
+                        <p>האלגוריתם המתקדם שלנו מנתח את רמת היציבות הפיננסית והאמינות שלכם.</p>
+                    </div>
+                </div>
+                <div class="spacer-col" style="grid-column: span 2;"></div>
+            </div>
+
+            <!-- Path 2-3: Left-to-Right Snake Curve -->
+            <div class="timeline-grid timeline">
+                <div class="corner-col" style="grid-column: span 1;">
+                    <div class="corner mr-curve"></div>
+                </div>
+                <div class="path-col" style="grid-column: span 4;">
+                    <hr>
+                </div>
+                <div class="corner-col" style="grid-column: span 1;">
+                    <div class="corner br-curve"></div>
+                </div>
+            </div>
+
+            <!-- Step 3: Circle on RIGHT (col 6), Text on LEFT (cols 3-5) -->
+            <div class="timeline-grid how-it-works">
+                <div class="spacer-col" style="grid-column: span 2;"></div>
+                <div class="text-content-col" style="grid-column: span 3; text-align: right;">
+                    <div class="step-content-text">
+                        <h5>קבלת ציון</h5>
+                        <p>מקבלים ציון KaLiScore שאותו ניתן לשתף עם משכירים.</p>
+                    </div>
+                </div>
+                <div class="indicator-col top" style="grid-column: span 1;">
+                    <div class="circle">3</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- About Section -->
+    <section class="process-section" id="about"
+        style="background-color: #f8fafc; padding-top: 5rem; padding-bottom: 5rem;">
+        <div class="content-wrapper info-section-border section-capsule">
+            <h2 style="display: block; margin-bottom: 2rem; text-align: center;">🤝 אודות KaLiScore</h2>
 
+            <div style="line-height: 1.7; color: var(--color-text-main); display: grid; gap: 1.5rem;">
+                <p>
+                    מטרתנו ליצור שקיפות ואמון בשוק השכירות בישראל באמצעות טכנולוגיה מתקדמת. המערכת מעניקה פתרון הוליסטי
+                    לשוכרים ומשכירים, ומבטיחה שקט נפשי בתהליך החשוב של השכרת דירה.
+                </p>
+
+                <p>
+                    שוק השכירות בישראל מאופיין בחוסר וודאות קיצוני. בעוד מחירי הדיור עולים, בעלי הדירות (המשכירים)
+                    חוששים להשכיר את נכסיהם לדיירים שאין ביכולתם לעמוד בתשלומים או שעלולים לגרום נזק. כיום, אין בישראל
+                    מנגנון מרכזי ואמין דוגמת FICO האמריקאי לדירוג אשראי של שוכרים פרטיים.
+                </p>
+
+                <p>
+                    מערכת KaLiScore נועדה לגשר על הפער הזה באמצעות טכנולוגיה. המערכת מספקת פלטפורמה אובייקטיבית המנתחת
+                    את יכולותיו הפינננסיות של השוכר ומפיקה עבורו "תעודת יושר פיננסית" אותה יוכל להציג לבעלי דירות.
+                </p>
+
+                <div
+                    style="background: white; padding: 2rem; border-radius: 15px; border-right: 5px solid var(--color-action-blue); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; color: var(--color-trust-blue);">🎯 מטרות המערכת:</h3>
+                    <ul style="list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: 0.8rem;">
+                        <li>✅ <strong>מתן כלי אובייקטיבי</strong> למשכירים לסינון דיירים.</li>
+                        <li>✅ <strong>העצמת שוכרים טובים</strong> באמצעות הוכחת יכולת תשלום (Power to the Tenant).</li>
+                        <li>✅ <strong>הפחתת החיכוך הבירוקרטי</strong> (איסוף ידני של תלושים ותדפיסי בנק).</li>
+                        <li>✅ <strong>יצירת סטנדרט חדש</strong> בשוק השכירות הישראלי.</li>
+                    </ul>
+                </div>
+
+                <p>
+                    כיום, שוק השכירות מתנהל בצורה "פיראטית" כמעט. אין מאגר נתונים מרכזי. קיימים פתרונות חלקיים:
+                </p>
+                <ul style="padding-right: 1.5rem; display: grid; gap: 0.5rem;">
+                    <li>מבצעים בדיקות רקע, אך השירות יקר ומיועד בעיקר למתווכים.</li>
+                    <li>מספקים דוחות אשראי שליליים ("אורות אדומים"), אך לא נותנים ציון חיובי שמאפשר לשוכר להתבלט.</li>
+                    <li>שימוש בלוחות מודעות ללא סינון איכותי.</li>
+                </ul>
+
+                <p style="font-weight: 700; color: var(--color-action-blue);">
+                    החידוש העיקרי הוא הפוזיטיביות והאוטומציה. במקום לחפש "מי לא שילם", אנו מחפשים "מי יכול לשלם".
+                </p>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+                    <div style="padding: 1.5rem; background: #e0f2fe; border-radius: 12px;">
+                        <span style="font-size: 2rem;">🤖</span>
+                        <h4 style="margin: 0.5rem 0;">בינה מלאכותית</h4>
+                        <p style="margin: 0;">שימוש ב AI לקריאת תלושי שכר בזמת אמת.</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: #f0fdf4; border-radius: 12px;">
+                        <span style="font-size: 2rem;">🧮</span>
+                        <h4 style="margin: 0.5rem 0;">אלגוריתם חכם</h4>
+                        <p style="margin: 0;">אלגוריתם הלוקח בחשבון פרמטרים כמו ותק, פנסיה וגודל
+                            משפחה.</p>
+                    </div>
+                    <div style="padding: 1.5rem; background: #fef2f2; border-radius: 12px;">
+                        <span style="font-size: 2rem;">🛡️</span>
+                        <h4 style="margin: 0.5rem 0;">ביטחון מלא</h4>
+                        <p style="margin: 0;">התלושים והנתונים אינם נשמרים - הם משמשים לחישוב הדירוג
+                            בלבד.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="process-section" id="faq"
+        style="background-color: #f1f5f9; padding-top: 5rem; padding-bottom: 5rem;">
+        <div class="content-wrapper info-section-border section-capsule">
+            <h2 style="display: block; margin-bottom: 3rem; text-align: center;">❓ שאלות נפוצות (FAQ)</h2>
+            <div style="display: grid; gap: 2rem;">
+                <div
+                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">כיצד נקבע הציון שלי?</h4>
+                    <p>הציון נקבע על פי פרמטרים של ותק תעסוקתי, יציבות הכנסה, וניתוח היסטוריית תשלומים, ללא צורך בחשיפת
+                        פרטי הבנק המלאים למשכיר.</p>
+                </div>
+                <div
+                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">האם המידע שלי מאובטח?</h4>
+                    <p>בהחלט. אנחנו משתמשים בהצפנה ברמה בנקאית (AES-256) וכל המידע האישי שלכם מוגן תחת תקני אבטחה
+                        מחמירים.</p>
+                </div>
+                <div
+                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">מה היתרון לשוכר בשימוש
+                        ב-KaLiScore?</h4>
+                    <p>השוכר יכול להוכיח את אמינותו למשכיר במהירות, לחסוך צורך בערבויות יקרות ולעמוד בראש רשימת המועמדים
+                        לדירה.</p>
+                </div>
+                <div
+                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">האם השירות כרוך בתשלום?</h4>
+                    <p>הוצאת דו"ח בסיסי היא חינמית. קיימים שירותי פרימיום נוספים לאימות מעסיקים ובדיקות רקע מעמיקות
+                        יותר.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="process-section" id="contact" style="padding-top: 4rem; padding-bottom: 4rem;">
+        <div class="content-wrapper info-section-border section-capsule">
+            <h2 style="display: block; margin-bottom: 1.5rem; text-align: center;">📞 צור קשר</h2>
+            <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap;">
+                <div>
+                    <h4 style="color: var(--color-action-blue);">אימייל</h4>
+                    <p>support&#64;tenantrating.co.il</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--color-action-blue);">טלפון</h4>
+                    <p>050-1234567</p>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

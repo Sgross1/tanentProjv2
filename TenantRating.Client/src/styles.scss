@@ -13,7 +13,7 @@
   --primary: var(--color-action-blue);
   --bg-color: var(--color-pure-white);
   --text-color: var(--color-text-main);
-  
+
   font-family: 'Rubik', 'Heebo', 'Segoe UI', sans-serif;
 }
 
@@ -25,7 +25,12 @@ body {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Rubik', sans-serif;
   margin: 0;
 }

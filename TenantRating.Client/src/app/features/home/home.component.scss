@@ -117,24 +117,24 @@ app-three-cube {
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 700;
-    margin-bottom: 0.2rem;
-    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
 }
 
 .subtitle {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 300;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
     opacity: 0.9;
 }
 
 .description {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
     max-width: 500px;
-    line-height: 1.4;
+    line-height: 1.5;
     opacity: 0.8;
 }
 
@@ -172,7 +172,8 @@ h1 {
     background: var(--color-pure-white);
     border-radius: 12px;
     padding: 1rem;
-    width: 220px;
+    width: 280px;
+    /* Increased to fit larger font */
     text-align: center;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -183,7 +184,8 @@ h1 {
     position: relative;
     overflow: hidden;
     /* Important for the effect */
-    height: 200px;
+    min-height: 320px;
+    /* Increased from 240px to fit larger font */
     /* Taller to accommodate the peek */
     display: flex;
     flex-direction: column;
@@ -195,7 +197,7 @@ h1 {
     /* Stable Title */
     position: relative;
     z-index: 20;
-    font-size: 1.5rem;
+    font-size: 2.2rem;
     font-weight: 700;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
@@ -225,8 +227,10 @@ h1 {
        We'll position it so it fills the bottom part comfortably.
     */
     top: auto;
-    height: 30%;
-    /* Occupy bottom 60% */
+    height: auto;
+    min-height: 140px;
+    /* Ensures enough space for text */
+    /* Occupy a generous bottom portion */
 
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
@@ -238,7 +242,7 @@ h1 {
        Only rotation on hover.
     */
     transform: translateY(0);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
 
     display: flex;
     flex-direction: column;
@@ -278,8 +282,8 @@ h1 {
 
 .card p {
     color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    line-height: 1.3;
+    font-size: 1.3rem;
+    line-height: 1.4;
     margin: 0;
 }
 
@@ -341,11 +345,52 @@ h1 {
     justify-content: flex-start;
 }
 
+.info-section-border {
+    border-right: 4px solid;
+    border-image: linear-gradient(to bottom, #0984e3, #00cec9, #a855f7) 1;
+    padding-right: 2.5rem;
+    /* Space between text and border */
+}
+
+.section-capsule {
+    width: 1000px;
+    max-width: 90vw;
+    margin: 0 auto;
+    text-align: right;
+    box-sizing: border-box;
+}
+
 .process-section h2 {
     color: var(--color-trust-blue);
-    font-size: 1.6rem;
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.process-section h3 {
+    font-size: 1.8rem;
+    color: var(--color-trust-blue);
+    margin-top: 1.5rem;
     margin-bottom: 1rem;
-    display: none;
+}
+
+.process-section h4 {
+    font-size: 1.5rem;
+    color: var(--color-action-blue);
+    margin-bottom: 0.8rem;
+}
+
+.process-section p,
+.process-section li {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* Specific overrides for nested items */
+.process-section ul {
+    padding-right: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .steps-container {
@@ -389,17 +434,17 @@ h1 {
 }
 
 .step h4 {
-    font-size: 1rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin: 0 0 0.2rem 0;
+    margin: 0 0 0.5rem 0;
     color: var(--color-trust-blue);
 }
 
 .step p {
     color: var(--color-text-muted);
-    font-size: 0.85rem;
+    font-size: 1.3rem;
     margin: 0;
-    line-height: 1.2;
+    line-height: 1.4;
 }
 
 .connector {
@@ -408,7 +453,7 @@ h1 {
     transform: rotate(180deg);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1250px) {
     .hero-section {
         height: auto;
         padding-top: 4rem;
@@ -458,7 +503,278 @@ h1 {
 
 /* Ensure content sections sit above the waves */
 .cards-section,
-.process-section {
+.process-section,
+.timeline-section-wrapper {
     position: relative;
     z-index: 10;
+}
+
+/* --- TIMELINE PIXEL-PERFECTION VARIABLES --- */
+$timeline-bg-color: #ffffff;
+$timeline-primary-color: #0984e3;
+/* Logo Blue */
+$line-w: 3px;
+$half-line: 1.5px;
+$row-h: 120px;
+$mid: 60px;
+$y-base: 58.5px;
+/* $mid - $half-line: The EXACT TOP for all horizontal edges */
+$over: 8px;
+/* Deep overlap for browser math smoothing */
+
+/* 
+   --- BACKUP: PRE-SEAM-REFINEMENT STATE ---
+   To restore: Uncomment below and remove the refined block after it.
+
+.how-it-works-section { background-color: $timeline-bg-color; padding: 6rem 0; }
+.blue-bg { background-color: $timeline-bg-color; color: $timeline-primary-color; }
+.timeline-grid {
+    display: grid !important; grid-template-columns: repeat(6, 1fr) !important;
+    margin: 0 !important; width: 100% !important; position: relative; padding: 0 !important; gap: 0 !important;
+}
+.circle {
+    font-weight: bold; width: 66px; height: 66px; border-radius: 50%;
+    background-color: $timeline-primary-color; color: $timeline-bg-color;
+    z-index: 20; display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; position: relative; box-shadow: 0 0 0 5px $timeline-bg-color;
+}
+.how-it-works.timeline-grid {
+    height: auto; min-height: 120px; align-items: center;
+    .indicator-col {
+        display: flex; justify-content: center; align-items: center; position: relative; height: 100%;
+        &::after { content: ''; position: absolute; width: $line-w; background-color: $timeline-primary-color; z-index: 10; left: calc(50% - #{$half-line}); }
+    }
+    .indicator-col.bottom::after { height: calc(50% + 6px); top: 50%; }
+    .indicator-col.full::after   { height: calc(100% + 12px); top: -6px; }
+    .indicator-col.top::after    { height: calc(50% + 6px); top: -6px; }
+    .text-content-col { padding: 2rem 4rem; z-index: 5; }
+}
+.step-content-text {
+    direction: rtl;
+    h5 { font-size: 2.2rem; margin-bottom: 0.75rem; color: $timeline-primary-color; font-weight: 700; }
+    p { font-size: 1.3rem; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0; }
+}
+.timeline.timeline-grid {
+    height: $row-h;
+    .path-col {
+        grid-column: 2 / 6; position: relative;
+        hr { border: none; border-top: $line-w solid $timeline-primary-color; margin: 0; top: $mid; position: absolute; width: calc(100% + 24px); left: -12px; transform: translateY(-$half-line); z-index: 15; opacity: 1; }
+    }
+    .corner-col { position: relative; }
+    .corner { position: absolute; width: calc(100% + 12px); height: calc(#{$mid} + 6px); border: $line-w solid $timeline-primary-color; box-sizing: border-box; z-index: 12; }
+    .tr-curve { right: calc(50% - #{$half-line}); top: -6px; border-radius: 0 0 $mid 0; border-top: none; border-left: none; }
+    .mr-curve { left: calc(50% - #{$half-line}); top: -6px; border-radius: 0 0 0 $mid; border-top: none; border-right: none; }
+    .ml-curve { left: calc(50% - #{$half-line}); top: $mid; border-radius: $mid 0 0 0; border-bottom: none; border-right: none; }
+    .br-curve { right: calc(50% - #{$half-line}); top: $mid; border-radius: 0 $mid 0 0; border-bottom: none; border-left: none; }
+}
+*/
+
+/* --- REFINED SEAMLESS TIMELINE - MATHEMATICAL ALIGNMENT --- */
+.how-it-works-section {
+    background-color: $timeline-bg-color;
+    padding: 5rem 0;
+    /* Standardized padding */
+}
+
+.blue-bg {
+    background-color: $timeline-bg-color;
+    color: $timeline-primary-color;
+}
+
+.timeline-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    margin: 0 !important;
+    width: 100% !important;
+    position: relative;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+
+.circle {
+    font-weight: bold;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background-color: $timeline-primary-color;
+    color: $timeline-bg-color;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    position: relative;
+    box-shadow: 0 0 0 5px $timeline-bg-color;
+}
+
+.how-it-works.timeline-grid {
+    height: auto;
+    min-height: 120px;
+    align-items: center;
+
+    .indicator-col {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        height: 100%;
+
+        &::after {
+            content: '';
+            position: absolute;
+            width: $line-w;
+            background-color: $timeline-primary-color;
+            z-index: 10;
+            left: calc(50% - #{$half-line});
+        }
+    }
+
+    .indicator-col.bottom::after {
+        height: calc(50% + #{$over});
+        top: 50%;
+    }
+
+    .indicator-col.full::after {
+        height: calc(100% + #{$over} * 2);
+        top: -$over;
+    }
+
+    .indicator-col.top::after {
+        height: calc(50% + #{$over});
+        top: -$over;
+    }
+
+    .text-content-col {
+        padding: 2rem 4rem;
+        z-index: 5;
+    }
+}
+
+.step-content-text {
+    direction: rtl;
+
+    h5 {
+        font-size: 2.2rem;
+        margin-bottom: 0.75rem;
+        color: $timeline-primary-color;
+        font-weight: 700;
+    }
+
+    p {
+        font-size: 1.3rem;
+        line-height: 1.6;
+        color: #4D4545;
+        /* Dark color for readability on white */
+        margin: 0;
+    }
+}
+
+.timeline.timeline-grid {
+    height: $row-h;
+
+    .path-col {
+        grid-column: 2 / 6;
+        position: relative;
+
+        hr {
+            border: none;
+            border-top: $line-w solid $timeline-primary-color;
+            margin: 0;
+            top: $y-base;
+            /* COORDINATE SYNC */
+            position: absolute;
+            width: calc(100% + #{$over} * 4);
+            left: calc(-#{$over} * 2);
+            z-index: 10;
+            opacity: 1;
+        }
+    }
+
+    .corner-col {
+        position: relative;
+    }
+
+    .corner {
+        position: absolute;
+        width: calc(100% + #{$over} * 2);
+        height: calc(#{$mid} + #{$over});
+        border: $line-w solid $timeline-primary-color;
+        box-sizing: border-box;
+        z-index: 20;
+        /* TOP STACKING TO MASK HR ENDS */
+    }
+
+    /* SYNCED CURVES: All horizontal segments start at $y-base */
+    .tr-curve {
+        right: calc(50% - #{$half-line});
+        top: -$over;
+        height: calc(#{$mid} + #{$over});
+        border-radius: 0 0 $mid 0;
+        border-top: none;
+        border-left: none;
+    }
+
+    .mr-curve {
+        left: calc(50% - #{$half-line});
+        top: -$over;
+        height: calc(#{$mid} + #{$over});
+        border-radius: 0 0 0 $mid;
+        border-top: none;
+        border-right: none;
+    }
+
+    .ml-curve {
+        left: calc(50% - #{$half-line});
+        top: $y-base;
+        /* COORDINATE SYNC */
+        height: $mid;
+        border-radius: $mid 0 0 0;
+        border-bottom: none;
+        border-right: none;
+    }
+
+    .br-curve {
+        right: calc(50% - #{$half-line});
+        top: $y-base;
+        /* COORDINATE SYNC */
+        height: $mid;
+        border-radius: 0 $mid 0 0;
+        border-bottom: none;
+        border-left: none;
+    }
+}
+
+@media (max-width: 1250px) {
+    .timeline {
+        display: none !important;
+    }
+
+    .how-it-works.timeline-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        text-align: center;
+        margin-bottom: 4rem !important;
+
+        .indicator-col {
+            width: 100% !important;
+            margin-bottom: 2rem !important;
+            order: 1;
+            /* Circle on top */
+
+            &::after {
+                display: none !important;
+            }
+        }
+
+        .text-content-col {
+            width: 100% !important;
+            padding: 0 !important;
+            order: 2;
+            /* Text below */
+        }
+
+        .step-content-text {
+            text-align: center !important;
+        }
+    }
 }

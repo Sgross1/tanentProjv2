@@ -1,6 +1,6 @@
 // App Configuration
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter, Routes } from '@angular/router';
+import { provideRouter, Routes, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
@@ -27,7 +27,10 @@ const routes: Routes = [
 
 export const appConfig: ApplicationConfig = {
     providers: [
-        provideRouter(routes),
+        provideRouter(routes, withInMemoryScrolling({
+            anchorScrolling: 'enabled',
+            scrollPositionRestoration: 'enabled'
+        })),
         provideHttpClient(withInterceptors([jwtInterceptor])),
         provideAnimations()
     ]
