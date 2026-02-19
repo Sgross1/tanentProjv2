@@ -17,12 +17,16 @@ public class RequestsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly IScoringService _scoringService;
     private readonly IOcrService _ocrService;
+    private readonly ISmsService _smsService;
+    private readonly IEmailService _emailService;
 
-    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService)
+    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService, ISmsService smsService, IEmailService emailService)
     {
         _context = context;
         _scoringService = scoringService;
         _ocrService = ocrService;
+        _smsService = smsService;
+        _emailService = emailService;
     }
 
     [HttpPost("analyze")]
@@ -63,6 +67,7 @@ public class RequestsController : ControllerBase
         }
     }
 
+    // ⚠️ FOR TESTING ONLY - Use /submit endpoint from client UI
     [HttpPost]
     public async Task<ActionResult<RequestResultDto>> CreateRequest(CreateRequestDto dto)
     {
@@ -111,6 +116,76 @@ public class RequestsController : ControllerBase
         };
     }
 
+    // ✅ SECURE ENDPOINT - For production client UI
+    [HttpPost("submit")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<RequestResultDto>> SubmitRequest(
+        [FromForm] List<IFormFile> files,
+        [FromForm] string idNumber,
+        [FromForm] decimal desiredRent,
+        [FromForm] string cityName)
+    {
+        if (files == null || (files.Count != 3 && files.Count != 6))
+        {
+            return BadRequest("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+        }
+
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+        try
+        {
+            // Extract data from files (server-side OCR)
+            var extracted = await _ocrService.AnalyzePayslipsAsync(files);
+
+            // Verify ID match between user input and extracted IDs
+            var inputId = idNumber?.Trim().Replace("-", "").Replace(" ", "");
+            var extractedIds = extracted.IdNumbers.Select(id => id.Trim().Replace("-", "").Replace(" ", "")).ToList();
+
+            if (string.IsNullOrEmpty(inputId) || !extractedIds.Contains(inputId))
+            {
+                return BadRequest("מספר הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
+            }
+
+            // Create request entity
+            var request = new Request
+            {
+                UserId = userId,
+                DesiredRent = desiredRent,
+                CityName = cityName,
+                TenantIdNumbers = string.Join(",", extracted.IdNumbers),
+                DateCreated = DateTime.UtcNow
+            };
+
+            // Calculate score using extracted data (not from client!)
+            _scoringService.CalculateScoreForRequest(
+                request,
+                extracted.NetIncome,
+                extracted.NumChildren,
+                extracted.IsMarried,
+                extracted.SeniorityYears,
+                extracted.PensionGrossAmount,
+                extracted.PensionDeductionPercent
+            );
+
+            _context.Requests.Add(request);
+            await _context.SaveChangesAsync();
+
+            return new RequestResultDto
+            {
+                RequestId = request.RequestId,
+                FinalScore = request.FinalScore,
+                TempScore = request.TempScore,
+                CityName = request.CityName,
+                DateCreated = request.DateCreated,
+                MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
+            };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"שגיאה בעיבוד הבקשה: {ex.Message}");
+        }
+    }
+
     [HttpPost("verify-id")]
     public async Task<IActionResult> VerifyId([FromBody] VerifyIdDto dto)
     {
@@ -157,32 +232,76 @@ public class RequestsController : ControllerBase
     [HttpPost("{id}/notify-sms")]
     public async Task<IActionResult> NotifySms(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send SMS via Twilio/etc using request.User.PhoneNumber
-        Console.WriteLine($"[SMS SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var phoneNumber = request.User?.PhoneNumber?.Trim();
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return BadRequest(new { error = "לא נמצא מספר פלאפון עבור המשתמש." });
+        }
 
-        return Ok();
+        var message = $"ציון הבקשה שלך הוא {request.FinalScore}. שכר דירה רצוי: {request.DesiredRent}.";
+        var result = await _smsService.SendSmsAsync(phoneNumber, message);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[SMS SENT] Request #{id} to {phoneNumber}: {result.Status}");
+            return Ok(new { message = "ה-SMS נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[SMS FAILED] Request #{id} to {phoneNumber}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 
     [HttpPost("{id}/notify-email")]
     public async Task<IActionResult> NotifyEmail(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send Email via SendGrid/SMTP using request.User.Email
-        Console.WriteLine($"[EMAIL SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var recipientEmail = request.User?.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(recipientEmail))
+        {
+            return BadRequest(new { error = "לא נמצאה כתובת אימייל עבור המשתמש." });
+        }
 
-        return Ok();
+        var firstName = request.User?.FirstName?.Trim();
+        var lastName = request.User?.LastName?.Trim();
+        var recipientName = string.Join(" ", new[] { firstName, lastName }.Where(v => !string.IsNullOrWhiteSpace(v))).Trim();
+        if (string.IsNullOrWhiteSpace(recipientName))
+        {
+            recipientName = "משתמש";
+        }
+
+        var result = await _emailService.SendRequestCreatedEmailAsync(
+            recipientEmail,
+            recipientName,
+            request.RequestId,
+            request.FinalScore,
+            request.DesiredRent,
+            request.CityName,
+            request.DateCreated);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[EMAIL SENT] Request #{id} to {recipientEmail}: {result.Status}");
+            return Ok(new { message = "האימייל נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[EMAIL FAILED] Request #{id} to {recipientEmail}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 }

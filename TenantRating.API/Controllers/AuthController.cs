@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using TenantRating.API.Data.Entities;
 using TenantRating.API.DTOs;
 using TenantRating.API.Services;
-using System.Net.Http.Json;
-using System.IO;
 
 namespace TenantRating.API.Controllers;
 
@@ -12,12 +10,12 @@ namespace TenantRating.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
 
-    public AuthController(IAuthService authService, IConfiguration configuration)
+    public AuthController(IAuthService authService, IEmailService emailService)
     {
         _authService = authService;
-        _configuration = configuration;
+        _emailService = emailService;
     }
 
     [HttpPost("register")]
@@ -84,6 +82,14 @@ public class AuthController : ControllerBase
         if (token != null)
         {
             var resetLink = $"http://localhost:4200/reset-password?token={token}";
+            var user = await _authService.GetUser(dto.Email);
+            var firstName = user?.FirstName?.Trim();
+            var lastName = user?.LastName?.Trim();
+            var recipientName = string.Join(" ", new[] { firstName, lastName }.Where(v => !string.IsNullOrWhiteSpace(v))).Trim();
+            if (string.IsNullOrWhiteSpace(recipientName))
+            {
+                recipientName = "משתמש";
+            }
 
             Console.WriteLine("=================================================");
             Console.WriteLine($"[EMAIL SIMULATION] To: {dto.Email}");
@@ -91,41 +97,15 @@ public class AuthController : ControllerBase
             Console.WriteLine($"[EMAIL SIMULATION] Body: Click here to reset: {resetLink}");
             Console.WriteLine($"[EMAIL SIMULATION] Token Code: {token}");
             Console.WriteLine("=================================================");
-            ///////
-            try
+            var sendResult = await _emailService.SendPasswordResetEmailAsync(dto.Email, recipientName, resetLink, token);
+            if (sendResult.IsSuccess)
             {
-                using var client = new HttpClient();
-                // הגדרת כותרת האבטחה עם ה-API KEY שלך מתוך ההגדרות
-                var apiKey = _configuration["Resend:ApiKey"];
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-                // קריאת ה-HTML מהקובץ החיצוני והחלפת המשתנים
-                string emailHtml = await GetEmailTemplate(resetLink, token);
-                // יצירת גוף ההודעה כפי ש-Resend מצפה לקבל
-                var emailPayload = new
-                {
-                    from = "onboarding@resend.dev",
-                    to = "a0583264755@gmail.com", // המייל האישי שלך כפי שביקשת
-                    subject = "איפוס סיסמה - KaLiScore",
-                    html = emailHtml
-                };
-
-
-                // שליחת הבקשה לשרתים של Resend
-                var response = await client.PostAsJsonAsync("https://api.resend.com/emails", emailPayload);
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"[SUCCESS] Email sent successfully to: {dto.Email}");
-                }
-                else
-                {
-                    Console.WriteLine($"[ERROR] Failed to send email via Resend: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
+                Console.WriteLine($"[SUCCESS] Email sent successfully to: {dto.Email}");
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"[ERROR] Failed to send email via Resend: {ex.Message}");
+                Console.WriteLine($"[ERROR] Failed to send email via Resend: {sendResult.Status}");
             }
-            /////////
 
         }
         else
@@ -134,15 +114,6 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = "If the email exists, a reset link has been sent." });
-    }
-
-    private async Task<string> GetEmailTemplate(string resetLink, string token)
-    {
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ResetPassword.html");
-        var html = await System.IO.File.ReadAllTextAsync(filePath);
-
-        // החלפת ה"ממלאי מקום" בנתונים האמיתיים
-        return html.Replace("{resetLink}", resetLink).Replace("{token}", token);
     }
 
     [HttpPost("reset-password")]

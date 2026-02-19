@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TenantRating.API.DTOs;
 
+// ⚠️ לשימוש לבדיקות בלבד (Swagger/Postman)
+// ⚠️ ממשק הלקוח אסור להשתמש ב-DTO זה - יש להשתמש ב-/api/requests/submit
+// ⚠️ FOR TESTING ONLY (Swagger/Postman) - Client UI must use /api/requests/submit
 public class CreateRequestDto
 {
     [Required]

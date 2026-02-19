@@ -68,24 +68,34 @@ public class OcrService : IOcrService
 
                     // Map Hebrew fields - robust checking
 
-                    // Net Income: "שכר נטו", "נטו לתשלום", "נטו"
-                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField) ||
-                        validFields.TryGetValue("נטו לתשלום", out netIncomeField) ||
-                        validFields.TryGetValue("נטו", out netIncomeField) ||
-                        validFields.TryGetValue("NetIncome", out netIncomeField))
+                    // Check for Minus field
+                    bool currentHasMinus = false;
+                    if (validFields.TryGetValue("מינוס", out var minusField))
                     {
-                        if (TryGetDecimal(netIncomeField, out var val))
+                        if (minusField != null && !string.IsNullOrWhiteSpace(minusField.Content))
                         {
-                            totalNetIncome += val;
-                            countNetIncome++;
+                            currentHasMinus = true;
                         }
                     }
 
-                    // ID Number: "מספר זהות", "ת.ז.", "ID" - allow lower confidence
+                    // Net Income: "שכר נטו" with minus logic if exists
+                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
+                    {
+                        if (TryGetDecimal(netIncomeField, out var val))
+                        {
+                            countNetIncome++;
+
+                            // If this payslip has minus, subtract from total; otherwise add
+                            if (currentHasMinus)
+                                totalNetIncome -= val;
+                            else
+                                totalNetIncome += val;
+                        }
+                    }
+
+                    // ID Number: "מספר זהות"
                     string? extractedId = null;
-                    if (document.Fields.TryGetValue("מספר זהות", out var idField) ||
-                        document.Fields.TryGetValue("ת.ז.", out idField) ||
-                        document.Fields.TryGetValue("ID", out idField))
+                    if (document.Fields.TryGetValue("מספר זהות", out var idField))
                     {
                         var idContent = idField.Content?.Replace(" ", "").Replace("-", "");
                         if (!string.IsNullOrEmpty(idContent) && Regex.IsMatch(idContent, @"^\d{9}$"))
@@ -99,11 +109,9 @@ public class OcrService : IOcrService
                         idMissing = true;
                     }
 
-                    // Children: "ילדים", "מספר ילדים", "Children"
+                    // Children: "מספר ילדים"
                     // Parse as decimal first to safely handle "2.0", then cast to int
-                    if (validFields.TryGetValue("ילדים", out var childrenField) ||
-                        validFields.TryGetValue("מספר ילדים", out childrenField) ||
-                        validFields.TryGetValue("NumChildren", out childrenField))
+                    if (validFields.TryGetValue("מספר ילדים", out var childrenField))
                     {
                         if (TryGetDecimal(childrenField, out var val))
                         {
@@ -112,14 +120,9 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Seniority: "ותק בעבודה", "ותק מוכר", "ותק", "שנות ותק", "וותק"
+                    // Seniority: "וותק"
                     bool seniorityFound = false;
-                    if (validFields.TryGetValue("ותק בעבודה", out var seniorityField) ||
-                        validFields.TryGetValue("ותק מוכר", out seniorityField) ||
-                        validFields.TryGetValue("ותק", out seniorityField) ||
-                        validFields.TryGetValue("וותק", out seniorityField) ||
-                        validFields.TryGetValue("שנות ותק", out seniorityField) ||
-                        validFields.TryGetValue("SeniorityYears", out seniorityField))
+                    if (validFields.TryGetValue("וותק", out var seniorityField))
                     {
                         if (TryGetDecimal(seniorityField, out var val))
                         {
@@ -131,8 +134,7 @@ public class OcrService : IOcrService
                     // If seniority not found, try to calculate from dates
                     if (!seniorityFound)
                     {
-                        if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField) ||
-                            validFields.TryGetValue("תחילת עבודה", out startDateField))
+                        if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField))
                         {
                             if (TryGetDate(startDateField, out var startDate))
                             {
@@ -142,11 +144,9 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Pension: "ברוטו לפנסיה", "פנסיה"
+                    // Pension: "ברוטו לפנסיה"
                     decimal currentGross = 0;
-                    if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField) ||
-                        validFields.TryGetValue("פנסיה", out pensionField) ||
-                        validFields.TryGetValue("PensionGrossAmount", out pensionField))
+                    if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField))
                     {
                         if (TryGetDecimal(pensionField, out var val))
                         {
@@ -166,8 +166,7 @@ public class OcrService : IOcrService
                     }
 
                     // Marital Status: "מצב משפחתי"
-                    if ((validFields.TryGetValue("מצב משפחתי", out var maritalField) ||
-                         validFields.TryGetValue("MaritalStatus", out maritalField)) && maritalField != null)
+                    if (validFields.TryGetValue("מצב משפחתי", out var maritalField) && maritalField != null)
                     {
                         var maritalContent = maritalField.Content;
                         if (!string.IsNullOrEmpty(maritalContent))
@@ -187,17 +186,19 @@ public class OcrService : IOcrService
                         }
                     }
 
-                    // Pay Date: "חודש ושנה", "תאריך"
-                    if (validFields.TryGetValue("חודש ושנה", out var dateField) ||
-                        validFields.TryGetValue("תאריך", out dateField) ||
-                        validFields.TryGetValue("PayDate", out dateField))
+                    // Pay Date: "חודש ושנה"
+                    // For this specific field, try high-confidence first, then fallback to raw field
+                    // because OCR often identifies month/year with lower confidence.
+                    if (!validFields.TryGetValue("חודש ושנה", out var dateField))
                     {
-                        if (TryGetDate(dateField, out var payDate))
-                        {
-                            // If d/m/y, take m/y
-                            payDate = new DateTime(payDate.Year, payDate.Month, 1);
-                            payDates.Add(payDate);
-                        }
+                        document.Fields.TryGetValue("חודש ושנה", out dateField);
+                    }
+
+                    if (dateField != null && TryGetDate(dateField, out var payDate))
+                    {
+                        // Normalize to first day of month
+                        payDate = new DateTime(payDate.Year, payDate.Month, 1);
+                        payDates.Add(payDate);
                     }
 
                     // Collect raw fields for debug
@@ -236,24 +237,35 @@ public class OcrService : IOcrService
             isMarriedInText = true;
         }
 
-        // Dates: Sort, check consecutiveness, last not >3 months old
+        // Dates: require 3 distinct detected months for 3 payslips,
+        // then enforce month-to-month consecutiveness and recency
         payDates = payDates.Distinct().OrderBy(d => d).ToList();
+
+        if (files.Count == 3 && payDates.Count != 3)
+        {
+            throw new InvalidOperationException("נדרשים 3 תאריכי תלוש שונים ומזוהים.");
+        }
+
         if (payDates.Count > 1)
         {
             for (int i = 1; i < payDates.Count; i++)
             {
-                var diff = (payDates[i] - payDates[i - 1]).TotalDays;
-                if (diff > 35 || diff < 25) // Approx monthly
+                var previous = payDates[i - 1];
+                var current = payDates[i];
+                var monthDiff = (current.Year - previous.Year) * 12 + (current.Month - previous.Month);
+
+                if (monthDiff != 1)
                 {
                     throw new InvalidOperationException("תאריכי התלושים אינם סמוכים.");
                 }
             }
         }
-        var lastDate = payDates.LastOrDefault();
-        if (lastDate != default && (DateTime.Now - lastDate).TotalDays > 90) // 3 months
-        {
-            throw new InvalidOperationException("התלוש האחרון ישן מדי.");
-        }
+        //מושבת זמנית לבדיקת תרחישים מרובים של תלושי שכר ישנים:
+        // var lastDate = payDates.LastOrDefault();
+        // if (lastDate != default && (DateTime.Now - lastDate).TotalDays > 90) // 3 months
+        // {
+        //     throw new InvalidOperationException("התלוש האחרון ישן מדי.");
+        // }
 
         // Calculation Logic
         decimal averageMonthlyIncome = countNetIncome > 0 ? totalNetIncome / countNetIncome : 0;
@@ -307,8 +319,35 @@ public class OcrService : IOcrService
             return true;
         }
 
-        var content = field.Content;
+        var content = field.Content?.Trim();
         if (string.IsNullOrWhiteSpace(content)) return false;
+
+        // Explicit month/year formats from payslips: MM/YY or MM/YYYY
+        if (Regex.IsMatch(content, @"^\d{1,2}\s*/\s*\d{2}$"))
+        {
+            var parts = content.Split('/');
+            if (int.TryParse(parts[0].Trim(), out var month) && int.TryParse(parts[1].Trim(), out var yy))
+            {
+                if (month >= 1 && month <= 12)
+                {
+                    value = new DateTime(2000 + yy, month, 1);
+                    return true;
+                }
+            }
+        }
+
+        if (Regex.IsMatch(content, @"^\d{1,2}\s*/\s*\d{4}$"))
+        {
+            var parts = content.Split('/');
+            if (int.TryParse(parts[0].Trim(), out var month) && int.TryParse(parts[1].Trim(), out var year))
+            {
+                if (month >= 1 && month <= 12 && year >= 1900 && year <= 2100)
+                {
+                    value = new DateTime(year, month, 1);
+                    return true;
+                }
+            }
+        }
 
         // Try parse common formats
         if (DateTime.TryParse(content, out value)) return true;

@@ -11,7 +11,13 @@ import { WheelComponent } from "../../../shared/components/wheel/wheel.component
 @Component({
   selector: "app-tenant-wizard",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ThreeCubeComponent, WheelComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ThreeCubeComponent,
+    WheelComponent,
+  ],
   templateUrl: "./tenant-wizard.component.html",
   styleUrls: ["./tenant-wizard.component.scss"],
 })
@@ -25,7 +31,9 @@ export class TenantWizardComponent implements OnInit {
     desiredRent: null as number | null,
     idNumber: "",
   };
-  idNumberError = ""; // Missing property added
+  idNumberError = "";
+  isIdNumberValid = false;
+  desiredRentCompleted = false;
 
   // Autocomplete Data
   citySearchQuery = "";
@@ -38,10 +46,7 @@ export class TenantWizardComponent implements OnInit {
   // Step 3 Data (Result)
   finalScore = 0;
   createdRequestId = 0; // For notifications
-
-  // Debug Modal Data
-  debugOcrData: any = null;
-  showDebugModal = false;
+  smsMockMode = true; // למחוק או לעשות פולס כדי להחזיר שליחת SMS אמיתית
 
   // Graph Data
   percentileBars: number[] = [];
@@ -51,7 +56,7 @@ export class TenantWizardComponent implements OnInit {
     private router: Router,
     private requestService: RequestService,
     private citiesService: CitiesService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -93,11 +98,14 @@ export class TenantWizardComponent implements OnInit {
 
   nextStep() {
     if (this.currentStep === 1) {
+      this.onIdNumberBlur();
+
       // Validate Step 1
       if (
         this.requestData.cities.length === 0 ||
         !this.requestData.desiredRent ||
-        !this.requestData.idNumber
+        !this.requestData.idNumber ||
+        !this.isIdNumberValid
       ) {
         alert("אנא מלא את כל שדות החובה");
         return;
@@ -166,91 +174,109 @@ export class TenantWizardComponent implements OnInit {
     this.currentStep = 3; // Processing view
     this.isProcessing = true;
 
-    // 1. Analyze Payslips (Real OCR) + Debug Data
-    this.requestService.analyzePayslip(this.uploadedFiles, this.requestData.desiredRent || 0).subscribe({
-      next: (ocrResult) => {
-        // Debug Phase: Show result
-        this.debugOcrData = ocrResult;
-        this.showDebugModal = true;
+    this.requestService
+      .submitRequest(
+        this.uploadedFiles,
+        this.requestData.idNumber,
+        this.requestData.desiredRent!,
+        this.requestData.cities.join(", "),
+      )
+      .subscribe({
+        next: (result) => {
+          this.isProcessing = false;
+          this.finalScore = result.finalScore;
+          this.maxAffordableRent = result.maxAffordableRent || 0;
+          this.createdRequestId = result.requestId;
 
-        // 2. Create the request in the backend with analyzed data AND user inputs
-        const requestDto = {
-          // Spread the results from OCR first
-          ...ocrResult,
-          // Then overwrite with user inputs
-          desiredRent: this.requestData.desiredRent!,
-          cityName: this.requestData.cities.join(", "),
-        };
+          this.sliderValue = Math.round(this.finalScore);
+          this.updateRentCalculation();
 
-        this.requestService.createRequest(requestDto).subscribe({
-          next: (result) => {
-            this.isProcessing = false;
-            this.finalScore = result.finalScore;
-            // Capture Max Affordable Rent from backend
-            this.maxAffordableRent = result.maxAffordableRent || 0;
-            this.createdRequestId = result.requestId;
+          this.generatePercentileGraph(this.finalScore);
+          this.currentStep = 4;
+        },
+        error: (err) => {
+          console.error("Error submitting request:", err);
+          this.isProcessing = false;
+          const errorMessage =
+            err.error?.title ||
+            err.error ||
+            err.message ||
+            "שגיאה ביצירת הבקשה";
+          alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
+          this.currentStep = 2;
+        },
+      });
+  }
 
-            // Initialize slider and calculation
-            this.sliderValue = Math.round(this.finalScore);
-            this.updateRentCalculation();
-
-            this.generatePercentileGraph(this.finalScore);
-            this.currentStep = 4; // Result view
-          },
-          error: (err) => {
-            console.error("Error creating request:", err);
-            this.isProcessing = false;
-            const errorMessage =
-              err.error?.title ||
-              err.error ||
-              err.message ||
-              "שגיאה ביצירת הבקשה";
-            alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
-            this.currentStep = 2; // Go back
-          },
-        });
-      },
-      error: (err) => {
-        console.error("Error analyzing payslips:", err);
-        this.isProcessing = false;
-        const errorMessage =
-          err.error?.title ||
-          err.error ||
-          err.message ||
-          "שגיאה בפענוח התלושים";
-        alert(`אירעה שגיאה בפענוח התלושים: ${JSON.stringify(errorMessage)}`);
-        this.currentStep = 2; // Go back
-      },
-    });
+  onDesiredRentBlur() {
+    this.desiredRentCompleted =
+      this.requestData.desiredRent !== null && this.requestData.desiredRent > 0;
   }
 
   // Helper Methods for Template
   calculateProgress(): number {
-    switch (this.currentStep) {
-      case 1: return 33;
-      case 2: return 66;
-      case 3: return 90;
-      case 4: return 100;
-      default: return 0;
+    let progress = 0;
+
+    if (this.isIdNumberValid) {
+      progress += 25;
     }
+
+    if (this.requestData.cities.length > 0) {
+      progress += 25;
+    }
+
+    if (this.desiredRentCompleted) {
+      progress += 25;
+    }
+
+    if (this.uploadedFiles.length === 3 || this.uploadedFiles.length === 6) {
+      progress += 25;
+    }
+
+    return progress;
   }
 
   getProgressText(): string {
     switch (this.currentStep) {
-      case 1: return "פרטים";
-      case 2: return "מסמכים";
-      case 3: return "עיבוד";
-      case 4: return "סיום";
-      default: return "";
+      case 1:
+        return "פרטים";
+      case 2:
+        return "מסמכים";
+      case 3:
+        return "עיבוד";
+      case 4:
+        return "סיום";
+      default:
+        return "";
     }
   }
 
-  // Workaround for template binding error on idNumbers[0]
-  // In the template change [(ngModel)]="requestData.idNumbers[0]" to [(ngModel)]="requestData.idNumber" 
-  // But wait, the component has idNumber as string. Let's fix the template binding instead.
-  // Actually, let's allow the component to handle the specific input logic
-  onIdNumberInput() {
-    // Optional: Add validation logic here if needed
+  onIdNumberBlur() {
+    const digitsOnly = (this.requestData.idNumber || "")
+      .replace(/\D/g, "")
+      .slice(0, 9);
+    this.requestData.idNumber = digitsOnly;
+
+    this.isIdNumberValid =
+      digitsOnly.length === 9 && this.isValidIsraeliId(digitsOnly);
+    this.idNumberError = this.isIdNumberValid ? "" : "מספר הזהות לא תקין";
+  }
+
+  private isValidIsraeliId(idNumber: string): boolean {
+    if (!/^\d{9}$/.test(idNumber)) {
+      return false;
+    }
+
+    const sum = idNumber
+      .split("")
+      .map((char, index) => {
+        const digit = Number(char);
+        const multiplied = digit * ((index % 2) + 1);
+        return multiplied > 9 ? multiplied - 9 : multiplied;
+      })
+      .reduce((acc, curr) => acc + curr, 0);
+
+    return sum % 10 === 0;
   }
 
   // Missing Properties for Result View
@@ -302,6 +328,27 @@ export class TenantWizardComponent implements OnInit {
   }
 
   sendSms() {
+    // מכאן נוסף רק כדי לעשות סימולציה של שליחת SMS בלי לקרוא לשרת.
+    if (this.smsMockMode) {
+      if (!this.createdRequestId) return;
+      console.log(
+        `[SMS MOCK] Skipped real SMS send for requestId=${this.createdRequestId}`,
+      );
+      alert("הודעת SMS סומנה כנשלחה (מצב סימולציה)");
+      return;
+    }
+    //ע ד כאן.
+    if (this.createdRequestId) {
+      this.requestService.sendSms(this.createdRequestId).subscribe({
+        next: (response) => {
+          alert(response?.message ?? "SMS נשלח!");
+        },
+        error: (error) => {
+          const serverError = error?.error?.error ?? "שליחת SMS נכשלה";
+          alert(serverError);
+        },
+      });
+    }
     if (!this.createdRequestId) return;
     this.requestService.sendSms(this.createdRequestId).subscribe(() => {
       alert("הודעת SMS נשלחה בהצלחה!");
