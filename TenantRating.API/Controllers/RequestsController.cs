@@ -18,13 +18,15 @@ public class RequestsController : ControllerBase
     private readonly IScoringService _scoringService;
     private readonly IOcrService _ocrService;
     private readonly ISmsService _smsService;
+    private readonly IEmailService _emailService;
 
-    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService, ISmsService smsService)
+    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService, ISmsService smsService, IEmailService emailService)
     {
         _context = context;
         _scoringService = scoringService;
         _ocrService = ocrService;
         _smsService = smsService;
+        _emailService = emailService;
     }
 
     [HttpPost("analyze")]
@@ -261,16 +263,45 @@ public class RequestsController : ControllerBase
     [HttpPost("{id}/notify-email")]
     public async Task<IActionResult> NotifyEmail(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send Email via SendGrid/SMTP using request.User.Email
-        Console.WriteLine($"[EMAIL SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var recipientEmail = request.User?.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(recipientEmail))
+        {
+            return BadRequest(new { error = "לא נמצאה כתובת אימייל עבור המשתמש." });
+        }
 
-        return Ok();
+        var firstName = request.User?.FirstName?.Trim();
+        var lastName = request.User?.LastName?.Trim();
+        var recipientName = string.Join(" ", new[] { firstName, lastName }.Where(v => !string.IsNullOrWhiteSpace(v))).Trim();
+        if (string.IsNullOrWhiteSpace(recipientName))
+        {
+            recipientName = "משתמש";
+        }
+
+        var result = await _emailService.SendRequestCreatedEmailAsync(
+            recipientEmail,
+            recipientName,
+            request.RequestId,
+            request.FinalScore,
+            request.DesiredRent,
+            request.CityName,
+            request.DateCreated);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[EMAIL SENT] Request #{id} to {recipientEmail}: {result.Status}");
+            return Ok(new { message = "האימייל נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[EMAIL FAILED] Request #{id} to {recipientEmail}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 }
