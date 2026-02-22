@@ -22,6 +22,9 @@ import { WheelComponent } from "../../../shared/components/wheel/wheel.component
   styleUrls: ["./tenant-wizard.component.scss"],
 })
 export class TenantWizardComponent implements OnInit {
+  private readonly spouseMustDifferError =
+    "מספר הזהות של בן/בת הזוג חייב להיות שונה מהמספר הראשי.";
+
   currentStep = 1;
   isProcessing = false;
 
@@ -30,10 +33,16 @@ export class TenantWizardComponent implements OnInit {
     cities: [] as string[],
     desiredRent: null as number | null,
     idNumber: "",
+    spouseIdNumber: "",
   };
   idNumberError = "";
   isIdNumberValid = false;
+  spouseIdNumberError = "";
+  isSpouseIdNumberValid = false;
   desiredRentCompleted = false;
+  stepErrors: string[] = [];
+  actionMessage = "";
+  actionMessageType: "success" | "error" | "info" = "info";
 
   // Autocomplete Data
   citySearchQuery = "";
@@ -73,15 +82,27 @@ export class TenantWizardComponent implements OnInit {
 
   // City Logic
   searchCities() {
-    if (!this.citySearchQuery.trim()) {
+    const query = this.citySearchQuery.trim();
+
+    if (!query) {
       this.filteredCities = [];
       return;
     }
-    this.filteredCities = this.availableCities.filter(
-      (city) =>
-        city.includes(this.citySearchQuery) &&
-        !this.requestData.cities.includes(city),
+
+    const matchingCities = this.availableCities.filter(
+      (city) => city.includes(query) && !this.requestData.cities.includes(city),
     );
+
+    this.filteredCities = matchingCities.sort((firstCity, secondCity) => {
+      const firstStartsWith = firstCity.startsWith(query);
+      const secondStartsWith = secondCity.startsWith(query);
+
+      if (firstStartsWith !== secondStartsWith) {
+        return firstStartsWith ? -1 : 1;
+      }
+
+      return firstCity.localeCompare(secondCity, "he");
+    });
   }
 
   addCity(city: string) {
@@ -97,17 +118,27 @@ export class TenantWizardComponent implements OnInit {
   }
 
   nextStep() {
+    this.stepErrors = [];
+
     if (this.currentStep === 1) {
       this.onIdNumberBlur();
+      const errors: string[] = [];
 
       // Validate Step 1
-      if (
-        this.requestData.cities.length === 0 ||
-        !this.requestData.desiredRent ||
-        !this.requestData.idNumber ||
-        !this.isIdNumberValid
-      ) {
-        alert("אנא מלא את כל שדות החובה");
+      if (this.requestData.cities.length === 0) {
+        errors.push("יש לבחור לפחות יישוב אחד.");
+      }
+
+      if (!this.requestData.desiredRent || this.requestData.desiredRent <= 0) {
+        errors.push("יש להזין שכר דירה רצוי תקין.");
+      }
+
+      if (!this.requestData.idNumber || !this.isIdNumberValid) {
+        errors.push("מספר הזהות הראשי אינו תקין.");
+      }
+
+      if (errors.length > 0) {
+        this.stepErrors = errors;
         return;
       }
     }
@@ -165,9 +196,32 @@ export class TenantWizardComponent implements OnInit {
   }
 
   processRequest() {
+    this.stepErrors = [];
+
+    const errors: string[] = [];
+
     // Validation: 3 or 6 files
     if (this.uploadedFiles.length !== 3 && this.uploadedFiles.length !== 6) {
-      alert("אנא העלה בדיוק 3 או 6 תלושי שכר (3 עבור יחיד, 6 עבור זוג).");
+      errors.push("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+    }
+
+    if (this.spouseFilesRequested && this.uploadedFiles.length < 6) {
+      errors.push('בחרת להוסיף תלושי בן/בת זוג — יש להעלות סה"כ 6 תלושים.');
+    }
+
+    if (this.spouseFilesRequested || this.uploadedFiles.length === 6) {
+      this.onSpouseIdNumberBlur();
+      if (!this.requestData.spouseIdNumber || !this.isSpouseIdNumberValid) {
+        errors.push("יש להזין מספר זהות תקין של בן/בת הזוג.");
+      }
+
+      if (this.requestData.spouseIdNumber === this.requestData.idNumber) {
+        errors.push("מספר הזהות של בן/בת הזוג חייב להיות שונה מהמספר הראשי.");
+      }
+    }
+
+    if (errors.length > 0) {
+      this.stepErrors = errors;
       return;
     }
 
@@ -178,6 +232,7 @@ export class TenantWizardComponent implements OnInit {
       .submitRequest(
         this.uploadedFiles,
         this.requestData.idNumber,
+        this.requestData.spouseIdNumber || null,
         this.requestData.desiredRent!,
         this.requestData.cities.join(", "),
       )
@@ -197,12 +252,7 @@ export class TenantWizardComponent implements OnInit {
         error: (err) => {
           console.error("Error submitting request:", err);
           this.isProcessing = false;
-          const errorMessage =
-            err.error?.title ||
-            err.error ||
-            err.message ||
-            "שגיאה ביצירת הבקשה";
-          alert(`אירעה שגיאה ביצירת הבקשה: ${JSON.stringify(errorMessage)}`);
+          this.stepErrors = this.extractErrorMessages(err);
           this.currentStep = 2;
         },
       });
@@ -260,6 +310,93 @@ export class TenantWizardComponent implements OnInit {
     this.isIdNumberValid =
       digitsOnly.length === 9 && this.isValidIsraeliId(digitsOnly);
     this.idNumberError = this.isIdNumberValid ? "" : "מספר הזהות לא תקין";
+
+    if (this.requestData.spouseIdNumber) {
+      this.onSpouseIdNumberBlur();
+    }
+  }
+
+  onSpouseIdNumberInput() {
+    const digitsOnly = (this.requestData.spouseIdNumber || "")
+      .replace(/\D/g, "")
+      .slice(0, 9);
+    this.requestData.spouseIdNumber = digitsOnly;
+
+    if (!digitsOnly) {
+      this.isSpouseIdNumberValid = false;
+      this.spouseIdNumberError = "";
+      return;
+    }
+
+    if (
+      digitsOnly.length === 9 &&
+      this.requestData.idNumber.length === 9 &&
+      digitsOnly === this.requestData.idNumber
+    ) {
+      this.isSpouseIdNumberValid = false;
+      this.spouseIdNumberError = this.spouseMustDifferError;
+      return;
+    }
+
+    if (this.spouseIdNumberError === this.spouseMustDifferError) {
+      this.spouseIdNumberError = "";
+    }
+  }
+
+  onSpouseIdNumberBlur() {
+    const digitsOnly = (this.requestData.spouseIdNumber || "")
+      .replace(/\D/g, "")
+      .slice(0, 9);
+    this.requestData.spouseIdNumber = digitsOnly;
+
+    if (!digitsOnly) {
+      this.isSpouseIdNumberValid = false;
+      this.spouseIdNumberError = "";
+      return;
+    }
+
+    if (digitsOnly === this.requestData.idNumber) {
+      this.isSpouseIdNumberValid = false;
+      this.spouseIdNumberError = this.spouseMustDifferError;
+      return;
+    }
+
+    this.isSpouseIdNumberValid =
+      digitsOnly.length === 9 && this.isValidIsraeliId(digitsOnly);
+    this.spouseIdNumberError = this.isSpouseIdNumberValid
+      ? ""
+      : "מספר הזהות של בן/בת הזוג לא תקין";
+  }
+
+  private extractErrorMessages(err: any): string[] {
+    const payload = err?.error;
+
+    if (!payload) {
+      return ["אירעה שגיאה ביצירת הבקשה."];
+    }
+
+    if (typeof payload === "string") {
+      return [payload];
+    }
+
+    const details = Array.isArray(payload?.details)
+      ? payload.details.filter((v: unknown) => typeof v === "string")
+      : [];
+
+    const validationErrors = payload?.errors
+      ? Object.values(payload.errors)
+          .flat()
+          .filter((v: unknown) => typeof v === "string")
+      : [];
+
+    const messages = [
+      ...(typeof payload?.message === "string" ? [payload.message] : []),
+      ...(typeof payload?.title === "string" ? [payload.title] : []),
+      ...details,
+      ...(validationErrors as string[]),
+    ].filter((v, index, arr) => !!v && arr.indexOf(v) === index);
+
+    return messages.length > 0 ? messages : ["אירעה שגיאה ביצירת הבקשה."];
   }
 
   private isValidIsraeliId(idNumber: string): boolean {
@@ -334,31 +471,52 @@ export class TenantWizardComponent implements OnInit {
       console.log(
         `[SMS MOCK] Skipped real SMS send for requestId=${this.createdRequestId}`,
       );
-      alert("הודעת SMS סומנה כנשלחה (מצב סימולציה)");
+      // קוד קודם שנשמר לבקשתך:
+      // alert("הודעת SMS סומנה כנשלחה (מצב סימולציה)");
+      this.setActionMessage("הודעת SMS סומנה כנשלחה (מצב סימולציה)", "info");
       return;
     }
     //ע ד כאן.
-    if (this.createdRequestId) {
-      this.requestService.sendSms(this.createdRequestId).subscribe({
-        next: (response) => {
-          alert(response?.message ?? "SMS נשלח!");
-        },
-        error: (error) => {
-          const serverError = error?.error?.error ?? "שליחת SMS נכשלה";
-          alert(serverError);
-        },
-      });
-    }
     if (!this.createdRequestId) return;
-    this.requestService.sendSms(this.createdRequestId).subscribe(() => {
-      alert("הודעת SMS נשלחה בהצלחה!");
+    this.requestService.sendSms(this.createdRequestId).subscribe({
+      next: (response) => {
+        // קוד קודם שנשמר לבקשתך:
+        // alert(response?.message ?? "SMS נשלח!");
+        // alert("הודעת SMS נשלחה בהצלחה!");
+        this.setActionMessage(
+          response?.message ?? "הודעת SMS נשלחה בהצלחה!",
+          "success",
+        );
+      },
+      error: (error) => {
+        const serverError = error?.error?.error ?? "שליחת SMS נכשלה";
+        // קוד קודם שנשמר לבקשתך:
+        // alert(serverError);
+        this.setActionMessage(serverError, "error");
+      },
     });
   }
 
   sendEmail() {
     if (!this.createdRequestId) return;
-    this.requestService.sendEmail(this.createdRequestId).subscribe(() => {
-      alert("הודעת אימייל נשלחה בהצלחה!");
+    this.requestService.sendEmail(this.createdRequestId).subscribe({
+      next: () => {
+        // קוד קודם שנשמר לבקשתך:
+        // alert("הודעת אימייל נשלחה בהצלחה!");
+        this.setActionMessage("הודעת אימייל נשלחה בהצלחה!", "success");
+      },
+      error: (error) => {
+        const serverError = error?.error?.error ?? "שליחת אימייל נכשלה";
+        this.setActionMessage(serverError, "error");
+      },
     });
+  }
+
+  private setActionMessage(
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) {
+    this.actionMessage = message;
+    this.actionMessageType = type;
   }
 }

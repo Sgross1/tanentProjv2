@@ -37,8 +37,10 @@ public class OcrService : IOcrService
 
         // New: Collect IDs and dates for validation
         var idNumbers = new HashSet<string>();
-        var payDates = new List<DateTime>();
+        var slipCountById = new Dictionary<string, int>();
+        var payDatesById = new Dictionary<string, List<DateTime>>();
         bool idMissing = false;
+        bool payDateMissing = false;
 
         // Accumulate all raw fields for debugging
         var allDebugFields = new Dictionary<string, object>();
@@ -107,6 +109,17 @@ public class OcrService : IOcrService
                     if (extractedId == null)
                     {
                         idMissing = true;
+                    }
+
+                    if (extractedId != null)
+                    {
+                        if (!slipCountById.ContainsKey(extractedId))
+                        {
+                            slipCountById[extractedId] = 0;
+                            payDatesById[extractedId] = new List<DateTime>();
+                        }
+
+                        slipCountById[extractedId]++;
                     }
 
                     // Children: "מספר ילדים"
@@ -198,7 +211,15 @@ public class OcrService : IOcrService
                     {
                         // Normalize to first day of month
                         payDate = new DateTime(payDate.Year, payDate.Month, 1);
-                        payDates.Add(payDate);
+
+                        if (extractedId != null)
+                        {
+                            payDatesById[extractedId].Add(payDate);
+                        }
+                    }
+                    else
+                    {
+                        payDateMissing = true;
                     }
 
                     // Collect raw fields for debug
@@ -226,9 +247,46 @@ public class OcrService : IOcrService
         {
             throw new InvalidOperationException("מספרי הזהות בתלושים אינם תואמים.");
         }
-        if (files.Count == 6 && idNumbers.Count > 2)
+        if (files.Count == 6 && idNumbers.Count != 2)
         {
-            throw new InvalidOperationException("יותר מדי מספרי זהות שונים בתלושים.");
+            throw new InvalidOperationException("במסלול של 6 תלושים נדרשים בדיוק שני מספרי זהות.");
+        }
+
+        if (payDateMissing)
+        {
+            throw new InvalidOperationException("לא הצלחנו לזהות תאריך תלוש באחד או יותר מהתלושים.");
+        }
+
+        foreach (var id in idNumbers)
+        {
+            if (!slipCountById.TryGetValue(id, out var slipsForId) || slipsForId != 3)
+            {
+                throw new InvalidOperationException($"עבור מספר זהות {id} חייבים להיות בדיוק 3 תלושים.");
+            }
+
+            if (!payDatesById.TryGetValue(id, out var datesForId))
+            {
+                throw new InvalidOperationException($"לא נמצאו תאריכים עבור מספר זהות {id}.");
+            }
+
+            var normalizedDates = datesForId.Distinct().OrderBy(d => d).ToList();
+
+            if (normalizedDates.Count != 3)
+            {
+                throw new InvalidOperationException($"עבור מספר זהות {id} נדרשים 3 חודשי תלוש שונים.");
+            }
+
+            for (int i = 1; i < normalizedDates.Count; i++)
+            {
+                var previous = normalizedDates[i - 1];
+                var current = normalizedDates[i];
+                var monthDiff = (current.Year - previous.Year) * 12 + (current.Month - previous.Month);
+
+                if (monthDiff != 1)
+                {
+                    throw new InvalidOperationException($"חודשי התלושים עבור מספר זהות {id} אינם עוקבים.");
+                }
+            }
         }
 
         // Marital: If not specified and has children, assume married
@@ -237,38 +295,28 @@ public class OcrService : IOcrService
             isMarriedInText = true;
         }
 
-        // Dates: require 3 distinct detected months for 3 payslips,
-        // then enforce month-to-month consecutiveness and recency
-        payDates = payDates.Distinct().OrderBy(d => d).ToList();
-
-        if (files.Count == 3 && payDates.Count != 3)
-        {
-            throw new InvalidOperationException("נדרשים 3 תאריכי תלוש שונים ומזוהים.");
-        }
-
-        if (payDates.Count > 1)
-        {
-            for (int i = 1; i < payDates.Count; i++)
-            {
-                var previous = payDates[i - 1];
-                var current = payDates[i];
-                var monthDiff = (current.Year - previous.Year) * 12 + (current.Month - previous.Month);
-
-                if (monthDiff != 1)
-                {
-                    throw new InvalidOperationException("תאריכי התלושים אינם סמוכים.");
-                }
-            }
-        }
-        //מושבת זמנית לבדיקת תרחישים מרובים של תלושי שכר ישנים:
-        // var lastDate = payDates.LastOrDefault();
-        // if (lastDate != default && (DateTime.Now - lastDate).TotalDays > 90) // 3 months
+        // מושבת זמנית לבדיקת עדכניות תלושים ("האחרונים") במסלול 6 תלושים:
+        // if (files.Count == 6)
         // {
-        //     throw new InvalidOperationException("התלוש האחרון ישן מדי.");
+        //     foreach (var id in idNumbers)
+        //     {
+        //         if (!payDatesById.TryGetValue(id, out var datesForId) || datesForId.Count == 0)
+        //         {
+        //             throw new InvalidOperationException($"לא נמצאו תאריכים עבור מספר זהות {id}.");
+        //         }
+        //
+        //         var lastDateForId = datesForId.Max();
+        //         if ((DateTime.Now - lastDateForId).TotalDays > 90) // 3 חודשים
+        //         {
+        //             throw new InvalidOperationException($"התלוש האחרון עבור מספר זהות {id} ישן מדי.");
+        //         }
+        //     }
         // }
 
         // Calculation Logic
-        decimal averageMonthlyIncome = countNetIncome > 0 ? totalNetIncome / countNetIncome : 0;
+        // עבור 6 תלושים (זוג): מחשבים הכנסה חודשית משקית ולכן מחלקים ב-3 חודשים, לא ב-6 תלושים.
+        var incomeDivisor = files.Count == 6 ? 3 : countNetIncome;
+        decimal averageMonthlyIncome = incomeDivisor > 0 ? totalNetIncome / incomeDivisor : 0;
 
         return new CreateRequestDto
         {
@@ -277,7 +325,7 @@ public class OcrService : IOcrService
             SeniorityYears = Math.Round(maxSeniority, 1),
             PensionGrossAmount = maxPension,
             PensionDeductionPercent = pensionDeductionPercent,
-            IdNumbers = idNumbers.ToList(),
+            IdNumbers = idNumbers.OrderBy(id => id).ToList(),
             RawData = allDebugFields,
             IsMarried = files.Count >= 6 || isMarriedInText
         };

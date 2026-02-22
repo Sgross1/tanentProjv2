@@ -27,6 +27,7 @@ export class AuthModalComponent {
   phoneError: string = "";
   emailError: string = "";
   loginError: string = "";
+  infoMessage: string = "";
 
   constructor(
     private fb: FormBuilder,
@@ -66,11 +67,13 @@ export class AuthModalComponent {
   toggleMode() {
     this.isLogin = !this.isLogin;
     this.isForgot = false;
+    this.infoMessage = "";
   }
 
   toggleForgot() {
     this.isForgot = !this.isForgot;
     this.isLogin = true; // Return to login context if canceling forgot
+    this.infoMessage = "";
   }
 
   close() {
@@ -80,6 +83,7 @@ export class AuthModalComponent {
 
   onSubmit() {
     this.loginError = "";
+    this.infoMessage = "";
     if (this.authForm.invalid) {
       // Allow partial validation for Forgot Password (only email needed)
       if (this.isForgot && this.authForm.get("email")?.valid) {
@@ -123,8 +127,12 @@ export class AuthModalComponent {
       next: (res) => {
         this.isLoading = false;
         if (this.isForgot) {
-          alert("אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.");
-          this.toggleForgot(); // Go back to login
+          // קוד קודם שנשמר לבקשתך:
+          // alert("אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.");
+          this.infoMessage =
+            "אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.";
+          this.isForgot = false;
+          this.isLogin = true;
         } else {
           console.log("Auth success", res);
           this.close();

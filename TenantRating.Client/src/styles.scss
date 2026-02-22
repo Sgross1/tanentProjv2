@@ -14,15 +14,30 @@
   --bg-color: var(--color-pure-white);
   --text-color: var(--color-text-main);
 
-  font-family: 'Rubik', 'Heebo', 'Segoe UI', sans-serif;
+  font-family: "Heebo", "Rubik", "Segoe UI", sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: 'Rubik', sans-serif;
+  font-family: "Heebo", "Rubik", sans-serif;
   background-color: var(--color-pure-white);
   color: var(--color-text-main);
   overflow-x: hidden;
+  scrollbar-color: #9fb6d8 #eef3f8;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #9fb6d8;
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #88a7d0;
 }
 
 h1,
@@ -31,6 +46,6 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Rubik', sans-serif;
+  font-family: "Rubik", sans-serif;
   margin: 0;
 }

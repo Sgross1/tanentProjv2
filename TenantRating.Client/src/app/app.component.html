@@ -7,57 +7,98 @@
 
 <!-- REFINED NAVBAR -->
 <nav class="navbar-refined">
-    <!-- Right side: Logo -->
-    <div class="logo-side">
-        <div class="logo" routerLink="/">KaLiScore</div>
+  <!-- Right side: Logo -->
+  <div class="logo-side">
+    <div class="logo" routerLink="/">KaLiScore</div>
+  </div>
+
+  <!-- Center side: Navigation Pill -->
+  <div class="nav-center">
+    <div class="nav-pill" [class.mobile-active]="isMenuOpen">
+      <!-- <a routerLink="/" fragment="home" class="nav-pill-item" (click)="closeMenu()">דף הבית</a> -->
+      <a
+        routerLink="/"
+        fragment="how-it-works"
+        class="nav-pill-item"
+        (click)="closeMenu()"
+        >איך זה עובד</a
+      >
+      <a
+        routerLink="/"
+        fragment="about"
+        class="nav-pill-item"
+        (click)="closeMenu()"
+        >אודות</a
+      >
+      <a
+        routerLink="/"
+        fragment="faq"
+        class="nav-pill-item"
+        (click)="closeMenu()"
+        >שאלות נפוצות</a
+      >
+      <a
+        routerLink="/"
+        fragment="contact"
+        class="nav-pill-item"
+        (click)="closeMenu()"
+        >צור קשר</a
+      >
     </div>
 
-    <!-- Center side: Navigation Pill -->
-    <div class="nav-center">
-        <div class="nav-pill" [class.mobile-active]="isMenuOpen">
-            <!-- <a routerLink="/" fragment="home" class="nav-pill-item" (click)="closeMenu()">דף הבית</a> -->
-            <a routerLink="/" fragment="how-it-works" class="nav-pill-item" (click)="closeMenu()">איך זה עובד</a>
-            <a routerLink="/" fragment="about" class="nav-pill-item" (click)="closeMenu()">אודות</a>
-            <a routerLink="/" fragment="faq" class="nav-pill-item" (click)="closeMenu()">שאלות נפוצות</a>
-            <a routerLink="/" fragment="contact" class="nav-pill-item" (click)="closeMenu()">צור קשר</a>
+    <!-- Hamburger Button (Mobile Only) -->
+    <div class="hamburger-wrapper" (click)="toggleMenu()">
+      <div class="hamburger" [class.active]="isMenuOpen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
 
-        </div>
+  <!-- Left side: Auth -->
+  <div class="auth-side">
+    <div
+      class="restricted-links"
+      *ngIf="authService.currentUser$ | async as user"
+    >
+      <a
+        routerLink="/tenant/dashboard"
+        (click)="closeMenu()"
+        *ngIf="user.role !== 'Admin'"
+        class="secondary-link personal-area-link"
+        >איזור אישי</a
+      >
 
-        <!-- Hamburger Button (Mobile Only) -->
-        <div class="hamburger-wrapper" (click)="toggleMenu()">
-            <div class="hamburger" [class.active]="isMenuOpen">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
+      <a
+        routerLink="/admin"
+        *ngIf="user.role === 'Admin'"
+        class="secondary-link admin-link"
+        (click)="closeMenu()"
+        >ניהול מערכת</a
+      >
     </div>
 
-    <!-- Left side: Auth -->
-    <div class="auth-side">
-        <div class="restricted-links" *ngIf="authService.currentUser$ | async as user">
-            <a routerLink="/tenant/dashboard" (click)="closeMenu()" *ngIf="user.role !== 'Admin'"
-                class="secondary-link personal-area-link">איזור אישי</a>
-
-            <a routerLink="/admin" *ngIf="user.role === 'Admin'" class="secondary-link admin-link"
-                (click)="closeMenu()">ניהול מערכת</a>
-        </div>
-
-        <div class="auth-buttons">
-            <ng-container *ngIf="authService.currentUser$ | async as user; else loginButton">
-                <span class="user-greeting">שלום, {{user.firstName}}</span>
-                <button (click)="authService.logout()" class="logout-btn">התנתק</button>
-            </ng-container>
-            <ng-template #loginButton>
-                <button (click)="openAuth()" class="login-btn">כניסה / הרשמה</button>
-            </ng-template>
-        </div>
+    <div class="auth-buttons">
+      <ng-container
+        *ngIf="authService.currentUser$ | async as user; else loginButton"
+      >
+        <span class="user-greeting">שלום, {{ user.firstName }}</span>
+        <button (click)="logout()" class="logout-btn">התנתק</button>
+      </ng-container>
+      <ng-template #loginButton>
+        <button (click)="openAuth()" class="login-btn">כניסה / הרשמה</button>
+      </ng-template>
     </div>
+  </div>
 </nav>
 
-<app-auth-modal *ngIf="showAuthModal" (closeEvent)="closeAuth()"></app-auth-modal>
+<app-auth-modal
+  *ngIf="showAuthModal"
+  (closeEvent)="closeAuth()"
+></app-auth-modal>
 
-<div class="container" style="padding: 2rem; padding-top: 90px;">
-    <!-- Main Content -->
-    <router-outlet></router-outlet>
+<div class="container" style="padding: 2rem; padding-top: 90px">
+  <!-- Main Content -->
+  <router-outlet></router-outlet>
 </div>

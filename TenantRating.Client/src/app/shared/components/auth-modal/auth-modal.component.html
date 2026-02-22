@@ -11,6 +11,8 @@
     </div>
 
     <form [formGroup]="authForm" (ngSubmit)="onSubmit()">
+      <div class="info-message" *ngIf="infoMessage">{{ infoMessage }}</div>
+
       <!-- Register Fields -->
       <div class="form-group-row" *ngIf="!isLogin && !isForgot">
         <div class="input-group">
@@ -79,8 +81,9 @@
         <span *ngIf="!isLogin && !isForgot && !isLoading">הרשמה מהירה</span>
         <span *ngIf="isLoading" class="loader">...</span>
       </button>
-      <div class="error-message" *ngIf="loginError && isLogin && !isForgot">{{ loginError }}</div>
-
+      <div class="error-message" *ngIf="loginError && isLogin && !isForgot">
+        {{ loginError }}
+      </div>
     </form>
 
     <div class="modal-footer">

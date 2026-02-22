@@ -122,12 +122,44 @@ public class RequestsController : ControllerBase
     public async Task<ActionResult<RequestResultDto>> SubmitRequest(
         [FromForm] List<IFormFile> files,
         [FromForm] string idNumber,
+        [FromForm] string? spouseIdNumber,
         [FromForm] decimal desiredRent,
         [FromForm] string cityName)
     {
         if (files == null || (files.Count != 3 && files.Count != 6))
         {
-            return BadRequest("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+            return ValidationError("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+        }
+
+        if (!TryNormalizeIsraeliId(idNumber, out var normalizedPrimaryId))
+        {
+            return ValidationError("מספר הזהות הראשי אינו תקין.");
+        }
+
+        string? normalizedSpouseId = null;
+        if (!string.IsNullOrWhiteSpace(spouseIdNumber))
+        {
+            if (!TryNormalizeIsraeliId(spouseIdNumber, out var parsedSpouseId))
+            {
+                return ValidationError("מספר הזהות של בן/בת הזוג אינו תקין.");
+            }
+
+            normalizedSpouseId = parsedSpouseId;
+        }
+
+        if (files.Count == 3 && !string.IsNullOrWhiteSpace(normalizedSpouseId))
+        {
+            return ValidationError("במסלול של 3 תלושים יש להזין רק מספר זהות אחד.");
+        }
+
+        if (files.Count == 6 && string.IsNullOrWhiteSpace(normalizedSpouseId))
+        {
+            return ValidationError("במסלול של 6 תלושים חובה להזין גם מספר זהות של בן/בת הזוג.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedSpouseId) && normalizedPrimaryId == normalizedSpouseId)
+        {
+            return ValidationError("מספר הזהות של בן/בת הזוג חייב להיות שונה מהמספר הראשי.");
         }
 
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -138,12 +170,40 @@ public class RequestsController : ControllerBase
             var extracted = await _ocrService.AnalyzePayslipsAsync(files);
 
             // Verify ID match between user input and extracted IDs
-            var inputId = idNumber?.Trim().Replace("-", "").Replace(" ", "");
-            var extractedIds = extracted.IdNumbers.Select(id => id.Trim().Replace("-", "").Replace(" ", "")).ToList();
+            var extractedIds = extracted.IdNumbers
+                .Select(id => NormalizeDigitsOnly(id))
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .OrderBy(id => id)
+                .ToList();
 
-            if (string.IsNullOrEmpty(inputId) || !extractedIds.Contains(inputId))
+            if (files.Count == 3)
             {
-                return BadRequest("מספר הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
+                if (extractedIds.Count != 1 || extractedIds[0] != normalizedPrimaryId)
+                {
+                    return ValidationError(
+                        "מספר הזהות שהוזן אינו תואם לתלושים שהועלו.",
+                        "נדרש שמספר הזהות הראשי יתאים לכל 3 התלושים במסלול יחיד.");
+                }
+            }
+            else
+            {
+                var submittedIds = new[] { normalizedPrimaryId, normalizedSpouseId! }
+                    .Distinct()
+                    .OrderBy(id => id)
+                    .ToList();
+
+                if (submittedIds.Count != 2)
+                {
+                    return ValidationError("נדרשים שני מספרי זהות שונים עבור מסלול של 6 תלושים.");
+                }
+
+                if (extractedIds.Count != 2 || !submittedIds.SequenceEqual(extractedIds))
+                {
+                    return ValidationError(
+                        "מספרי הזהות שהוזנו אינם תואמים למספרים שחולצו מהתלושים.",
+                        "ודא שהזנת את מספר הזהות של בעל הבקשה ושל בן/בת הזוג בדיוק כפי שמופיעים בתלושים.");
+                }
             }
 
             // Create request entity
@@ -152,7 +212,7 @@ public class RequestsController : ControllerBase
                 UserId = userId,
                 DesiredRent = desiredRent,
                 CityName = cityName,
-                TenantIdNumbers = string.Join(",", extracted.IdNumbers),
+                TenantIdNumbers = string.Join(",", extractedIds),
                 DateCreated = DateTime.UtcNow
             };
 
@@ -180,10 +240,46 @@ public class RequestsController : ControllerBase
                 MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
             };
         }
+        catch (InvalidOperationException ex)
+        {
+            return ValidationError("אימות התלושים נכשל.", ex.Message);
+        }
         catch (Exception ex)
         {
             return StatusCode(500, $"שגיאה בעיבוד הבקשה: {ex.Message}");
         }
+    }
+
+    private ActionResult ValidationError(string message, params string[] details)
+    {
+        return BadRequest(new
+        {
+            message,
+            details = details.Where(d => !string.IsNullOrWhiteSpace(d)).ToArray()
+        });
+    }
+
+    private static string NormalizeDigitsOnly(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+        return new string(raw.Where(char.IsDigit).ToArray());
+    }
+
+    private static bool TryNormalizeIsraeliId(string? raw, out string normalized)
+    {
+        normalized = NormalizeDigitsOnly(raw);
+        if (normalized.Length != 9) return false;
+
+        var sum = normalized
+            .Select((ch, index) =>
+            {
+                var digit = ch - '0';
+                var multiplied = digit * ((index % 2) + 1);
+                return multiplied > 9 ? multiplied - 9 : multiplied;
+            })
+            .Sum();
+
+        return sum % 10 == 0;
     }
 
     [HttpPost("verify-id")]

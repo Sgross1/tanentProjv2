@@ -21,7 +21,8 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
     {
-        Console.WriteLine($"[API] Register request received for: {dto.Email}"); // Debug Log
+        var normalizedEmail = (dto.Email ?? string.Empty).Trim().ToLowerInvariant();
+        Console.WriteLine($"[API] Register request received for: {normalizedEmail}"); // Debug Log
         if (!Enum.TryParse<UserRole>(dto.Role, true, out var role))
         {
             return BadRequest("Invalid Role");
@@ -38,16 +39,16 @@ public class AuthController : ControllerBase
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            Email = dto.Email,
+            Email = normalizedEmail,
             PhoneNumber = phone,
             Role = role
         };
 
         var result = await _authService.Register(user, dto.Password);
-        if (result == null) return BadRequest("User already exists");
+        if (result == null) return BadRequest("קיים כבר משתמש עם כתובת האימייל הזו.");
 
         // Auto login after register
-        var token = await _authService.Login(dto.Email, dto.Password);
+        var token = await _authService.Login(normalizedEmail, dto.Password);
 
         return new AuthResponseDto
         {
@@ -60,10 +61,12 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
     {
-        var token = await _authService.Login(dto.Email, dto.Password);
+        var normalizedEmail = (dto.Email ?? string.Empty).Trim().ToLowerInvariant();
+
+        var token = await _authService.Login(normalizedEmail, dto.Password);
         if (token == null) return Unauthorized("Invalid email or password");
 
-        var user = await _authService.GetUser(dto.Email);
+        var user = await _authService.GetUser(normalizedEmail);
 
         return new AuthResponseDto
         {
@@ -76,13 +79,14 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
     {
-        Console.WriteLine($"[DEBUG] Received forgot password request for: {dto.Email}");
-        var token = await _authService.GeneratePasswordResetToken(dto.Email);
+        var normalizedEmail = (dto.Email ?? string.Empty).Trim().ToLowerInvariant();
+        Console.WriteLine($"[DEBUG] Received forgot password request for: {normalizedEmail}");
+        var token = await _authService.GeneratePasswordResetToken(normalizedEmail);
 
         if (token != null)
         {
             var resetLink = $"http://localhost:4200/reset-password?token={token}";
-            var user = await _authService.GetUser(dto.Email);
+            var user = await _authService.GetUser(normalizedEmail);
             var firstName = user?.FirstName?.Trim();
             var lastName = user?.LastName?.Trim();
             var recipientName = string.Join(" ", new[] { firstName, lastName }.Where(v => !string.IsNullOrWhiteSpace(v))).Trim();
@@ -92,15 +96,15 @@ public class AuthController : ControllerBase
             }
 
             Console.WriteLine("=================================================");
-            Console.WriteLine($"[EMAIL SIMULATION] To: {dto.Email}");
+            Console.WriteLine($"[EMAIL SIMULATION] To: {normalizedEmail}");
             Console.WriteLine($"[EMAIL SIMULATION] Subject: Password Reset Request");
             Console.WriteLine($"[EMAIL SIMULATION] Body: Click here to reset: {resetLink}");
             Console.WriteLine($"[EMAIL SIMULATION] Token Code: {token}");
             Console.WriteLine("=================================================");
-            var sendResult = await _emailService.SendPasswordResetEmailAsync(dto.Email, recipientName, resetLink, token);
+            var sendResult = await _emailService.SendPasswordResetEmailAsync(normalizedEmail, recipientName, resetLink, token);
             if (sendResult.IsSuccess)
             {
-                Console.WriteLine($"[SUCCESS] Email sent successfully to: {dto.Email}");
+                Console.WriteLine($"[SUCCESS] Email sent successfully to: {normalizedEmail}");
             }
             else
             {
@@ -110,7 +114,7 @@ public class AuthController : ControllerBase
         }
         else
         {
-            Console.WriteLine($"[DEBUG] User not found for email: {dto.Email}");
+            Console.WriteLine($"[DEBUG] User not found for email: {normalizedEmail}");
         }
 
         return Ok(new { message = "If the email exists, a reset link has been sent." });

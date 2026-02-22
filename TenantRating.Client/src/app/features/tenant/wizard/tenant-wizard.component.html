@@ -68,6 +68,15 @@
             <button class="btn-outline" (click)="sendEmail()">📧 מייל</button>
           </div>
 
+          <div
+            class="inline-message"
+            *ngIf="actionMessage"
+            [class.success]="actionMessageType === 'success'"
+            [class.error]="actionMessageType === 'error'"
+          >
+            {{ actionMessage }}
+          </div>
+
           <div class="actions">
             <button class="btn-primary full-width" (click)="finish()">
               סיום וחזרה
@@ -101,6 +110,13 @@
             <div class="step-content fade-in" *ngIf="currentStep === 1">
               <h2>פרטים בסיסיים</h2>
               <p>בוא נתחיל עם הפרטים על הדירה שאתה מחפש.</p>
+
+              <div class="inline-errors" *ngIf="stepErrors.length > 0">
+                <div class="error-title">יש לתקן את הנקודות הבאות:</div>
+                <ul>
+                  <li *ngFor="let error of stepErrors">{{ error }}</li>
+                </ul>
+              </div>
 
               <div class="form-group">
                 <label>תעודת זהות</label>
@@ -180,10 +196,16 @@
                 {{
                   spouseFilesRequested
                     ? "העלה 3 תלושים של בן/בת הזוג"
-                    : 'העלה 3 תלושי שכר אחרונים
-                ותדפיס עו"ש.'
+                    : 'העלה 3 תלושי שכר אחרונים ותדפיס עו"ש.'
                 }}
               </p>
+
+              <div class="inline-errors" *ngIf="stepErrors.length > 0">
+                <div class="error-title">הבקשה לא נשלחה:</div>
+                <ul>
+                  <li *ngFor="let error of stepErrors">{{ error }}</li>
+                </ul>
+              </div>
 
               <div class="spouse-promo" *ngIf="askSpouse">
                 <h3>🎉 כל הכבוד!</h3>
@@ -203,6 +225,23 @@
                   >
                     לא, תודה
                   </button>
+                </div>
+              </div>
+
+              <div
+                class="form-group"
+                *ngIf="spouseFilesRequested || uploadedFiles.length === 6"
+              >
+                <label>תעודת זהות בן/בת זוג</label>
+                <input
+                  type="text"
+                  [(ngModel)]="requestData.spouseIdNumber"
+                  (input)="onSpouseIdNumberInput()"
+                  (blur)="onSpouseIdNumberBlur()"
+                  placeholder="מספר תעודת זהות של בן/בת הזוג"
+                />
+                <div class="error-message" *ngIf="spouseIdNumberError">
+                  {{ spouseIdNumberError }}
                 </div>
               </div>
 

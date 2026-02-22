@@ -1,13 +1,12 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
 import {
   LandlordService,
   TenantSearchResult,
 } from "../../../core/services/landlord.service";
 import { CitiesService } from "../../../core/services/cities.service";
-import { debounceTime, distinctUntilChanged, Subject, switchMap } from "rxjs";
+import { AuthService } from "../../../core/services/auth.service";
 
 import { WheelComponent } from "../../../shared/components/wheel/wheel.component";
 
@@ -28,6 +27,7 @@ export class LandlordSearchComponent implements OnInit {
   hasSearched = false;
   showPhoneMap: { [key: number]: boolean } = {};
   savedMap: { [key: number]: boolean } = {};
+  actionError = "";
 
   // Autocomplete Data
   filteredCities: string[] = [];
@@ -35,9 +35,9 @@ export class LandlordSearchComponent implements OnInit {
 
   constructor(
     private landlordService: LandlordService,
-    private router: Router,
     private citiesService: CitiesService,
-  ) { }
+    private authService: AuthService,
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -107,29 +107,50 @@ export class LandlordSearchComponent implements OnInit {
   }
 
   toggleSave(tenant: TenantSearchResult) {
-    // Check if user is logged in
-    const currentUser = localStorage.getItem("user");
-    if (!currentUser) {
-      if (
-        confirm("עליך להתחבר כדי לשמור פניות. האם לעבור לדף הרשמה/התחברות?")
-      ) {
-        // We should ideally redirect to login, but we don't have Router injected.
-        // Let's reload to login or use window.location for quick fix, or better: inject Router.
-        this.router.navigate(["/"]); // Redirect to home for login
-      }
+    this.actionError = "";
+
+    const currentUser = this.authService.getCurrentUserValue();
+    if (!currentUser?.token) {
+      this.actionError = "כדי לשמור פנייה יש להתחבר לחשבון.";
       return;
     }
 
     const isSaved = this.savedMap[tenant.requestId];
 
     if (isSaved) {
-      this.landlordService.unsaveRequest(tenant.requestId).subscribe(() => {
-        this.savedMap[tenant.requestId] = false;
+      this.landlordService.unsaveRequest(tenant.requestId).subscribe({
+        next: () => {
+          this.savedMap[tenant.requestId] = false;
+        },
+        error: (err) => {
+          this.actionError = this.mapSaveError(err);
+        },
       });
     } else {
-      this.landlordService.saveRequest(tenant.requestId).subscribe(() => {
-        this.savedMap[tenant.requestId] = true;
+      this.landlordService.saveRequest(tenant.requestId).subscribe({
+        next: () => {
+          this.savedMap[tenant.requestId] = true;
+        },
+        error: (err) => {
+          this.actionError = this.mapSaveError(err);
+        },
       });
     }
+  }
+
+  private mapSaveError(err: any): string {
+    if (err?.status === 401) {
+      return "כדי לשמור פנייה יש להתחבר לחשבון.";
+    }
+
+    if (typeof err?.error === "string" && err.error.trim()) {
+      return err.error;
+    }
+
+    if (typeof err?.error?.message === "string" && err.error.message.trim()) {
+      return err.error.message;
+    }
+
+    return "פעולת שמירה נכשלה. נסה שוב.";
   }
 }

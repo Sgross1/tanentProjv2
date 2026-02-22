@@ -65,12 +65,12 @@ export class HomeComponent implements AfterViewInit {
   handleRoleClick(role: "Tenant" | "Landlord") {
     const currentUser = this.authService.getCurrentUserValue();
 
-    if (!currentUser) {
-      this.appComponent.openAuth();
-      return;
-    }
-
     if (role === "Tenant") {
+      if (!currentUser) {
+        this.appComponent.openAuth();
+        return;
+      }
+
       this.router.navigate(["/tenant/wizard"]);
     } else if (role === "Landlord") {
       this.router.navigate(["/landlord/search"]);

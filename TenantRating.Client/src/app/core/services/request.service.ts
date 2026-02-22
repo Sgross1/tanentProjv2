@@ -62,6 +62,7 @@ export class RequestService {
   submitRequest(
     files: File[],
     idNumber: string,
+    spouseIdNumber: string | null,
     desiredRent: number,
     cityName: string,
   ): Observable<RequestResultDto> {
@@ -70,6 +71,9 @@ export class RequestService {
       formData.append("files", file);
     });
     formData.append("idNumber", idNumber);
+    if (spouseIdNumber) {
+      formData.append("spouseIdNumber", spouseIdNumber);
+    }
     formData.append("desiredRent", desiredRent.toString());
     formData.append("cityName", cityName);
 
