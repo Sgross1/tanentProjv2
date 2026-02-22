@@ -42,6 +42,7 @@ export class TenantWizardComponent implements OnInit {
 
   // Step 2 Data
   uploadedFiles: File[] = [];
+  fileStatuses: { [fileName: string]: 'loading' | 'done' } = {};
 
   // Step 3 Data (Result)
   finalScore = 0;
@@ -56,7 +57,7 @@ export class TenantWizardComponent implements OnInit {
     private router: Router,
     private requestService: RequestService,
     private citiesService: CitiesService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -128,10 +129,18 @@ export class TenantWizardComponent implements OnInit {
   spouseFilesRequested = false;
 
   onFileSelected(event: any) {
-    const files = event.target.files;
+    const files: FileList = event.target.files;
     if (files) {
       for (let i = 0; i < files.length; i++) {
-        this.uploadedFiles.push(files[i]);
+        const file = files[i];
+        this.uploadedFiles.push(file);
+
+        // Simulating the "fake load" animation from the provided design
+        this.fileStatuses[file.name] = 'loading';
+        const simulatedLoadTime = 1500 + (i * 800);
+        setTimeout(() => {
+          this.fileStatuses[file.name] = 'done';
+        }, simulatedLoadTime);
       }
     }
 
@@ -146,7 +155,9 @@ export class TenantWizardComponent implements OnInit {
   }
 
   removeFile(index: number) {
+    const fileName = this.uploadedFiles[index].name;
     this.uploadedFiles.splice(index, 1);
+    delete this.fileStatuses[fileName];
 
     // Reset spouse logic if we drop below 3 files
     if (this.uploadedFiles.length < 3) {
