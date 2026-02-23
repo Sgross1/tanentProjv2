@@ -37,4 +37,5 @@ public class RequestResultDto
     public string CityName { get; set; } = string.Empty;
     public DateTime DateCreated { get; set; }
     public decimal MaxAffordableRent { get; set; }
+    public int Percentile { get; set; }
 }

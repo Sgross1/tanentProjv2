@@ -290,8 +290,9 @@ OLD CODE END -->
         <div class="wizard-card" style="margin-top: 15px; width: 100%; text-align: right;">
 
           <!-- Result Step (Full Width) -->
-          <div class="step-content result fade-in" *ngIf="currentStep === 4">
-            <h2>הדירוג שלך מוכן!</h2>
+          <div class="step-content result fade-in" *ngIf="currentStep === 4"
+            style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <h2 style="margin-bottom: 20px;">הדירוג שלך מוכן!</h2>
 
             <div class="score-display">
               <div class="score-circle">
@@ -302,37 +303,37 @@ OLD CODE END -->
               </div>
             </div>
 
-            <p class="score-desc" style="text-align: center;">
+            <p class="score-desc" style="text-align: center; margin-top: 15px;">
               עבור שכ"ד {{ requestData.desiredRent | number }} ₪
             </p>
 
-            <div class="distribution-graph-container">
-              <h3>איפה אתה ביחס לאחרים?</h3>
-              <div class="graph-wrapper">
-                <div class="y-axis-label">כמות אנשים</div>
-                <div class="distribution-graph">
-                  <div class="bar-wrapper" *ngFor="let bar of distributionBars">
-                    <div class="label-you" *ngIf="bar.isUser">אתה כאן!</div>
-                    <div class="bar" [style.height.%]="bar.height" [class.highlight]="bar.isUser"></div>
-                  </div>
+            <div class="distribution-graph-container" style="margin: 1rem 0; padding: 1rem; text-align: center;">
+              <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: #2d3436;">איפה אתה ביחס לאחרים?</h3>
+
+              <div class="radial-progress-wrapper" style="margin: 20px 0;">
+                <div class="radial-progress" [style.--value]="userPercentile"
+                  style="--size: 11rem; --thickness: 1.5rem;" role="progressbar">
+                  <div class="percent-text">{{ userPercentile }}<span class="symbol">%</span></div>
                 </div>
               </div>
 
-              <div class="x-axis">
-                <span class="range-val">0</span>
-                <span class="x-label-text">ציון אמינות</span>
-                <span class="range-val">100</span>
-              </div>
-              <p class="graph-note">
+              <p class="graph-note" style="margin-top: 1.5rem; font-size: 0.95rem; font-weight: 500;">
                 הציון שלך גבוה מ-{{ userPercentile }}% מהמחפשים בתקציב זה.
               </p>
             </div>
 
-            <div class="slider-box">
-              <h4>רוצה לשפר ל-{{ sliderValue }}?</h4>
+            <div class="slider-box"
+              style="margin-top: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+              <h4 *ngIf="sliderValue === finalScore" style="margin-bottom: 20px; text-align: center; width: 100%;">
+                בדוק תקציב מול ציון אם שכר הדירה הוא {{ requestData.desiredRent | number }} ₪
+              </h4>
+              <h4 *ngIf="sliderValue !== finalScore" style="margin-bottom: 20px; text-align: center; width: 100%;">
+                בשביל לקבל ציון <span style="color:#00cec9;">{{ sliderValue }}</span>
+              </h4>
+
               <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
-                (input)="updateRentCalculation()" />
-              <p>
+                (input)="updateRentCalculation()" dir="ltr" style="width: 75%; margin: 0 auto;" />
+              <p style="margin-top: 15px; text-align: center; width: 100%;">
                 תקציב מומלץ: <strong>{{ calculatedRent | number }} ₪</strong>
               </p>
             </div>

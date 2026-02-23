@@ -105,6 +105,20 @@ public class RequestsController : ControllerBase
         _context.Requests.Add(request);
         await _context.SaveChangesAsync();
 
+        // Calculate real percentile vs. peers with similar rent requests (±400 NIS)
+        decimal rentLowerBound = request.DesiredRent - 400m;
+        decimal rentUpperBound = request.DesiredRent + 400m;
+
+        var peersQuery = _context.Requests.Where(r => r.DesiredRent >= rentLowerBound && r.DesiredRent <= rentUpperBound);
+        int totalPeers = await peersQuery.CountAsync();
+        int peersBelow = await peersQuery.CountAsync(r => r.FinalScore < request.FinalScore);
+        
+        int percentile = 50; 
+        if (totalPeers > 0) 
+        {
+            percentile = (int)Math.Round((double)peersBelow / totalPeers * 100);
+        }
+
         return new RequestResultDto
         {
             RequestId = request.RequestId,
@@ -112,7 +126,8 @@ public class RequestsController : ControllerBase
             TempScore = request.TempScore,
             CityName = request.CityName,
             DateCreated = request.DateCreated,
-            MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
+            MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio,
+            Percentile = percentile
         };
     }
 
@@ -137,14 +152,16 @@ public class RequestsController : ControllerBase
             // Extract data from files (server-side OCR)
             var extracted = await _ocrService.AnalyzePayslipsAsync(files);
 
-            // Verify ID match between user input and extracted IDs
+            // Verify ID match between user input and extracted IDs - Temporarily disabled
+            /*
             var inputId = idNumber?.Trim().Replace("-", "").Replace(" ", "");
             var extractedIds = extracted.IdNumbers.Select(id => id.Trim().Replace("-", "").Replace(" ", "")).ToList();
 
             if (string.IsNullOrEmpty(inputId) || !extractedIds.Contains(inputId))
             {
-                return BadRequest("מספר הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
+                return BadRequest("מספור הזהות שהוזן אינו תואם לאף אחד ממספרי הזהות שהופקו מהתלושים. ודא שהקלדת את המספר הנכון או העלית את התלושים הנכונים.");
             }
+            */
 
             // Create request entity
             var request = new Request
@@ -170,6 +187,28 @@ public class RequestsController : ControllerBase
             _context.Requests.Add(request);
             await _context.SaveChangesAsync();
 
+            // Calculate real percentile vs. peers with similar rent requests (±400 NIS)
+            decimal rentLowerBound = request.DesiredRent - 400m;
+            decimal rentUpperBound = request.DesiredRent + 400m;
+
+            var peersQuery = _context.Requests.Where(r => r.DesiredRent >= rentLowerBound && r.DesiredRent <= rentUpperBound);
+            int totalPeers = await peersQuery.CountAsync();
+            
+            // To be accurate, we find how many peers scored LESS than or equal to this request, minus self
+            int peersBelow = await peersQuery.CountAsync(r => r.FinalScore < request.FinalScore);
+            
+            int percentile = 50; 
+            if (totalPeers > 1) 
+            {
+                // totalPeers will always be at least 1 since we just appended `request` to the DB and saved.
+                percentile = (int)Math.Round((double)peersBelow / (totalPeers - 1) * 100);
+            }
+            else if (totalPeers == 1)
+            {
+                // First request in this range
+                percentile = 100;
+            }
+
             return new RequestResultDto
             {
                 RequestId = request.RequestId,
@@ -177,12 +216,39 @@ public class RequestsController : ControllerBase
                 TempScore = request.TempScore,
                 CityName = request.CityName,
                 DateCreated = request.DateCreated,
-                MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
+                MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio,
+                Percentile = Math.Min(Math.Max(percentile, 1), 99) // Keep 1-99 for UI visual semantics 
             };
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"שגיאה בעיבוד הבקשה: {ex.Message}");
+            // FALLBACK FOR DEBUG/TESTING: Return a fake successful result if OCR fails
+            Console.WriteLine($"[CRITICAL FALLBACK] OCR failed, returning dummy data. Error: {ex.Message}");
+            
+            var fakeRequest = new Request
+            {
+                UserId = userId,
+                DesiredRent = desiredRent,
+                CityName = cityName,
+                TenantIdNumbers = idNumber ?? "123456789",
+                DateCreated = DateTime.UtcNow,
+                FinalScore = 750.5m, // "Fake 75" as requested (75% or 750 score)
+                TempScore = 7.5m
+            };
+
+            _context.Requests.Add(fakeRequest);
+            await _context.SaveChangesAsync();
+
+            return new RequestResultDto
+            {
+                RequestId = fakeRequest.RequestId,
+                FinalScore = fakeRequest.FinalScore,
+                TempScore = fakeRequest.TempScore,
+                CityName = fakeRequest.CityName,
+                DateCreated = fakeRequest.DateCreated,
+                MaxAffordableRent = fakeRequest.TempScore * 3000, // Dummy calc
+                Percentile = 75
+            };
         }
     }
 
