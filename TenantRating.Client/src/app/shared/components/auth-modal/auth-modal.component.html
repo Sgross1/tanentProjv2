@@ -35,6 +35,8 @@
         <input
           type="email"
           formControlName="email"
+          (input)="onEmailInput()"
+          (blur)="onEmailBlur()"
           placeholder="כתובת אימייל"
         />
         <div class="error-message" *ngIf="emailError">{{ emailError }}</div>
@@ -76,9 +78,13 @@
         class="btn-premium submit-btn"
         [disabled]="isLoading"
       >
-        <span *ngIf="isForgot && !isLoading">שלח קישור ליפוס</span>
+        <!-- נוסח קודם שנשמר לבקשתך:
         <span *ngIf="isLogin && !isForgot && !isLoading">התחבר</span>
         <span *ngIf="!isLogin && !isForgot && !isLoading">הרשמה מהירה</span>
+        -->
+        <span *ngIf="isForgot && !isLoading">שלח קישור לאיפוס</span>
+        <span *ngIf="isLogin && !isForgot && !isLoading">התחברות</span>
+        <span *ngIf="!isLogin && !isForgot && !isLoading">הרשמה</span>
         <span *ngIf="isLoading" class="loader">...</span>
       </button>
       <div class="error-message" *ngIf="loginError && isLogin && !isForgot">

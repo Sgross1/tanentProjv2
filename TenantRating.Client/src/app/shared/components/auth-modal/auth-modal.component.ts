@@ -52,16 +52,37 @@ export class AuthModalComponent {
       }
     });
 
+    // קוד קודם שנשמר לבקשתך:
     // בדיקת תקינות אימייל תוך כדי הקלדה (Regex מחמיר)
-    this.authForm.get("email")?.valueChanges.subscribe((val) => {
-      this.emailError = "";
-      if (!val) return;
-      const strictEmailRegex =
-        /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-      if (!strictEmailRegex.test(val)) {
-        this.emailError = "כתובת אימייל לא תקינה";
-      }
-    });
+    // this.authForm.get("email")?.valueChanges.subscribe((val) => {
+    //   this.emailError = "";
+    //   if (!val) return;
+    //   const strictEmailRegex =
+    //     /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    //   if (!strictEmailRegex.test(val)) {
+    //     this.emailError = "כתובת אימייל לא תקינה";
+    //   }
+    // });
+  }
+
+  onEmailInput() {
+    this.emailError = "";
+  }
+
+  onEmailBlur() {
+    const emailValue = (this.authForm.get("email")?.value ?? "")
+      .toString()
+      .trim();
+
+    if (!emailValue) {
+      this.emailError = "יש להזין כתובת אימייל.";
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    this.emailError = emailRegex.test(emailValue)
+      ? ""
+      : "כתובת אימייל לא תקינה";
   }
 
   toggleMode() {
@@ -84,6 +105,12 @@ export class AuthModalComponent {
   onSubmit() {
     this.loginError = "";
     this.infoMessage = "";
+
+    this.onEmailBlur();
+    if (this.emailError) {
+      return;
+    }
+
     if (this.authForm.invalid) {
       // Allow partial validation for Forgot Password (only email needed)
       if (this.isForgot && this.authForm.get("email")?.valid) {
