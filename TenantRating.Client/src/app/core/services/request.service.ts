@@ -5,8 +5,8 @@ import { BehaviorSubject, Observable, tap } from "rxjs";
 export interface RequestResultDto {
   requestId: number;
   finalScore: number;
-  tempScore: number;
   cityName: string;
+  desiredRent?: number;
 
   dateCreated: string;
   maxAffordableRent?: number;
@@ -103,6 +103,21 @@ export class RequestService {
       requestId,
       idNumber,
     });
+  }
+
+  deleteRequest(requestId: number): Observable<{ message?: string }> {
+    return this.http
+      .delete<{ message?: string }>(`${this.apiUrl}/${requestId}`)
+      .pipe(
+        tap(() => {
+          const currentRequests = this.requestsSubject.value;
+          this.requestsSubject.next(
+            currentRequests.filter(
+              (request) => request.requestId !== requestId,
+            ),
+          );
+        }),
+      );
   }
 
   getMyRequests(): Observable<RequestResultDto[]> {

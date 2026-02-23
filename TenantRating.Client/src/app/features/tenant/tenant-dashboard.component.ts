@@ -40,25 +40,12 @@ import { AuthService } from "../../core/services/auth.service";
       </header>
 
       <div
-        class="inline-message"
+        class="inline-message global-toast"
         *ngIf="uiMessage"
         [class.error]="uiMessageType === 'error'"
         [class.success]="uiMessageType === 'success'"
       >
         {{ uiMessage }}
-      </div>
-
-      <div class="inline-confirm" *ngIf="pendingConfirmVisible">
-        <div class="confirm-title">אישור פעולה</div>
-        <div class="confirm-text">להסיר מהמועדפים?</div>
-        <div class="confirm-actions">
-          <button class="action-btn small" (click)="confirmUnsave()">
-            אישור
-          </button>
-          <button class="action-btn small warning" (click)="cancelUnsave()">
-            ביטול
-          </button>
-        </div>
       </div>
 
       <!-- Content Area: Show Request Stats/List if (CurrentTab == MyRequests OR ViewState == TenantOnly) -->
@@ -132,10 +119,14 @@ import { AuthService } from "../../core/services/auth.service";
               <!-- Row -->
               <div class="request-row">
                 <div class="req-info">
+                  <span class="req-city">פנייה #{{ req.requestId }}</span>
                   <span class="req-date">{{
                     req.dateCreated | date: "dd/MM/yyyy"
                   }}</span>
                   <span class="req-city">{{ req.cityName }}</span>
+                  <span class="req-city" *ngIf="req.desiredRent != null"
+                    >שכ"ד: {{ req.desiredRent | number: "1.0-0" }} ₪</span
+                  >
                 </div>
                 <div
                   class="req-score"
@@ -145,12 +136,29 @@ import { AuthService } from "../../core/services/auth.service";
                 </div>
                 <div class="req-status">
                   <span class="badge">הושלם</span>
+                  <button
+                    class="delete-request-btn"
+                    type="button"
+                    title="מחק פנייה"
+                    aria-label="מחק פנייה"
+                    (click)="openDeleteRequestConfirm(req.requestId)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M9 3h6l1 2h5v2H3V5h5l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM7 9h2v9H7V9Zm-1 12h12a2 2 0 0 0 2-2V7H4v12a2 2 0 0 0 2 2Z"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="actions-section" *ngIf="(requests$ | async)?.length">
+          <div class="actions-section">
             <button class="action-btn primary" (click)="uploadNewRequest()">
               <span class="icon">➕</span>
               צור בקשת דירוג חדשה
@@ -202,7 +210,9 @@ import { AuthService } from "../../core/services/auth.service";
                   <button
                     class="action-btn small"
                     style="background: #0984e3; color: white; border: none; border-radius: 8px; cursor: pointer;"
-                    (click)="startVerification(saved.requestId)"
+                    (click)="
+                      startVerification(saved.requestId, !!saved.hasSecondId)
+                    "
                   >
                     {{
                       verifyingRequestId === saved.requestId
@@ -211,10 +221,21 @@ import { AuthService } from "../../core/services/auth.service";
                     }}
                   </button>
                   <button
-                    class="action-btn small warning"
+                    class="delete-request-btn"
+                    type="button"
+                    title="הסר מהמועדפים"
+                    aria-label="הסר מהמועדפים"
                     (click)="unsave(saved.requestId)"
                   >
-                    הסר
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M9 3h6l1 2h5v2H3V5h5l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM7 9h2v9H7V9Zm-1 12h12a2 2 0 0 0 2-2V7H4v12a2 2 0 0 0 2 2Z"
+                      />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -224,24 +245,100 @@ import { AuthService } from "../../core/services/auth.service";
                 *ngIf="verifyingRequestId === saved.requestId"
                 style="width: 100%; margin-top: 15px; background: #dfe6e9; padding: 15px; border-radius: 8px; animation: fadeIn 0.3s;"
               >
-                <p style="margin-bottom: 5px; font-weight: bold;">
-                  הקלד ת.ז של הדייר לאימות:
-                </p>
-                <div style="display: flex; gap: 10px;">
-                  <input
-                    type="text"
-                    [(ngModel)]="verificationInput"
-                    placeholder="מספר ת.ז..."
-                    style="padding: 8px; border-radius: 4px; border: 1px solid #b2bec3; flex: 1;"
-                  />
-                  <button
-                    class="action-btn small"
-                    style="background: #00b894; color: white;"
-                    (click)="submitVerification(saved.requestId)"
-                    [disabled]="isVerifying"
+                <ng-container *ngIf="showVerificationInputSection">
+                  <p style="margin-bottom: 5px; font-weight: bold;">
+                    {{
+                      secondVerificationMode
+                        ? "אימות מספר נוסף:"
+                        : "הקלד ת.ז של הדייר לאימות:"
+                    }}
+                  </p>
+                  <p
+                    *ngIf="currentRequestHasSecondId"
+                    style="margin-top: 0; margin-bottom: 10px; color: #636e72; font-size: 0.9rem;"
                   >
-                    {{ isVerifying ? "בודק..." : "בדוק" }}
-                  </button>
+                    {{
+                      secondVerificationMode
+                        ? "אימות 2 מתוך 2"
+                        : "אימות 1 מתוך 2"
+                    }}
+                  </p>
+                  <div style="display: flex; gap: 10px;">
+                    <input
+                      type="text"
+                      [(ngModel)]="verificationInput"
+                      (input)="onVerificationInput()"
+                      (blur)="onVerificationBlur()"
+                      placeholder="מספר ת.ז..."
+                      maxlength="9"
+                      style="padding: 8px; border-radius: 4px; border: 1px solid #b2bec3; flex: 1;"
+                    />
+                    <button
+                      class="action-btn small"
+                      style="background: #00b894; color: white; border: none; border-radius: 8px; cursor: pointer;"
+                      (click)="submitVerification(saved.requestId)"
+                      [disabled]="isVerifying || !isVerificationInputValid"
+                    >
+                      {{
+                        isVerifying
+                          ? "בודק..."
+                          : secondVerificationMode
+                            ? "בדוק מספר נוסף"
+                            : "בדוק"
+                      }}
+                    </button>
+                  </div>
+
+                  <div
+                    class="inline-message error"
+                    *ngIf="verificationInputError"
+                  >
+                    {{ verificationInputError }}
+                  </div>
+                </ng-container>
+
+                <!-- קוד קודם שנשמר לבקשתך:
+                <div
+                  class="inline-message"
+                  *ngIf="uiMessage"
+                  [class.error]="uiMessageType === 'error'"
+                  [class.success]="uiMessageType === 'success'"
+                >
+                  {{ uiMessage }}
+                </div>
+                -->
+                <div
+                  class="inline-message verification-message"
+                  *ngIf="verificationMessage"
+                  [class.error]="verificationMessageType === 'error'"
+                  [class.success]="verificationMessageType === 'success'"
+                >
+                  {{ verificationMessage }}
+                </div>
+
+                <div
+                  class="inline-confirm verification-confirm"
+                  *ngIf="showSecondVerificationPrompt"
+                >
+                  <div class="confirm-title">יש מספר זהות נוסף לאימות</div>
+                  <div class="confirm-text">האם תרצה לבצע אימות נוסף?</div>
+                  <div class="confirm-actions">
+                    <button
+                      class="action-btn small"
+                      type="button"
+                      style="background: #0984e3; color: white; border: none; border-radius: 8px; cursor: pointer;"
+                      (click)="startSecondVerification()"
+                    >
+                      כן, אמת נוסף
+                    </button>
+                    <button
+                      class="action-btn small warning"
+                      type="button"
+                      (click)="skipSecondVerification()"
+                    >
+                      לא תודה
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -270,6 +367,45 @@ import { AuthService } from "../../core/services/auth.service";
           </div>
         </div>
       </div>
+
+      <div
+        class="confirm-modal-overlay"
+        *ngIf="confirmActionVisible"
+        (click)="cancelConfirmAction()"
+      >
+        <div class="confirm-modal" (click)="$event.stopPropagation()">
+          <div class="confirm-title">{{ confirmActionTitle }}</div>
+          <div class="confirm-text">{{ confirmActionText }}</div>
+          <div
+            class="inline-message"
+            *ngIf="confirmActionMessage"
+            [class.error]="confirmActionMessageType === 'error'"
+            [class.success]="confirmActionMessageType === 'success'"
+          >
+            {{ confirmActionMessage }}
+          </div>
+          <div class="confirm-actions confirm-actions-end">
+            <button
+              class="action-btn small danger"
+              (click)="confirmAction()"
+              [disabled]="confirmActionInProgress"
+            >
+              {{
+                confirmActionInProgress
+                  ? confirmActionProgressLabel
+                  : confirmActionConfirmLabel
+              }}
+            </button>
+            <button
+              class="action-btn small neutral"
+              (click)="cancelConfirmAction()"
+              [disabled]="confirmActionInProgress"
+            >
+              ביטול
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [
@@ -286,9 +422,7 @@ import { AuthService } from "../../core/services/auth.service";
         h1 {
           font-size: 2.5rem;
           margin-bottom: 0.5rem;
-          background: var(--primary-gradient);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: var(--color-trust-blue);
         }
         p {
           color: var(--text-muted);
@@ -386,23 +520,67 @@ import { AuthService } from "../../core/services/auth.service";
         font-weight: 800;
       }
 
+      .req-status {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .delete-request-btn {
+        border: 1px solid #fecaca;
+        background: #fff1f2;
+        color: #dc2626;
+        border-radius: 8px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        svg {
+          width: 18px;
+          height: 18px;
+          fill: currentColor;
+        }
+
+        &:hover {
+          background: #fee2e2;
+          color: #b91c1c;
+        }
+      }
+
       .action-btn.primary {
-        background: var(--primary-color);
+        background: var(--primary-gradient);
         color: white;
         padding: 1rem 2rem;
-        border-radius: 50px;
+        border-radius: 8px;
         border: none;
         font-weight: bold;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
-        transition: transform 0.2s;
+        transition: opacity 0.2s;
         &:hover {
-          transform: translateY(-2px);
+          opacity: 0.9;
         }
       }
       .action-btn.small {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
+      }
+      .action-btn.neutral {
+        background: #ffffff;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .action-btn.danger {
+        background: #ef4444;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
       }
       .action-btn.warning {
         background: #ff7675;
@@ -435,6 +613,23 @@ import { AuthService } from "../../core/services/auth.service";
         }
       }
 
+      .global-toast {
+        position: fixed;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(92vw, 720px);
+        z-index: 1300;
+        margin: 0;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+      }
+
+      .verification-message {
+        margin-top: 0.75rem;
+        margin-bottom: 0;
+        max-width: 100%;
+      }
+
       .inline-confirm {
         max-width: 750px;
         margin: 0 auto 1rem;
@@ -443,6 +638,10 @@ import { AuthService } from "../../core/services/auth.service";
         background: #ffffff;
         padding: 0.9rem 1rem;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .inline-confirm.verification-confirm {
+        margin: 1rem auto 1rem;
       }
 
       .confirm-title {
@@ -457,6 +656,30 @@ import { AuthService } from "../../core/services/auth.service";
       .confirm-actions {
         display: flex;
         gap: 0.6rem;
+      }
+
+      .confirm-actions-end {
+        justify-content: flex-end;
+      }
+
+      .confirm-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        padding: 1rem;
+      }
+
+      .confirm-modal {
+        width: min(520px, 100%);
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid #d8e4f7;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        padding: 1rem 1.15rem;
       }
 
       /* Empty Dashboard */
@@ -540,8 +763,18 @@ export class TenantDashboardComponent implements OnInit {
   hasScore = false;
   uiMessage = "";
   uiMessageType: "success" | "error" | "info" = "info";
-  pendingConfirmVisible = false;
-  pendingUnsaveId: number | null = null;
+  confirmActionVisible = false;
+  confirmActionType: "delete-request" | "unsave-saved" | null = null;
+  confirmActionItemId: number | null = null;
+  confirmActionTitle = "";
+  confirmActionText = "";
+  confirmActionConfirmLabel = "";
+  confirmActionProgressLabel = "";
+  confirmActionMessage = "";
+  confirmActionMessageType: "success" | "error" | "info" = "info";
+  confirmActionInProgress = false;
+  private uiMessageTimer: ReturnType<typeof setTimeout> | null = null;
+  private confirmActionCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private router: Router,
@@ -549,13 +782,15 @@ export class TenantDashboardComponent implements OnInit {
     private landlordService: LandlordService,
     private authService: AuthService,
   ) {
-    this.requests$ = this.requestService.getMyRequests().pipe(shareReplay(1));
+    this.requests$ = this.requestService.requests$;
     this.activeRequestsCount$ = this.requests$.pipe(map((reqs) => reqs.length));
     this.latestScore$ = this.requests$.pipe(
       map((reqs) => (reqs.length > 0 ? reqs[0].finalScore : 0)),
     );
 
-    this.requests$.pipe(take(1)).subscribe((reqs) => {
+    this.refreshTenantRequests();
+
+    this.requests$.subscribe((reqs) => {
       if (reqs && reqs.length > 0) {
         const latestInfo = reqs[0];
         this.currentMaxAffordableRent =
@@ -563,6 +798,10 @@ export class TenantDashboardComponent implements OnInit {
         this.sliderValue = Math.round(latestInfo.finalScore);
         this.hasScore = true;
         this.updateRentCalculation();
+      } else {
+        this.hasScore = false;
+        this.currentMaxAffordableRent = 0;
+        this.calculatedRent = 0;
       }
     });
 
@@ -618,38 +857,139 @@ export class TenantDashboardComponent implements OnInit {
   }
 
   unsave(id: number) {
-    // קוד קודם שנשמר לבקשתך:
-    // if (!confirm('להסיר מהמועדפים?')) return;
-    // this.landlordService.unsaveRequest(id).subscribe(() => {
-    //   window.location.reload();
-    // });
-
-    this.pendingUnsaveId = id;
-    this.pendingConfirmVisible = true;
+    this.openConfirmAction(
+      "unsave-saved",
+      id,
+      "אישור הסרה",
+      `האם להסיר את פנייה #${id} מהמועדפים?`,
+      "כן, הסר",
+      "מסיר...",
+    );
   }
 
   confirmUnsave() {
-    if (this.pendingUnsaveId == null) return;
+    this.confirmAction();
+  }
 
-    const id = this.pendingUnsaveId;
-    this.cancelUnsave();
+  cancelUnsave() {
+    this.cancelConfirmAction();
+  }
 
-    this.landlordService.unsaveRequest(id).subscribe({
+  openDeleteRequestConfirm(requestId: number) {
+    this.openConfirmAction(
+      "delete-request",
+      requestId,
+      "אישור מחיקה",
+      `האם הינך בטוח שברצונך למחוק את פנייה #${requestId}?`,
+      "כן, מחק",
+      "מוחק...",
+    );
+  }
+
+  cancelDeleteRequest() {
+    this.cancelConfirmAction();
+  }
+
+  confirmDeleteRequest() {
+    this.confirmAction();
+  }
+
+  confirmAction() {
+    if (
+      this.confirmActionType == null ||
+      this.confirmActionItemId == null ||
+      this.confirmActionInProgress
+    ) {
+      return;
+    }
+
+    const actionType = this.confirmActionType;
+    const itemId = this.confirmActionItemId;
+    this.confirmActionInProgress = true;
+    this.confirmActionMessage = "";
+
+    if (actionType === "delete-request") {
+      this.requestService.deleteRequest(itemId).subscribe({
+        next: (response) => {
+          this.confirmActionInProgress = false;
+          this.confirmActionMessage =
+            response?.message ?? `פנייה #${itemId} נמחקה בהצלחה.`;
+          this.confirmActionMessageType = "success";
+          this.scheduleConfirmActionClose();
+        },
+        error: () => {
+          this.confirmActionInProgress = false;
+          this.confirmActionMessage = `מחיקת פנייה #${itemId} נכשלה.`;
+          this.confirmActionMessageType = "error";
+        },
+      });
+      return;
+    }
+
+    this.landlordService.unsaveRequest(itemId).subscribe({
       next: () => {
         this.savedRequests$ = this.landlordService
           .getSavedRequests()
           .pipe(shareReplay(1));
-        this.setUiMessage("הפנייה הוסרה מהמועדפים.", "success");
+        this.confirmActionInProgress = false;
+        this.confirmActionMessage = "הפנייה הוסרה מהמועדפים.";
+        this.confirmActionMessageType = "success";
+        this.scheduleConfirmActionClose();
       },
       error: () => {
-        this.setUiMessage("הסרת הפנייה מהמועדפים נכשלה.", "error");
+        this.confirmActionInProgress = false;
+        this.confirmActionMessage = "הסרת הפנייה מהמועדפים נכשלה.";
+        this.confirmActionMessageType = "error";
       },
     });
   }
 
-  cancelUnsave() {
-    this.pendingConfirmVisible = false;
-    this.pendingUnsaveId = null;
+  cancelConfirmAction() {
+    if (this.confirmActionCloseTimer) {
+      clearTimeout(this.confirmActionCloseTimer);
+      this.confirmActionCloseTimer = null;
+    }
+
+    this.confirmActionVisible = false;
+    this.confirmActionType = null;
+    this.confirmActionItemId = null;
+    this.confirmActionTitle = "";
+    this.confirmActionText = "";
+    this.confirmActionConfirmLabel = "";
+    this.confirmActionProgressLabel = "";
+    this.confirmActionMessage = "";
+    this.confirmActionMessageType = "info";
+    this.confirmActionInProgress = false;
+  }
+
+  private openConfirmAction(
+    actionType: "delete-request" | "unsave-saved",
+    itemId: number,
+    title: string,
+    text: string,
+    confirmLabel: string,
+    progressLabel: string,
+  ) {
+    this.confirmActionType = actionType;
+    this.confirmActionItemId = itemId;
+    this.confirmActionTitle = title;
+    this.confirmActionText = text;
+    this.confirmActionConfirmLabel = confirmLabel;
+    this.confirmActionProgressLabel = progressLabel;
+    this.confirmActionMessage = "";
+    this.confirmActionMessageType = "info";
+    this.confirmActionInProgress = false;
+    this.confirmActionVisible = true;
+  }
+
+  private scheduleConfirmActionClose() {
+    if (this.confirmActionCloseTimer) {
+      clearTimeout(this.confirmActionCloseTimer);
+    }
+
+    this.confirmActionCloseTimer = setTimeout(() => {
+      this.cancelConfirmAction();
+    }, 1200);
   }
 
   getScoreColor(score: number): string {
@@ -672,18 +1012,145 @@ export class TenantDashboardComponent implements OnInit {
   verifyingRequestId: number | null = null;
   verificationInput = "";
   isVerifying = false;
+  verificationMessage = "";
+  verificationMessageType: "success" | "error" | "info" = "info";
+  verificationInputError = "";
+  isVerificationInputValid = false;
+  currentRequestHasSecondId = false;
+  showSecondVerificationPrompt = false;
+  secondVerificationMode = false;
+  showVerificationInputSection = true;
+  verificationFlowCompleted = false;
 
-  startVerification(id: number) {
+  startVerification(id: number, hasSecondId = false) {
+    // קוד קודם שנשמר לבקשתך:
+    // startVerification(id: number) {
     if (this.verifyingRequestId === id) {
       this.verifyingRequestId = null; // Toggle off
+      this.verificationMessage = "";
+      this.verificationInputError = "";
+      this.isVerificationInputValid = false;
+      this.currentRequestHasSecondId = false;
+      this.showSecondVerificationPrompt = false;
+      this.secondVerificationMode = false;
+      this.showVerificationInputSection = true;
+      this.verificationFlowCompleted = false;
     } else {
       this.verifyingRequestId = id;
       this.verificationInput = "";
+      this.verificationMessage = "";
+      this.verificationInputError = "";
+      this.isVerificationInputValid = false;
+      this.currentRequestHasSecondId = hasSecondId;
+      this.showSecondVerificationPrompt = false;
+      this.secondVerificationMode = false;
+      this.showVerificationInputSection = true;
+      this.verificationFlowCompleted = false;
     }
   }
 
+  startSecondVerification() {
+    // קוד קודם שנשמר לבקשתך:
+    // this.secondVerificationMode = true;
+    // this.showSecondVerificationPrompt = false;
+    // this.setVerificationMessage("הקלד מספר זהות נוסף לאימות.", "info");
+    this.secondVerificationMode = true;
+    this.showSecondVerificationPrompt = false;
+    this.verificationInput = "";
+    this.verificationInputError = "";
+    this.isVerificationInputValid = false;
+    this.showVerificationInputSection = true;
+    this.verificationFlowCompleted = false;
+    this.verificationMessage = "";
+  }
+
+  skipSecondVerification() {
+    // קוד קודם שנשמר לבקשתך:
+    // this.showSecondVerificationPrompt = false;
+    // this.secondVerificationMode = false;
+    this.showSecondVerificationPrompt = false;
+    this.secondVerificationMode = false;
+    this.showVerificationInputSection = false;
+    this.verificationFlowCompleted = true;
+    this.setVerificationMessage(
+      "האימות הסתיים. ניתן לסגור את הפאנל.",
+      "success",
+    );
+  }
+
+  onVerificationInput() {
+    const digitsOnly = (this.verificationInput || "")
+      .replace(/\D/g, "")
+      .slice(0, 9);
+    this.verificationInput = digitsOnly;
+
+    if (!digitsOnly) {
+      this.verificationInputError = "";
+      this.isVerificationInputValid = false;
+      return;
+    }
+
+    if (digitsOnly.length < 9) {
+      this.verificationInputError = "";
+      this.isVerificationInputValid = false;
+      return;
+    }
+
+    this.isVerificationInputValid = this.isValidIsraeliId(digitsOnly);
+    this.verificationInputError = this.isVerificationInputValid
+      ? ""
+      : "מספר הזהות לא תקין";
+  }
+
+  onVerificationBlur() {
+    const digitsOnly = (this.verificationInput || "")
+      .replace(/\D/g, "")
+      .slice(0, 9);
+    this.verificationInput = digitsOnly;
+
+    if (!digitsOnly) {
+      // קוד קודם שנשמר לבקשתך:
+      // this.verificationInputError = "יש להזין מספר תעודת זהות";
+      this.verificationInputError = "יש להזין מספר תעודת זהות.";
+      this.isVerificationInputValid = false;
+      return;
+    }
+
+    if (digitsOnly.length !== 9) {
+      // קוד קודם שנשמר לבקשתך:
+      // this.verificationInputError = "מספר הזהות חייב להכיל 9 ספרות";
+      this.verificationInputError = "מספר תעודת הזהות חייב להכיל 9 ספרות.";
+      this.isVerificationInputValid = false;
+      return;
+    }
+
+    this.isVerificationInputValid = this.isValidIsraeliId(digitsOnly);
+    // קוד קודם שנשמר לבקשתך:
+    // this.verificationInputError = this.isVerificationInputValid
+    //   ? ""
+    //   : "מספר הזהות לא תקין";
+    this.verificationInputError = this.isVerificationInputValid
+      ? ""
+      : "מספר תעודת הזהות אינו תקין.";
+  }
+
   submitVerification(requestId: number) {
-    if (!this.verificationInput.trim()) return;
+    // קוד קודם שנשמר לבקשתך:
+    // if (!this.verificationInput.trim()) return;
+
+    this.onVerificationBlur();
+    if (!this.isVerificationInputValid) {
+      // קוד קודם שנשמר לבקשתך:
+      // this.setVerificationMessage(
+      //   "לא ניתן להמשיך: מספר תעודת זהות לא תקין.",
+      //   "error",
+      // );
+      this.setVerificationMessage(
+        "לא ניתן להמשיך: מספר תעודת הזהות אינו תקין.",
+        "error",
+      );
+      return;
+    }
 
     this.isVerifying = true;
     this.requestService
@@ -694,12 +1161,67 @@ export class TenantDashboardComponent implements OnInit {
           if (res.isMatch) {
             // קוד קודם שנשמר לבקשתך:
             // alert('✅ אימות הצליח! תעודת הזהות תואמת.');
-            this.setUiMessage("אימות הצליח! תעודת הזהות תואמת.", "success");
-            this.verifyingRequestId = null;
+            // this.setUiMessage("אימות הצליח! תעודת הזהות תואמת.", "success");
+            if (this.secondVerificationMode) {
+              // קוד קודם שנשמר לבקשתך:
+              // this.setVerificationMessage(
+              //   "אימות נוסף הצליח! תעודת הזהות תואמת. האימות הסתיים.",
+              //   "success",
+              // );
+              this.setVerificationMessage(
+                "האימות הנוסף הצליח: מספר תעודת הזהות תואם. תהליך האימות הושלם.",
+                "success",
+              );
+              this.secondVerificationMode = false;
+              this.showSecondVerificationPrompt = false;
+              this.showVerificationInputSection = false;
+              this.verificationFlowCompleted = true;
+            } else {
+              // קוד קודם שנשמר לבקשתך:
+              // this.setVerificationMessage(
+              //   "אימות הצליח! תעודת הזהות תואמת.",
+              //   "success",
+              // );
+              this.setVerificationMessage(
+                "האימות הצליח: מספר תעודת הזהות תואם.",
+                "success",
+              );
+
+              if (this.currentRequestHasSecondId) {
+                this.showSecondVerificationPrompt = true;
+                this.showVerificationInputSection = false;
+              }
+
+              if (!this.currentRequestHasSecondId) {
+                // קוד קודם שנשמר לבקשתך:
+                // this.setVerificationMessage(
+                //   "אימות הצליח! תעודת הזהות תואמת. האימות הסתיים.",
+                //   "success",
+                // );
+                this.setVerificationMessage(
+                  "האימות הצליח: מספר תעודת הזהות תואם. תהליך האימות הושלם.",
+                  "success",
+                );
+                this.showVerificationInputSection = false;
+                this.verificationFlowCompleted = true;
+              }
+            }
           } else {
             // קוד קודם שנשמר לבקשתך:
             // alert('❌ אימות נכשל! תעודת הזהות אינה תואמת.');
-            this.setUiMessage("אימות נכשל! תעודת הזהות אינה תואמת.", "error");
+            // this.setUiMessage("אימות נכשל! תעודת הזהות אינה תואמת.", "error");
+            // קוד קודם שנשמר לבקשתך:
+            // this.setVerificationMessage(
+            //   "אימות נכשל! תעודת הזהות אינה תואמת.",
+            //   "error",
+            // );
+            this.setVerificationMessage(
+              "האימות נכשל: מספר תעודת הזהות אינו תואם.",
+              "error",
+            );
+            this.showSecondVerificationPrompt = false;
+            this.showVerificationInputSection = true;
+            this.verificationFlowCompleted = false;
           }
         },
         error: (err) => {
@@ -707,16 +1229,64 @@ export class TenantDashboardComponent implements OnInit {
           console.error(err);
           // קוד קודם שנשמר לבקשתך:
           // alert('שגיאה בתהליך האימות.');
-          this.setUiMessage("שגיאה בתהליך האימות.", "error");
+          // this.setUiMessage("שגיאה בתהליך האימות.", "error");
+          // קוד קודם שנשמר לבקשתך:
+          // this.setVerificationMessage("שגיאה בתהליך האימות.", "error");
+          this.setVerificationMessage(
+            "אירעה שגיאה במהלך האימות. נא לנסות שוב.",
+            "error",
+          );
+          this.showSecondVerificationPrompt = false;
+          this.showVerificationInputSection = true;
+          this.verificationFlowCompleted = false;
         },
       });
+  }
+
+  private isValidIsraeliId(idNumber: string): boolean {
+    if (!/^\d{9}$/.test(idNumber)) {
+      return false;
+    }
+
+    const sum = idNumber
+      .split("")
+      .map(Number)
+      .map((digit, index) => {
+        const step = digit * ((index % 2) + 1);
+        return step > 9 ? step - 9 : step;
+      })
+      .reduce((acc, val) => acc + val, 0);
+
+    return sum % 10 === 0;
+  }
+
+  private setVerificationMessage(
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) {
+    this.verificationMessage = message;
+    this.verificationMessageType = type;
   }
 
   private setUiMessage(
     message: string,
     type: "success" | "error" | "info" = "info",
   ) {
+    if (this.uiMessageTimer) {
+      clearTimeout(this.uiMessageTimer);
+      this.uiMessageTimer = null;
+    }
+
     this.uiMessage = message;
     this.uiMessageType = type;
+
+    this.uiMessageTimer = setTimeout(() => {
+      this.uiMessage = "";
+      this.uiMessageTimer = null;
+    }, 3200);
+  }
+
+  private refreshTenantRequests() {
+    this.requestService.getMyRequests().pipe(take(1)).subscribe();
   }
 }

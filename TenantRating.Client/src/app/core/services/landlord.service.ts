@@ -10,6 +10,7 @@ export interface TenantSearchResult {
     cityName: string;
     dateOfRating: string;
     phoneNumber?: string;
+    hasSecondId?: boolean;
     isSaved?: boolean;
 }
 

@@ -212,7 +212,7 @@
     margin-top: 1rem;
     width: 100%;
     padding: 0.8rem;
-    background: var(--primary-color);
+    background: var(--primary-gradient);
     border: none;
     color: white;
     border-radius: 8px;
@@ -238,32 +238,6 @@
     font-weight: bold;
     font-size: 1.1rem;
     letter-spacing: 1px;
-  }
-}
-
-.suggestions-list {
-  text-align: center;
-  margin-top: 3rem;
-  color: #b2bec3;
-
-  .tags {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
-
-    span {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: 0.2s;
-
-      &:hover {
-        background: var(--primary-color);
-        color: white;
-      }
-    }
   }
 }
 

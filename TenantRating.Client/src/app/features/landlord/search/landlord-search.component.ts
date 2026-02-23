@@ -53,13 +53,27 @@ export class LandlordSearchComponent implements OnInit {
   }
 
   onSearchInput() {
-    if (!this.searchCity.trim()) {
+    const query = this.searchCity.trim();
+
+    if (!query) {
       this.filteredCities = [];
       return;
     }
-    this.filteredCities = this.availableCities.filter((city) =>
-      city.includes(this.searchCity),
+
+    const matchingCities = this.availableCities.filter((city) =>
+      city.includes(query),
     );
+
+    this.filteredCities = matchingCities.sort((firstCity, secondCity) => {
+      const firstStartsWith = firstCity.startsWith(query);
+      const secondStartsWith = secondCity.startsWith(query);
+
+      if (firstStartsWith !== secondStartsWith) {
+        return firstStartsWith ? -1 : 1;
+      }
+
+      return firstCity.localeCompare(secondCity, "he");
+    });
   }
 
   selectCity(city: string) {

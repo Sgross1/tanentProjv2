@@ -44,6 +44,8 @@ public class LandlordsController : ControllerBase
             query = query.Where(r => r.DesiredRent <= maxRent.Value);
         }
 
+        query = query.OrderByDescending(r => r.DateCreated);
+
         // Fetch saved request IDs for this landlord to efficiently check IsSaved
         var savedRequestIds = await _context.SavedRequests
             .Where(sr => sr.LandlordUserId == landlordId)
@@ -61,7 +63,8 @@ public class LandlordsController : ControllerBase
                 r.DesiredRent,
                 r.CityName,
                 DateOfRating = r.DateCreated,
-                PhoneNumber = r.User != null ? r.User.PhoneNumber : ""
+                PhoneNumber = r.User != null ? r.User.PhoneNumber : "",
+                HasSecondId = !string.IsNullOrWhiteSpace(r.TenantIdNumbers) && r.TenantIdNumbers.Contains(',')
             })
             .ToListAsync();
 
@@ -75,6 +78,7 @@ public class LandlordsController : ControllerBase
             r.CityName,
             r.DateOfRating,
             r.PhoneNumber,
+            r.HasSecondId,
             IsSaved = savedSet.Contains(r.RequestId)
         });
 
@@ -128,17 +132,18 @@ public class LandlordsController : ControllerBase
 
         var savedRequests = await _context.SavedRequests
             .Include(sr => sr.Request)
-                .ThenInclude(r => r.User) // Need to include User to access TenantName
-            .Where(sr => sr.LandlordUserId == userId)
+                .ThenInclude(r => r!.User) // Need to include User to access TenantName
+            .Where(sr => sr.LandlordUserId == userId && sr.Request != null)
             .Select(sr => new
             {
-                sr.Request.RequestId,
+                sr.Request!.RequestId,
                 TenantName = sr.Request.User != null ? $"{sr.Request.User!.FirstName} {sr.Request.User!.LastName}" : "Unknown",
                 sr.Request.CityName,
                 sr.Request.FinalScore,
                 PhoneNumber = sr.Request.User != null ? sr.Request.User!.PhoneNumber : "Unknown",
                 sr.Request.DesiredRent,
-                sr.Request.DateCreated
+                sr.Request.DateCreated,
+                HasSecondId = !string.IsNullOrWhiteSpace(sr.Request.TenantIdNumbers) && sr.Request.TenantIdNumbers.Contains(',')
             })
             .ToListAsync();
 

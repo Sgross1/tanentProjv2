@@ -94,13 +94,9 @@
     <p>נסה לשנות את פרמטרי החיפוש</p>
   </div>
 
-  <!-- Quick Suggestions for Demo if empty -->
-  <div class="suggestions-list" *ngIf="!hasSearched">
-    <p>ערים פופולריות:</p>
-    <div class="tags">
-      <span (click)="searchCity = 'תל אביב'; onSearch()">תל אביב - יפו</span>
-      <span (click)="searchCity = 'רמת גן'; onSearch()">רמת גן</span>
-      <span (click)="searchCity = 'גבעתיים'; onSearch()">גבעתיים</span>
-    </div>
+  <div class="no-results" *ngIf="!hasSearched && !isLoading">
+    <div class="icon">🔎</div>
+    <h3>כאן יופיעו תוצאות חיפוש השוכרים</h3>
+    <p>אפשר לחפש לפי עיר וטווח שכר דירה</p>
   </div>
 </div>

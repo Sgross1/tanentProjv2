@@ -295,21 +295,28 @@ OLD CODE END -->
 
 <div class="responsive-container-block big-container wizard-page-container">
   <div class="responsive-container-block container">
-    <div style="width: 100%; text-align: center; margin-bottom: 20px;">
-      <h1 class="page-title text-blk section-head" style="margin: 0 auto;">פניה חדשה</h1>
+    <div style="width: 100%; text-align: center; margin-bottom: 20px">
+      <h1 class="page-title text-blk section-head" style="margin: 0 auto">
+        פניה חדשה
+      </h1>
     </div>
     <div class="responsive-container-block flex-row-reverse-mobile">
-
       <!-- Right Side (Stripes Image) -->
-      <div class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 img-one">
+      <div
+        class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 img-one"
+      >
         <!-- Replaced image tag with a styled div for mixed color stripes -->
         <div class="image-block bg-image mixed-stripes"></div>
       </div>
 
       <!-- Left Side (Wizard Content) -->
-      <div class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 content-one form-side">
-        <div class="wizard-card" style="margin-top: 15px; width: 100%; text-align: right;">
-
+      <div
+        class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 content-one form-side"
+      >
+        <div
+          class="wizard-card"
+          style="margin-top: 15px; width: 100%; text-align: right"
+        >
           <!-- Result Step (Full Width) -->
           <div class="step-content result fade-in" *ngIf="currentStep === 4">
             <h2>הדירוג שלך מוכן!</h2>
@@ -318,12 +325,12 @@ OLD CODE END -->
               <div class="score-circle">
                 <span class="score-value">{{
                   finalScore | number: "1.0-1"
-                  }}</span>
+                }}</span>
                 <span class="score-label">ציון אמינות</span>
               </div>
             </div>
 
-            <p class="score-desc" style="text-align: center;">
+            <p class="score-desc" style="text-align: center">
               עבור שכ"ד {{ requestData.desiredRent | number }} ₪
             </p>
 
@@ -334,7 +341,11 @@ OLD CODE END -->
                 <div class="distribution-graph">
                   <div class="bar-wrapper" *ngFor="let bar of distributionBars">
                     <div class="label-you" *ngIf="bar.isUser">אתה כאן!</div>
-                    <div class="bar" [style.height.%]="bar.height" [class.highlight]="bar.isUser"></div>
+                    <div
+                      class="bar"
+                      [style.height.%]="bar.height"
+                      [class.highlight]="bar.isUser"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -351,8 +362,14 @@ OLD CODE END -->
 
             <div class="slider-box">
               <h4>רוצה לשפר ל-{{ sliderValue }}?</h4>
-              <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
-                (input)="updateRentCalculation()" />
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="1"
+                [(ngModel)]="sliderValue"
+                (input)="updateRentCalculation()"
+              />
               <p>
                 תקציב מומלץ: <strong>{{ calculatedRent | number }} ₪</strong>
               </p>
@@ -361,6 +378,15 @@ OLD CODE END -->
             <div class="notification-actions">
               <button class="btn-outline" (click)="sendSms()">📱 SMS</button>
               <button class="btn-outline" (click)="sendEmail()">📧 מייל</button>
+            </div>
+
+            <div
+              class="inline-message"
+              *ngIf="actionMessage"
+              [class.success]="actionMessageType === 'success'"
+              [class.error]="actionMessageType === 'error'"
+            >
+              {{ actionMessage }}
             </div>
 
             <div class="actions">
@@ -372,13 +398,27 @@ OLD CODE END -->
 
           <!-- Wizard Steps (Columns Layout) -->
           <div class="wizard-columns" *ngIf="currentStep !== 4">
-
             <!-- Wheel / Visual Column -->
-            <div class="wheel-column"
-              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div
+              class="wheel-column"
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+              "
+            >
               <!-- Wheel for Steps 1, 2 -->
-              <div class="wheel-wrapper-inline" style="transform: scale(0.8);" *ngIf="currentStep !== 3">
-                <app-wheel [percent]="calculateProgress()" [statusText]="getProgressText()" size="small">
+              <div
+                class="wheel-wrapper-inline"
+                style="transform: scale(0.8)"
+                *ngIf="currentStep !== 3"
+              >
+                <app-wheel
+                  [percent]="calculateProgress()"
+                  [statusText]="getProgressText()"
+                  size="small"
+                >
                 </app-wheel>
               </div>
 
@@ -397,8 +437,12 @@ OLD CODE END -->
 
                 <div class="form-group">
                   <label>תעודת זהות</label>
-                  <input type="text" [(ngModel)]="requestData.idNumber" (blur)="onIdNumberBlur()"
-                    placeholder="מספר תעודת זהות תקין (9 ספרות)" />
+                  <input
+                    type="text"
+                    [(ngModel)]="requestData.idNumber"
+                    (blur)="onIdNumberBlur()"
+                    placeholder="מספר תעודת זהות תקין (9 ספרות)"
+                  />
                   <div class="error-message" *ngIf="idNumberError">
                     {{ idNumberError }}
                   </div>
@@ -412,10 +456,22 @@ OLD CODE END -->
                       <span class="remove" (click)="removeCity(city)">×</span>
                     </div>
                   </div>
-                  <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()"
-                    placeholder="הקלד שם ישוב..." [disabled]="requestData.cities.length >= 5" />
-                  <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
-                    <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
+                  <input
+                    type="text"
+                    [(ngModel)]="citySearchQuery"
+                    (input)="searchCities()"
+                    placeholder="הקלד שם ישוב..."
+                    [disabled]="requestData.cities.length >= 5"
+                  />
+                  <div
+                    class="autocomplete-dropdown"
+                    *ngIf="filteredCities.length > 0"
+                  >
+                    <div
+                      class="suggestion"
+                      *ngFor="let city of filteredCities"
+                      (click)="addCity(city)"
+                    >
                       {{ city }}
                     </div>
                   </div>
@@ -423,20 +479,28 @@ OLD CODE END -->
 
                 <div class="form-group">
                   <label>שכר דירה רצוי (₪)</label>
-                  <input type="number" [(ngModel)]="requestData.desiredRent" (blur)="onDesiredRentBlur()"
-                    placeholder="לדוגמה: 6000" />
+                  <input
+                    type="number"
+                    [(ngModel)]="requestData.desiredRent"
+                    (blur)="onDesiredRentBlur()"
+                    placeholder="לדוגמה: 6000"
+                  />
                 </div>
 
                 <div class="actions">
                   <button class="btn-secondary" routerLink="/tenant/dashboard">
                     ביטול
                   </button>
-                  <button class="btn-primary" (click)="nextStep()" [disabled]="
+                  <button
+                    class="btn-primary"
+                    (click)="nextStep()"
+                    [disabled]="
                       requestData.cities.length === 0 ||
                       !requestData.desiredRent ||
                       !requestData.idNumber ||
                       !isIdNumberValid
-                    ">
+                    "
+                  >
                     המשך
                   </button>
                 </div>
@@ -447,9 +511,9 @@ OLD CODE END -->
                 <h2>העלאת מסמכים</h2>
                 <p>
                   {{
-                  spouseFilesRequested
-                  ? "העלה 3 תלושים של בן/בת הזוג"
-                  : 'העלה 3 תלושי שכר אחרונים
+                    spouseFilesRequested
+                      ? "העלה 3 תלושים של בן/בת הזוג"
+                      : 'העלה 3 תלושי שכר אחרונים
                   ותדפיס עו"ש.'
                   }}
                 </p>
@@ -457,13 +521,20 @@ OLD CODE END -->
                 <div class="spouse-promo" *ngIf="askSpouse">
                   <h3>🎉 כל הכבוד!</h3>
                   <p>
-                    העלית 3 מסמכים. רוצה להעלות גם את של בן/בת הזוג לשיפור הדירוג?
+                    העלית 3 מסמכים. רוצה להעלות גם את של בן/בת הזוג לשיפור
+                    הדירוג?
                   </p>
                   <div class="promo-actions">
-                    <button class="btn-primary small" (click)="acceptSpouseUpload()">
+                    <button
+                      class="btn-primary small"
+                      (click)="acceptSpouseUpload()"
+                    >
                       כן, הוסף
                     </button>
-                    <button class="btn-secondary small" (click)="declineSpouseUpload()">
+                    <button
+                      class="btn-secondary small"
+                      (click)="declineSpouseUpload()"
+                    >
                       לא, תודה
                     </button>
                   </div>
@@ -479,40 +550,83 @@ OLD CODE END -->
                         <span class="load">מסמכים</span>
                       </p>
                     </header>
-                    <div class="body" id="drop" (click)="fileInput.click()" [class.hidden]="uploadedFiles.length > 0">
-                      <i class="fa fa-file-text-o pointer-none" aria-hidden="true"></i>
-                      <p class="pointer-none" style="font-family: 'Rubik', sans-serif;"><b>גרור ושחרר</b> קבצים כאן
-                        <br /> או <a href="javascript:void(0)" id="triggerFile">לחץ לבחירה</a>
+                    <div
+                      class="body"
+                      id="drop"
+                      (click)="fileInput.click()"
+                      [class.hidden]="uploadedFiles.length > 0"
+                    >
+                      <i
+                        class="fa fa-file-text-o pointer-none"
+                        aria-hidden="true"
+                      ></i>
+                      <p
+                        class="pointer-none"
+                        style="font-family: &quot;Rubik&quot;, sans-serif"
+                      >
+                        <b>גרור ושחרר</b> קבצים כאן <br />
+                        או
+                        <a href="javascript:void(0)" id="triggerFile"
+                          >לחץ לבחירה</a
+                        >
                       </p>
-                      <input #fileInput type="file" multiple (change)="onFileSelected($event)" />
+                      <input
+                        #fileInput
+                        type="file"
+                        multiple
+                        (change)="onFileSelected($event)"
+                      />
                     </div>
                     <footer [class.hasFiles]="uploadedFiles.length > 0">
                       <div class="divider">
                         <span>קבצים</span>
                       </div>
                       <div class="list-files">
-                        <div class="file" *ngFor="let file of uploadedFiles; let i = index">
+                        <div
+                          class="file"
+                          *ngFor="let file of uploadedFiles; let i = index"
+                        >
                           <div class="name">
-                            <i class="fa fa-times remove-icon" (click)="removeFile(i); $event.stopPropagation()"></i>
+                            <i
+                              class="fa fa-times remove-icon"
+                              (click)="removeFile(i); $event.stopPropagation()"
+                            ></i>
                             <span>{{ file.name }}</span>
                           </div>
-                          <div class="progress" [class.active]="fileStatuses[file.name] === 'loading'"></div>
-                          <div class="done" [class.anim]="fileStatuses[file.name] === 'done'">
+                          <div
+                            class="progress"
+                            [class.active]="
+                              fileStatuses[file.name] === 'loading'
+                            "
+                          ></div>
+                          <div
+                            class="done"
+                            [class.anim]="fileStatuses[file.name] === 'done'"
+                          >
                             <i class="fa fa-check"></i>
                           </div>
                         </div>
                       </div>
-                      <button class="importar" [class.active]="uploadedFiles.length > 0"
-                        (click)="uploadedFiles = []; fileStatuses = {}">
+                      <button
+                        class="importar"
+                        [class.active]="uploadedFiles.length > 0"
+                        (click)="uploadedFiles = []; fileStatuses = {}"
+                      >
                         נקה הכל
                       </button>
                     </footer>
                   </div>
                 </div>
 
-                <div class="actions" style="margin-top: 2rem;">
-                  <button class="btn-secondary" (click)="prevStep()">חזור</button>
-                  <button class="btn-primary" (click)="nextStep()" [disabled]="uploadedFiles.length === 0">
+                <div class="actions" style="margin-top: 2rem">
+                  <button class="btn-secondary" (click)="prevStep()">
+                    חזור
+                  </button>
+                  <button
+                    class="btn-primary"
+                    (click)="nextStep()"
+                    [disabled]="uploadedFiles.length === 0"
+                  >
                     נתח מסמכים
                   </button>
                 </div>
@@ -520,21 +634,23 @@ OLD CODE END -->
 
               <!-- Step 3: Processing -->
               <div class="step-content processing" *ngIf="currentStep === 3">
-                <h2 style="text-align: center;">מנתח נתונים...</h2>
-                <p style="text-align: center;">ה-AI שלנו סורק את המסמכים ואת ההיסטוריה הפיננסית.</p>
+                <h2 style="text-align: center">מנתח נתונים...</h2>
+                <p style="text-align: center">
+                  ה-AI שלנו סורק את המסמכים ואת ההיסטוריה הפיננסית.
+                </p>
 
                 <div class="scanner-animation">
                   <div class="doc-icon">📄</div>
                   <div class="scan-line"></div>
                 </div>
 
-                <p class="status-blink" style="text-align: center;">מבצע הצלבת נתונים...</p>
+                <p class="status-blink" style="text-align: center">
+                  מבצע הצלבת נתונים...
+                </p>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   </div>

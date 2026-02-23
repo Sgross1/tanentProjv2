@@ -33,8 +33,8 @@ public class RequestResultDto
 {
     public int RequestId { get; set; }
     public decimal FinalScore { get; set; }
-    public decimal TempScore { get; set; }
     public string CityName { get; set; } = string.Empty;
+    public decimal DesiredRent { get; set; }
     public DateTime DateCreated { get; set; }
     public decimal MaxAffordableRent { get; set; }
 }

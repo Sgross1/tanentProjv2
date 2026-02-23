@@ -11,8 +11,12 @@
 
   /* Legacy / Functional mappings */
   --primary: var(--color-action-blue);
+  --primary-color: var(--color-action-blue);
+  --primary-gradient: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
   --bg-color: var(--color-pure-white);
   --text-color: var(--color-text-main);
+  --text-muted: var(--color-text-muted);
+  --border-color: var(--color-border-subtle);
 
   font-family: "Heebo", "Rubik", "Segoe UI", sans-serif;
 }

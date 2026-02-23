@@ -109,8 +109,8 @@ public class RequestsController : ControllerBase
         {
             RequestId = request.RequestId,
             FinalScore = request.FinalScore,
-            TempScore = request.TempScore,
             CityName = request.CityName,
+            DesiredRent = request.DesiredRent,
             DateCreated = request.DateCreated,
             MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
         };
@@ -234,8 +234,8 @@ public class RequestsController : ControllerBase
             {
                 RequestId = request.RequestId,
                 FinalScore = request.FinalScore,
-                TempScore = request.TempScore,
                 CityName = request.CityName,
+                DesiredRent = request.DesiredRent,
                 DateCreated = request.DateCreated,
                 MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
             };
@@ -316,13 +316,41 @@ public class RequestsController : ControllerBase
             {
                 RequestId = r.RequestId,
                 FinalScore = r.FinalScore,
-                TempScore = r.TempScore,
                 CityName = r.CityName,
+                DesiredRent = r.DesiredRent,
                 DateCreated = r.DateCreated
             })
             .ToListAsync();
 
         return requests;
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteRequest(int id)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+        var request = await _context.Requests
+            .FirstOrDefaultAsync(r => r.RequestId == id && r.UserId == userId);
+
+        if (request == null)
+        {
+            return NotFound(new { message = "הפנייה לא נמצאה." });
+        }
+
+        var savedRefs = await _context.SavedRequests
+            .Where(sr => sr.TenantRequestId == id)
+            .ToListAsync();
+
+        if (savedRefs.Count > 0)
+        {
+            _context.SavedRequests.RemoveRange(savedRefs);
+        }
+
+        _context.Requests.Remove(request);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"פנייה #{id} נמחקה בהצלחה." });
     }
 
     [HttpPost("{id}/notify-sms")]
