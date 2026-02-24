@@ -19,15 +19,23 @@
           <input
             type="text"
             formControlName="firstName"
+            (input)="onFirstNameInput()"
             placeholder="שם פרטי"
           />
+          <div class="error-message" *ngIf="firstNameError">
+            {{ firstNameError }}
+          </div>
         </div>
         <div class="input-group">
           <input
             type="text"
             formControlName="lastName"
+            (input)="onLastNameInput()"
             placeholder="שם משפחה"
           />
+          <div class="error-message" *ngIf="lastNameError">
+            {{ lastNameError }}
+          </div>
         </div>
       </div>
 
@@ -43,7 +51,15 @@
       </div>
 
       <div class="input-group" *ngIf="!isForgot">
-        <input type="password" formControlName="password" placeholder="סיסמה" />
+        <input
+          type="password"
+          formControlName="password"
+          (input)="onPasswordInput()"
+          placeholder="סיסמה"
+        />
+        <div class="error-message" *ngIf="passwordError">
+          {{ passwordError }}
+        </div>
       </div>
 
       <div class="input-group" *ngIf="!isLogin && !isForgot">
@@ -58,20 +74,31 @@
       <!-- Role Selection (Register Only) -->
       <div class="role-selector" *ngIf="!isLogin && !isForgot">
         <label>
-          <input type="radio" formControlName="role" value="Tenant" />
+          <input
+            type="radio"
+            formControlName="role"
+            value="Tenant"
+            (change)="onRoleChange()"
+          />
           <div class="role-card">
             <span>🏠</span>
             <span>אני שוכר</span>
           </div>
         </label>
         <label>
-          <input type="radio" formControlName="role" value="Landlord" />
+          <input
+            type="radio"
+            formControlName="role"
+            value="Landlord"
+            (change)="onRoleChange()"
+          />
           <div class="role-card">
             <span>🔑</span>
             <span>אני משכיר</span>
           </div>
         </label>
       </div>
+      <div class="error-message" *ngIf="roleError">{{ roleError }}</div>
 
       <button
         type="submit"

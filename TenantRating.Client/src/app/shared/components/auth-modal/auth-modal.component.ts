@@ -26,6 +26,10 @@ export class AuthModalComponent {
 
   phoneError: string = "";
   emailError: string = "";
+  firstNameError: string = "";
+  lastNameError: string = "";
+  passwordError: string = "";
+  roleError: string = "";
   loginError: string = "";
   infoMessage: string = "";
 
@@ -69,6 +73,22 @@ export class AuthModalComponent {
     this.emailError = "";
   }
 
+  onFirstNameInput() {
+    this.firstNameError = "";
+  }
+
+  onLastNameInput() {
+    this.lastNameError = "";
+  }
+
+  onPasswordInput() {
+    this.passwordError = "";
+  }
+
+  onRoleChange() {
+    this.roleError = "";
+  }
+
   onEmailBlur() {
     const emailValue = (this.authForm.get("email")?.value ?? "")
       .toString()
@@ -105,28 +125,81 @@ export class AuthModalComponent {
   onSubmit() {
     this.loginError = "";
     this.infoMessage = "";
+    this.phoneError = "";
+    this.firstNameError = "";
+    this.lastNameError = "";
+    this.passwordError = "";
+    this.roleError = "";
+    let hasValidationError = false;
 
     this.onEmailBlur();
-    if (this.emailError) {
-      return;
-    }
+    hasValidationError = !!this.emailError;
 
-    if (this.authForm.invalid) {
-      // Allow partial validation for Forgot Password (only email needed)
-      if (this.isForgot && this.authForm.get("email")?.valid) {
-        // Continue
-      } else if (this.isForgot) {
+    if (this.isForgot) {
+      // Email already validated above
+      if (hasValidationError) {
         return;
-      } else if (
-        this.isLogin &&
-        this.authForm.get("email")?.valid &&
-        this.authForm.get("password")?.value
-      ) {
-        // Simple login check
-      } else if (this.isLogin) {
+      }
+    } else if (this.isLogin) {
+      const passwordValue = (this.authForm.get("password")?.value ?? "")
+        .toString()
+        .trim();
+      if (!passwordValue) {
+        this.passwordError = "יש להזין סיסמה.";
+        hasValidationError = true;
+      }
+
+      if (hasValidationError) {
         return;
-      } else {
-        return; // Register needs all
+      }
+    } else {
+      const firstNameValue = (this.authForm.get("firstName")?.value ?? "")
+        .toString()
+        .trim();
+      const lastNameValue = (this.authForm.get("lastName")?.value ?? "")
+        .toString()
+        .trim();
+      const passwordValue = (this.authForm.get("password")?.value ?? "")
+        .toString()
+        .trim();
+      const roleValue = (this.authForm.get("role")?.value ?? "")
+        .toString()
+        .trim();
+      const phoneRaw = (
+        this.authForm.get("phoneNumber")?.value ?? ""
+      ).toString();
+      const normalizedPhone = phoneRaw.trim().replace(/[-\s]/g, "");
+
+      if (!firstNameValue) {
+        this.firstNameError = "יש להזין שם פרטי.";
+        hasValidationError = true;
+      }
+
+      if (!lastNameValue) {
+        this.lastNameError = "יש להזין שם משפחה.";
+        hasValidationError = true;
+      }
+
+      if (!passwordValue) {
+        this.passwordError = "יש להזין סיסמה.";
+        hasValidationError = true;
+      }
+
+      if (!normalizedPhone) {
+        this.phoneError = "יש להזין מספר פלאפון.";
+        hasValidationError = true;
+      } else if (!/^05[0-8][0-9]{7}$/.test(normalizedPhone)) {
+        this.phoneError = "מספר פלאפון לא תקין";
+        hasValidationError = true;
+      }
+
+      if (!roleValue) {
+        this.roleError = "יש לבחור סוג משתמש.";
+        hasValidationError = true;
+      }
+
+      if (hasValidationError) {
+        return;
       }
     }
 

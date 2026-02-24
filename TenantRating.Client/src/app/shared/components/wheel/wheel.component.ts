@@ -148,7 +148,7 @@ import { CommonModule } from "@angular/common";
 
       .core-label {
         font-size: 0.9rem;
-        color: #64748b;
+        color: var(--wheel-secondary);
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-top: 2px;
@@ -177,6 +177,10 @@ import { CommonModule } from "@angular/common";
       }
 
       .core-reactor.ready .core-text {
+        color: var(--wheel-success);
+      }
+
+      .core-reactor.ready .core-label {
         color: var(--wheel-success);
       }
 
