@@ -37,4 +37,5 @@ public class RequestResultDto
     public decimal DesiredRent { get; set; }
     public DateTime DateCreated { get; set; }
     public decimal MaxAffordableRent { get; set; }
+    public int Percentile { get; set; }
 }

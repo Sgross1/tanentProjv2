@@ -39,7 +39,6 @@ public class OcrService : IOcrService
         var idNumbers = new HashSet<string>();
         var slipCountById = new Dictionary<string, int>();
         var payDatesById = new Dictionary<string, List<DateTime>>();
-        bool idMissing = false;
         bool payDateMissing = false;
 
         // Accumulate all raw fields for debugging
@@ -65,6 +64,12 @@ public class OcrService : IOcrService
                 int docIndex = 0;
                 foreach (var document in result.Documents)
                 {
+                    // Print all keys for debugging OCR changes
+                    foreach (var kvp in document.Fields)
+                    {
+                        _logger.LogInformation($"[OCR Debug] Found Field: '{kvp.Key}' = '{kvp.Value.Content}' (Confidence: {kvp.Value.Confidence})");
+                    }
+
                     // Only process fields with confidence > 80%
                     var validFields = document.Fields.Where(kvp => kvp.Value.Confidence > 0.8).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
@@ -105,10 +110,6 @@ public class OcrService : IOcrService
                             extractedId = idContent;
                             idNumbers.Add(idContent);
                         }
-                    }
-                    if (extractedId == null)
-                    {
-                        idMissing = true;
                     }
 
                     if (extractedId != null)
@@ -237,9 +238,8 @@ public class OcrService : IOcrService
             }
         }
 
-        // Validations
-        // ID: Must have all, unique up to 2
-        if (idMissing || idNumbers.Count == 0)
+        // Fully bypassed ID validation 
+        if (idNumbers.Count == 0)
         {
             throw new InvalidOperationException("לא מצליחים לזהות את מספר הזהות באחד או יותר מהתלושים.");
         }

@@ -10,6 +10,7 @@ export interface RequestResultDto {
 
   dateCreated: string;
   maxAffordableRent?: number;
+  percentile: number;
 }
 
 export interface CreateRequestDto {
@@ -34,7 +35,7 @@ export class RequestService {
   private requestsSubject = new BehaviorSubject<RequestResultDto[]>([]);
   public requests$ = this.requestsSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   createRequest(dto: CreateRequestDto): Observable<RequestResultDto> {
     return this.http.post<RequestResultDto>(this.apiUrl, dto).pipe(

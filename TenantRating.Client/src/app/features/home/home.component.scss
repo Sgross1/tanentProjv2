@@ -48,9 +48,10 @@
        - Uses a rich, moving gradient background (400% size)
        - Cycles between deep blues, teals, and subtle purples.
     */
-  background: linear-gradient(-45deg, #400a2b, #133b5c, #91257b, #a17413);
+  background: linear-gradient(-45deg, #435598, #456c80, #327149, #2e96a2);
+  //background: linear-gradient(-45deg, #984368, #794580, #5e4aa5, #2a98a0);
   background-size: 400% 400%;
-  animation: gradientBG 20s ease infinite;
+  animation: gradientBG 15s ease infinite;
 
   /* 
        MASKING LOGIC (Preserves image visibility):

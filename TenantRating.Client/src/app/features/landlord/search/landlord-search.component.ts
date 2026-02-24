@@ -28,6 +28,7 @@ export class LandlordSearchComponent implements OnInit {
   showPhoneMap: { [key: number]: boolean } = {};
   savedMap: { [key: number]: boolean } = {};
   actionError = "";
+  searchError = "";
 
   // Autocomplete Data
   filteredCities: string[] = [];
@@ -54,6 +55,7 @@ export class LandlordSearchComponent implements OnInit {
 
   onSearchInput() {
     const query = this.searchCity.trim();
+    this.searchError = "";
 
     if (!query) {
       this.filteredCities = [];
@@ -78,11 +80,25 @@ export class LandlordSearchComponent implements OnInit {
 
   selectCity(city: string) {
     this.searchCity = city;
+    this.searchError = "";
     this.filteredCities = []; // Close dropdown
     this.onSearch(); // Trigger search immediately on selection
   }
 
   onSearch() {
+    const normalizedCity = this.searchCity.trim();
+
+    if (!normalizedCity) {
+      this.hasSearched = true;
+      this.isLoading = false;
+      this.results = [];
+      this.filteredCities = [];
+      this.searchError = "יש להזין עיר כדי לבצע חיפוש שוכרים.";
+      return;
+    }
+
+    this.searchCity = normalizedCity;
+    this.searchError = "";
     this.filteredCities = []; // Ensure dropdown closed
     this.isLoading = true;
     this.hasSearched = true;
@@ -105,6 +121,7 @@ export class LandlordSearchComponent implements OnInit {
         },
         error: (err) => {
           console.error("Search failed", err);
+          this.searchError = "החיפוש נכשל. נסה שוב בעוד רגע.";
           this.isLoading = false;
         },
       });

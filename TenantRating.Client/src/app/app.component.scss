@@ -39,6 +39,12 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   font-family: "Rajdhani", "Rubik", sans-serif;
+  transition: font-size 0.3s ease;
+
+  @media (min-width: 901px) {
+    font-size: 2.16rem;
+    /* 1.8rem * 1.2 = 2.16rem */
+  }
 }
 
 .nav-center {
@@ -48,17 +54,17 @@
 }
 
 .nav-pill {
-  background: rgba(30, 41, 59, 0.95);
-  /* Lighter navy blue */
+  background: rgba(186, 230, 253, 0.4);
+  /* Light sky blue transparent */
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 206, 201, 0.4);
-  /* Cyan border */
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  /* Sky blue border */
   border-radius: 50px;
   display: flex;
   gap: 4px;
   padding: 6px;
-  box-shadow: 0 0 20px rgba(0, 206, 201, 0.2);
-  /* Glow shadow */
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.15);
+  /* Subtle blue shadow */
   transition: all 0.3s ease;
 
   &:hover {
@@ -69,8 +75,8 @@
 }
 
 .nav-pill-item {
-  color: rgba(255, 255, 255, 0.9);
-  /* White text */
+  color: #0c4a6e;
+  /* Dark navy blue for contrast */
   text-decoration: none;
   font-weight: 600;
   padding: 8px 18px;
@@ -82,9 +88,9 @@
   position: relative;
 
   &:hover {
-    color: #00cec9;
-    /* Cyan on hover */
-    background: rgba(0, 206, 201, 0.1);
+    color: #0ea5e9;
+    /* Sky blue on hover */
+    background: rgba(14, 165, 233, 0.1);
 
     &::after {
       width: 70%;
@@ -162,26 +168,6 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-
-  /*
-      OLD login-btn style kept by request:
-      .login-btn {
-          background: #0984e3;
-          border: none;
-          color: white;
-          padding: 0.7rem 1.8rem;
-          border-radius: 50px;
-          cursor: pointer;
-          transition: all 0.3s;
-          font-weight: 700;
-          box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
-
-          &:hover {
-              background: #74b9ff;
-              transform: translateY(-2px);
-          }
-      }
-    */
 
   .login-btn {
     background: #ffffff;
@@ -338,7 +324,9 @@
     min-width: 180px;
     /* Ensure it's not too narrow for text */
     flex-direction: column;
-    background: rgba(15, 23, 42, 0.98);
+    background: rgba(186, 230, 253, 0.95);
+    /* Light sky blue transparent for mobile */
+    backdrop-filter: blur(12px);
     border-radius: 20px 0 0 20px;
     /* Top-left and bottom-left rounded */
     padding: 1.5rem 1rem;

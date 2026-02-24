@@ -43,6 +43,10 @@
     <button class="search-btn" (click)="onSearch()">חפש</button>
   </div>
 
+  <div class="inline-message error" *ngIf="searchError">
+    {{ searchError }}
+  </div>
+
   <div class="inline-message error" *ngIf="actionError">
     {{ actionError }}
   </div>

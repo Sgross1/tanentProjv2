@@ -117,6 +117,9 @@
       <div class="error-message" *ngIf="loginError && isLogin && !isForgot">
         {{ loginError }}
       </div>
+      <div class="error-message" *ngIf="registerError && !isLogin && !isForgot">
+        {{ registerError }}
+      </div>
     </form>
 
     <div class="modal-footer">

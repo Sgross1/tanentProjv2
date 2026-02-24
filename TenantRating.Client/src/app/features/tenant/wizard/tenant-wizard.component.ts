@@ -51,7 +51,7 @@ export class TenantWizardComponent implements OnInit {
 
   // Step 2 Data
   uploadedFiles: File[] = [];
-  fileStatuses: { [fileName: string]: 'loading' | 'done' } = {};
+  fileStatuses: { [fileName: string]: "loading" | "done" } = {};
 
   // Step 3 Data (Result)
   finalScore = 0;
@@ -66,7 +66,7 @@ export class TenantWizardComponent implements OnInit {
     private router: Router,
     private requestService: RequestService,
     private citiesService: CitiesService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -159,20 +159,40 @@ export class TenantWizardComponent implements OnInit {
   askSpouse = false;
   spouseFilesRequested = false;
 
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDropFiles(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!event.dataTransfer?.files?.length) {
+      return;
+    }
+
+    this.addSelectedFiles(event.dataTransfer.files);
+  }
+
   onFileSelected(event: any) {
     const files: FileList = event.target.files;
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        this.uploadedFiles.push(file);
+    this.addSelectedFiles(files);
+  }
 
-        // Simulating the "fake load" animation from the provided design
-        this.fileStatuses[file.name] = 'loading';
-        const simulatedLoadTime = 1500 + (i * 800);
-        setTimeout(() => {
-          this.fileStatuses[file.name] = 'done';
-        }, simulatedLoadTime);
-      }
+  private addSelectedFiles(files: FileList | null) {
+    if (!files) return;
+
+    const startIndex = this.uploadedFiles.length;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      this.uploadedFiles.push(file);
+
+      // Simulating the "fake load" animation from the provided design
+      this.fileStatuses[file.name] = "loading";
+      const simulatedLoadTime = 1500 + (startIndex + i) * 800;
+      setTimeout(() => {
+        this.fileStatuses[file.name] = "done";
+      }, simulatedLoadTime);
     }
 
     // Trigger spouse prompt if we have 3 files and haven't asked yet
@@ -251,6 +271,8 @@ export class TenantWizardComponent implements OnInit {
         next: (result) => {
           this.isProcessing = false;
           this.finalScore = result.finalScore;
+          // Set userPercentile from backend
+          this.userPercentile = result.percentile;
           this.maxAffordableRent = result.maxAffordableRent || 0;
           this.createdRequestId = result.requestId;
 
@@ -429,7 +451,6 @@ export class TenantWizardComponent implements OnInit {
 
   // Missing Properties for Result View
   userPercentile = 0;
-  distributionBars: { height: number; isUser: boolean }[] = [];
 
   // Dynamic Rent Calculation Logic
   maxAffordableRent = 0;
@@ -441,34 +462,19 @@ export class TenantWizardComponent implements OnInit {
       this.calculatedRent = 0;
       return;
     }
-    // Formula: Score = (MaxRent / RequestRent) * 100
-    // Therefore: RequestRent = (MaxRent * 100) / Score
+    // Formula: The higher the score requested, the higher the affordable rent becomes.
+    // Therefore: RequestRent = (MaxRent * Score) / 100
     this.calculatedRent = Math.round(
-      (this.maxAffordableRent * 100) / this.sliderValue,
+      (this.maxAffordableRent * this.sliderValue) / 100,
     );
   }
 
   generatePercentileGraph(score: number) {
-    // Generate a mock distribution (bell curve-ish)
-    const bars = [];
-    // User percentile logic (0-100) - simpler approximation
-    this.userPercentile = Math.min(Math.round((score / 1000) * 100), 99);
-
-    // Create visual bars
-    for (let i = 0; i < 40; i++) {
-      // Create a random-ish distribution curve
-      let height = 20 + Math.random() * 50;
-      // Peak around 700-800 score
-      if (i > 25 && i < 35) height += 30;
-
-      // Identify if this bar represents the user
-      // Map user score (0-1000) to bar index (0-39)
-      const userBarIndex = Math.floor((score / 1000) * 40);
-      const isUser = i === userBarIndex;
-
-      bars.push({ height: Math.min(height, 100), isUser });
-    }
-    this.distributionBars = bars;
+    // True percentile calculation (0-100) is now calculated by the backend
+    // based on peers with similar rent. The `userPercentile` is already
+    // mapped from `result.percentile` inside `processRequest`.
+    // However, we ensure it's not above 99 or below 1 for the UI chart.
+    this.userPercentile = Math.min(Math.max(this.userPercentile, 1), 99);
   }
 
   finish() {

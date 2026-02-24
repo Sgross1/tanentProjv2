@@ -135,7 +135,6 @@ import { AuthService } from "../../core/services/auth.service";
                   {{ req.finalScore | number: "1.0-1" }}
                 </div>
                 <div class="req-status">
-                  <span class="badge">הושלם</span>
                   <button
                     class="delete-request-btn"
                     type="button"
@@ -208,8 +207,7 @@ import { AuthService } from "../../core/services/auth.service";
                 </div>
                 <div class="req-status" style="display: flex; gap: 10px;">
                   <button
-                    class="action-btn small"
-                    style="background: #0984e3; color: white; border: none; border-radius: 8px; cursor: pointer;"
+                    class="action-btn small primary"
                     (click)="
                       startVerification(saved.requestId, !!saved.hasSecondId)
                     "

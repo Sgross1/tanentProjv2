@@ -31,6 +31,7 @@ export class AuthModalComponent {
   passwordError: string = "";
   roleError: string = "";
   loginError: string = "";
+  registerError: string = "";
   infoMessage: string = "";
 
   constructor(
@@ -109,12 +110,14 @@ export class AuthModalComponent {
     this.isLogin = !this.isLogin;
     this.isForgot = false;
     this.infoMessage = "";
+    this.registerError = "";
   }
 
   toggleForgot() {
     this.isForgot = !this.isForgot;
     this.isLogin = true; // Return to login context if canceling forgot
     this.infoMessage = "";
+    this.registerError = "";
   }
 
   close() {
@@ -124,6 +127,7 @@ export class AuthModalComponent {
 
   onSubmit() {
     this.loginError = "";
+    this.registerError = "";
     this.infoMessage = "";
     this.phoneError = "";
     this.firstNameError = "";
@@ -241,11 +245,55 @@ export class AuthModalComponent {
       error: (err) => {
         console.error("Auth error", err);
         this.isLoading = false;
+        const serverMessage = this.extractServerErrorMessage(err);
+
         // Handle regular errors
         if (this.isLogin && !this.isForgot) {
-          this.loginError = "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+          this.loginError =
+            serverMessage || "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+          return;
+        }
+
+        if (!this.isLogin && !this.isForgot) {
+          if (serverMessage.includes("אימייל")) {
+            this.emailError = serverMessage;
+          } else if (
+            serverMessage.includes("פלאפון") ||
+            serverMessage.includes("טלפון")
+          ) {
+            this.phoneError = serverMessage;
+          } else {
+            this.registerError =
+              serverMessage || "לא ניתן להשלים הרשמה כרגע. נסה שוב.";
+          }
         }
       },
     });
+  }
+
+  private extractServerErrorMessage(err: any): string {
+    const payload = err?.error;
+
+    if (typeof payload === "string") {
+      return payload;
+    }
+
+    if (typeof payload?.message === "string") {
+      return payload.message;
+    }
+
+    if (typeof payload?.title === "string") {
+      return payload.title;
+    }
+
+    const firstValidationMessage = payload?.errors
+      ? Object.values(payload.errors)
+          .flat()
+          .find((v: unknown) => typeof v === "string")
+      : undefined;
+
+    return typeof firstValidationMessage === "string"
+      ? firstValidationMessage
+      : "";
   }
 }

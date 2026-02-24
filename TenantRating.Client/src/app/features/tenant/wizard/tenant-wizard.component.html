@@ -238,6 +238,22 @@
               </div>
 
               <div class="upload-zone" (click)="fileInput.click()">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px;">
+                  <svg viewBox="0 0 24 24" width="50" height="50" stroke="url(#gradient-skin)" stroke-width="2" fill="none" class="mb-2">
+                    <defs>
+                      <linearGradient id="gradient-skin" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#0984e3;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#00cec9;stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                    <path d="M12 9v8"></path>
+                    <path d="m9 12 3-3 3 3"></path>
+                  </svg>
+                  <span style="font-size: 24px; font-weight: bold; color: #2d3436; margin-top: 10px;">
+                    {{ spouseFilesRequested ? "העלה 3 תלושים של בן/בת הזוג" : 'העלה 3 תלושי שכר שלך' }}
+                  </span>
+                </div>
                 <input
                   #fileInput
                   type="file"
@@ -245,7 +261,6 @@
                   style="display: none"
                   (change)="onFileSelected($event)"
                 />
-                <div class="icon">📂</div>
                 <p>לחץ לבחירת קבצים</p>
                 <div class="files-preview">
                   <div
@@ -253,6 +268,11 @@
                     *ngFor="let file of uploadedFiles; let i = index"
                   >
                     {{ file.name }}
+                    <div class="done" [class.anim]="fileStatuses[file.name] === 'done'">
+                      <svg viewBox="0 0 24 24" width="18" height="18" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
                     <span
                       class="remove"
                       (click)="removeFile(i); $event.stopPropagation()"
@@ -262,11 +282,19 @@
                 </div>
               </div>
 
-              <div class="actions">
+              <div class="actions" style="margin-top: 20px;">
                 <button class="btn-secondary" (click)="prevStep()">חזור</button>
+                <div style="display: flex; gap: 10px;" *ngIf="uploadedFiles.length > 0">
+                   <button class="btn-secondary" (click)="fileInput.click()">
+                      צרף למסמכים
+                   </button>
+                   <button class="btn-secondary" (click)="uploadedFiles = []; fileStatuses = {}">
+                      נקה הכל
+                   </button>
+                </div>
                 <button
                   class="btn-primary"
-                  (click)="nextStep()"
+                  (click)="processRequest()"
                   [disabled]="uploadedFiles.length === 0"
                 >
                   נתח מסמכים
@@ -318,8 +346,17 @@ OLD CODE END -->
           style="margin-top: 15px; width: 100%; text-align: right"
         >
           <!-- Result Step (Full Width) -->
-          <div class="step-content result fade-in" *ngIf="currentStep === 4">
-            <h2>הדירוג שלך מוכן!</h2>
+          <div
+            class="step-content result fade-in"
+            *ngIf="currentStep === 4"
+            style="
+              text-align: center;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            "
+          >
+            <h2 style="margin-bottom: 20px">הדירוג שלך מוכן!</h2>
 
             <div class="score-display">
               <div class="score-circle">
@@ -330,38 +367,67 @@ OLD CODE END -->
               </div>
             </div>
 
-            <p class="score-desc" style="text-align: center">
+            <p class="score-desc" style="text-align: center; margin-top: 15px">
               עבור שכ"ד {{ requestData.desiredRent | number }} ₪
             </p>
 
-            <div class="distribution-graph-container">
-              <h3>איפה אתה ביחס לאחרים?</h3>
-              <div class="graph-wrapper">
-                <div class="y-axis-label">כמות אנשים</div>
-                <div class="distribution-graph">
-                  <div class="bar-wrapper" *ngFor="let bar of distributionBars">
-                    <div class="label-you" *ngIf="bar.isUser">אתה כאן!</div>
-                    <div
-                      class="bar"
-                      [style.height.%]="bar.height"
-                      [class.highlight]="bar.isUser"
-                    ></div>
+            <div
+              class="distribution-graph-container"
+              style="margin: 1rem 0; padding: 1rem; text-align: center"
+            >
+              <h3
+                style="margin-bottom: 1.5rem; font-size: 1.2rem; color: #2d3436"
+              >
+                איפה אתה ביחס לאחרים?
+              </h3>
+
+              <div class="radial-progress-wrapper" style="margin: 20px 0">
+                <div
+                  class="radial-progress"
+                  [style.--value]="userPercentile"
+                  style="--size: 11rem; --thickness: 1.5rem"
+                  role="progressbar"
+                >
+                  <div class="percent-text">
+                    {{ userPercentile }}<span class="symbol">%</span>
                   </div>
                 </div>
               </div>
 
-              <div class="x-axis">
-                <span class="range-val">0</span>
-                <span class="x-label-text">ציון אמינות</span>
-                <span class="range-val">100</span>
-              </div>
-              <p class="graph-note">
+              <p
+                class="graph-note"
+                style="margin-top: 1.5rem; font-size: 0.95rem; font-weight: 500"
+              >
                 הציון שלך גבוה מ-{{ userPercentile }}% מהמחפשים בתקציב זה.
               </p>
             </div>
 
-            <div class="slider-box">
-              <h4>רוצה לשפר ל-{{ sliderValue }}?</h4>
+            <div
+              class="slider-box"
+              style="
+                margin-top: 30px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+              "
+            >
+              <h4
+                *ngIf="sliderValue === finalScore"
+                style="margin-bottom: 20px; text-align: center; width: 100%"
+              >
+                בדוק תקציב מול ציון אם שכר הדירה הוא
+                {{ requestData.desiredRent | number }} ₪
+              </h4>
+              <h4
+                *ngIf="sliderValue !== finalScore"
+                style="margin-bottom: 20px; text-align: center; width: 100%"
+              >
+                בשביל לקבל ציון
+                <span style="color: #00cec9">{{ sliderValue }}</span>
+              </h4>
+
               <input
                 type="range"
                 min="10"
@@ -369,8 +435,10 @@ OLD CODE END -->
                 step="1"
                 [(ngModel)]="sliderValue"
                 (input)="updateRentCalculation()"
+                dir="ltr"
+                style="width: 75%; margin: 0 auto"
               />
-              <p>
+              <p style="margin-top: 15px; text-align: center; width: 100%">
                 תקציב מומלץ: <strong>{{ calculatedRent | number }} ₪</strong>
               </p>
             </div>
@@ -508,52 +576,47 @@ OLD CODE END -->
 
               <!-- Step 2: Upload -->
               <div class="step-content fade-in" *ngIf="currentStep === 2">
-                <h2>העלאת מסמכים</h2>
-                <p>
-                  {{
-                    spouseFilesRequested
-                      ? "העלה 3 תלושים של בן/בת הזוג"
-                      : 'העלה 3 תלושי שכר אחרונים
-                  ותדפיס עו"ש.'
-                  }}
-                </p>
-
-                <div class="spouse-promo" *ngIf="askSpouse">
-                  <h3>🎉 כל הכבוד!</h3>
-                  <p>
-                    העלית 3 מסמכים. רוצה להעלות גם את של בן/בת הזוג לשיפור
-                    הדירוג?
-                  </p>
-                  <div class="promo-actions">
-                    <button
-                      class="btn-primary small"
-                      (click)="acceptSpouseUpload()"
-                    >
-                      כן, הוסף
-                    </button>
-                    <button
-                      class="btn-secondary small"
-                      (click)="declineSpouseUpload()"
-                    >
-                      לא, תודה
-                    </button>
-                  </div>
+                <div class="inline-errors" *ngIf="stepErrors.length > 0">
+                  <div class="error-title">הבקשה לא נשלחה:</div>
+                  <ul>
+                    <li *ngFor="let error of stepErrors">{{ error }}</li>
+                  </ul>
                 </div>
 
                 <!-- New Decorative Upload Design -->
                 <div class="upload">
-                  <div class="upload-files">
+                  <div
+                    class="upload-files"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onDropFiles($event)"
+                  >
                     <header>
-                      <p>
-                        <i class="fa fa-cloud-upload" aria-hidden="true"></i>
-                        <span class="up">העלאת</span>
-                        <span class="load">מסמכים</span>
+                      <p style="gap: 15px">
+                        <i
+                          class="fa fa-cloud-upload"
+                          aria-hidden="true"
+                          style="margin-right: 15px"
+                        ></i>
+                        <span
+                          class="load"
+                          style="
+                            font-size: 28px;
+                            font-family: &quot;Rubik&quot;, sans-serif;
+                          "
+                          >{{
+                            spouseFilesRequested
+                              ? "העלה 3 תלושים של בן/בת הזוג"
+                              : "העלה 3 תלושי שכר שלך"
+                          }}</span
+                        >
                       </p>
                     </header>
                     <div
                       class="body"
                       id="drop"
                       (click)="fileInput.click()"
+                      (dragover)="onDragOver($event)"
+                      (drop)="onDropFiles($event)"
                       [class.hidden]="uploadedFiles.length > 0"
                     >
                       <i
@@ -603,18 +666,85 @@ OLD CODE END -->
                             class="done"
                             [class.anim]="fileStatuses[file.name] === 'done'"
                           >
-                            <i class="fa fa-check"></i>
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="18"
+                              height="18"
+                              stroke="white"
+                              stroke-width="2"
+                              fill="none"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                           </div>
                         </div>
                       </div>
-                      <button
-                        class="importar"
-                        [class.active]="uploadedFiles.length > 0"
-                        (click)="uploadedFiles = []; fileStatuses = {}"
+                      <div
+                        style="
+                          display: flex;
+                          justify-content: center;
+                          gap: 10px;
+                        "
                       >
-                        נקה הכל
-                      </button>
+                        <button
+                          class="importar"
+                          [class.active]="uploadedFiles.length > 0"
+                          (click)="fileInput.click()"
+                          style="margin: 20px 0 10px"
+                        >
+                          צרף קובץ
+                        </button>
+                        <button
+                          class="importar"
+                          [class.active]="uploadedFiles.length > 0"
+                          (click)="uploadedFiles = []; fileStatuses = {}"
+                          style="margin: 20px 0 10px"
+                        >
+                          נקה הכל
+                        </button>
+                      </div>
                     </footer>
+                  </div>
+                </div>
+
+                <div class="spouse-promo" *ngIf="askSpouse">
+                  <h3>שדרוג הדיוק בדירוג</h3>
+                  <p>
+                    אפשר להעלות גם 3 תלושים של בן/בת הזוג כדי לשפר את דיוק
+                    הניתוח והדירוג.
+                  </p>
+                  <div class="promo-actions">
+                    <button
+                      class="promo-btn primary"
+                      (click)="acceptSpouseUpload()"
+                    >
+                      הוסף עוד 3
+                    </button>
+                    <button
+                      class="promo-btn secondary"
+                      (click)="declineSpouseUpload()"
+                    >
+                      המשך עם 3
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="form-group"
+                  *ngIf="spouseFilesRequested || uploadedFiles.length === 6"
+                >
+                  <label>תעודת זהות בן/בת זוג</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="requestData.spouseIdNumber"
+                    (input)="onSpouseIdNumberInput()"
+                    (blur)="onSpouseIdNumberBlur()"
+                    placeholder="מספר תעודת זהות של בן/בת הזוג"
+                  />
+                  <div class="error-message" *ngIf="spouseIdNumberError">
+                    {{ spouseIdNumberError }}
                   </div>
                 </div>
 
