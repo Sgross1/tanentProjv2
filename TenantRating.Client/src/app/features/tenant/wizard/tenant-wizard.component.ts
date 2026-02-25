@@ -22,6 +22,7 @@ import { WheelComponent } from "../../../shared/components/wheel/wheel.component
   styleUrls: ["./tenant-wizard.component.scss"],
 })
 export class TenantWizardComponent implements OnInit {
+  protected readonly Math = Math;
   private readonly spouseMustDifferError =
     "מספר הזהות של בן/בת הזוג חייב להיות שונה מהמספר הראשי.";
 
@@ -66,7 +67,7 @@ export class TenantWizardComponent implements OnInit {
     private router: Router,
     private requestService: RequestService,
     private citiesService: CitiesService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -273,7 +274,8 @@ export class TenantWizardComponent implements OnInit {
           this.finalScore = result.finalScore;
           // Set userPercentile from backend
           this.userPercentile = result.percentile;
-          this.maxAffordableRent = result.maxAffordableRent || 0;
+          // Baseline for Inverse Logic: Product of rent and score
+          this.maxAffordableRent = (this.requestData.desiredRent! * result.finalScore);
           this.createdRequestId = result.requestId;
 
           this.sliderValue = Math.round(this.finalScore);
@@ -418,8 +420,8 @@ export class TenantWizardComponent implements OnInit {
 
     const validationErrors = payload?.errors
       ? Object.values(payload.errors)
-          .flat()
-          .filter((v: unknown) => typeof v === "string")
+        .flat()
+        .filter((v: unknown) => typeof v === "string")
       : [];
 
     const messages = [
@@ -462,11 +464,9 @@ export class TenantWizardComponent implements OnInit {
       this.calculatedRent = 0;
       return;
     }
-    // Formula: The higher the score requested, the higher the affordable rent becomes.
-    // Therefore: RequestRent = (MaxRent * Score) / 100
-    this.calculatedRent = Math.round(
-      (this.maxAffordableRent * this.sliderValue) / 100,
-    );
+    // Formula: Inverse Proportionality (Higher Score = Lower Budget)
+    // Rent = (BaselineProduct) / Score
+    this.calculatedRent = Math.round(this.maxAffordableRent / this.sliderValue);
   }
 
   generatePercentileGraph(score: number) {

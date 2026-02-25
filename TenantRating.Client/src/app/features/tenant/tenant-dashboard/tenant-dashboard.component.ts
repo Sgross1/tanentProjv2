@@ -795,8 +795,8 @@ export class TenantDashboardComponent implements OnInit {
     this.requests$.subscribe((reqs) => {
       if (reqs && reqs.length > 0) {
         const latestInfo = reqs[0];
-        this.currentMaxAffordableRent =
-          latestInfo.maxAffordableRent || latestInfo.finalScore * 0.35 * 100;
+        // Baseline for Inverse Logic: Product of rent and score
+        this.currentMaxAffordableRent = (latestInfo.desiredRent! * latestInfo.finalScore);
         this.sliderValue = Math.round(latestInfo.finalScore);
         this.hasScore = true;
         this.updateRentCalculation();
@@ -848,7 +848,7 @@ export class TenantDashboardComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   uploadNewRequest() {
     this.router.navigate(["/tenant/wizard"]);
@@ -1005,9 +1005,9 @@ export class TenantDashboardComponent implements OnInit {
       this.calculatedRent = 0;
       return;
     }
-    this.calculatedRent = Math.round(
-      (this.currentMaxAffordableRent * 100) / this.sliderValue,
-    );
+    // Formula: Inverse Proportionality (Higher Score = Lower Budget)
+    // Rent = (BaselineProduct) / Score
+    this.calculatedRent = Math.round(this.currentMaxAffordableRent / this.sliderValue);
   }
 
   // Verification Logic
