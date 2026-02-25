@@ -26,6 +26,8 @@ secrets.bat
 
 # Database
 *.db
+*.db-wal
+*.db-shm
 
 # Database
 *.db
