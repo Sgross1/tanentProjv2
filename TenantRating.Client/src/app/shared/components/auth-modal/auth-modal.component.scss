@@ -1,3 +1,5 @@
+@use "styles/responsive" as r;
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -12,7 +14,7 @@
   padding: 84px 16px 16px;
   box-sizing: border-box;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 10050;
   animation: fadeIn 0.3s ease;
 }
 
@@ -251,16 +253,16 @@
   text-align: right;
 }
 
-@media (max-width: 640px) {
+@include r.down(modal-sm) {
   .modal-overlay {
-    padding: 72px 10px 10px;
+    padding: calc(80px + env(safe-area-inset-top) + 14px) 10px 10px;
   }
 
   .modal-content {
-    width: min(94vw, 430px);
+    width: min(96vw, 430px);
     padding: 1rem 0.9rem 0.9rem;
     border-radius: 14px;
-    max-height: calc(100dvh - 92px);
+    max-height: calc(100dvh - 116px);
   }
 
   .modal-header h2 {
@@ -274,5 +276,64 @@
 
   .role-selector {
     gap: 0.6rem;
+
+    .role-card {
+      padding: 0.75rem;
+      min-height: 74px;
+    }
+  }
+
+  .input-group input {
+    padding: 0.78rem 0.85rem;
+  }
+
+  .submit-btn {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .modal-footer {
+    font-size: 0.86rem;
+  }
+}
+
+@include r.down(mobile-xs) {
+  .modal-overlay {
+    padding: calc(80px + env(safe-area-inset-top) + 12px) 8px 8px;
+  }
+
+  .modal-content {
+    width: 100%;
+    border-radius: 12px;
+    padding: 0.9rem 0.8rem 0.85rem;
+    max-height: calc(100dvh - 104px);
+  }
+
+  .close-btn {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 30px;
+    height: 30px;
+  }
+
+  .modal-header {
+    h2 {
+      font-size: 1.45rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
+
+  .role-selector {
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .role-card {
+      flex-direction: row;
+      justify-content: center;
+      gap: 0.6rem;
+      min-height: 56px;
+    }
   }
 }

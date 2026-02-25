@@ -1,0 +1,37 @@
+$breakpoints: (
+  wide: 1250px,
+  nav-wide: 1100px,
+  laptop: 1024px,
+  nav-collapse: 900px,
+  tablet: 768px,
+  modal-sm: 640px,
+  mobile: 500px,
+  mobile-xs: 480px,
+  wizard-stack: 850px,
+);
+
+@function bp($name) {
+  @if map-has-key($breakpoints, $name) {
+    @return map-get($breakpoints, $name);
+  }
+
+  @error "Unknown breakpoint `#{$name}`. Available: #{map-keys($breakpoints)}";
+}
+
+@mixin down($name) {
+  @media (max-width: bp($name)) {
+    @content;
+  }
+}
+
+@mixin up($name) {
+  @media (min-width: bp($name)) {
+    @content;
+  }
+}
+
+@mixin up-next($name) {
+  @media (min-width: (bp($name) + 1px)) {
+    @content;
+  }
+}

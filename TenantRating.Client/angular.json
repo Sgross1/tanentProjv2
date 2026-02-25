@@ -24,6 +24,9 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["src"]
+            },
             "assets": ["src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": []
@@ -76,6 +79,9 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["src"]
+            },
             "assets": ["src/assets"],
             "styles": ["src/styles.scss"],
             "scripts": []

@@ -16,34 +16,28 @@
   <div class="nav-center">
     <div class="nav-pill" [class.mobile-active]="isMenuOpen">
       <!-- <a routerLink="/" fragment="home" class="nav-pill-item" (click)="closeMenu()">דף הבית</a> -->
-      <a
-        routerLink="/"
-        fragment="how-it-works"
-        class="nav-pill-item"
-        (click)="closeMenu()"
+      <a routerLink="/" fragment="how-it-works" class="nav-pill-item"
         >איך זה עובד</a
       >
-      <a
-        routerLink="/"
-        fragment="about"
-        class="nav-pill-item"
-        (click)="closeMenu()"
-        >אודות</a
-      >
-      <a
-        routerLink="/"
-        fragment="faq"
-        class="nav-pill-item"
-        (click)="closeMenu()"
-        >שאלות נפוצות</a
-      >
-      <a
-        routerLink="/"
-        fragment="contact"
-        class="nav-pill-item"
-        (click)="closeMenu()"
-        >צור קשר</a
-      >
+      <a routerLink="/" fragment="about" class="nav-pill-item">אודות</a>
+      <a routerLink="/" fragment="faq" class="nav-pill-item">שאלות נפוצות</a>
+      <a routerLink="/" fragment="contact" class="nav-pill-item">צור קשר</a>
+
+      <ng-container *ngIf="authService.currentUser$ | async as user">
+        <a
+          routerLink="/tenant/dashboard"
+          *ngIf="user.role !== 'Admin'"
+          class="nav-pill-item mobile-account-link"
+          >איזור אישי</a
+        >
+
+        <a
+          routerLink="/admin"
+          *ngIf="user.role === 'Admin'"
+          class="nav-pill-item mobile-account-link"
+          >ניהול מערכת</a
+        >
+      </ng-container>
     </div>
 
     <!-- Hamburger Button (Mobile Only) -->
@@ -64,7 +58,6 @@
     >
       <a
         routerLink="/tenant/dashboard"
-        (click)="closeMenu()"
         *ngIf="user.role !== 'Admin'"
         class="secondary-link personal-area-link"
         >איזור אישי</a
@@ -74,7 +67,6 @@
         routerLink="/admin"
         *ngIf="user.role === 'Admin'"
         class="secondary-link admin-link"
-        (click)="closeMenu()"
         >ניהול מערכת</a
       >
     </div>
@@ -92,6 +84,8 @@
     </div>
   </div>
 </nav>
+
+<div class="menu-backdrop" *ngIf="isMenuOpen" (click)="closeMenu()"></div>
 
 <app-auth-modal
   *ngIf="showAuthModal"

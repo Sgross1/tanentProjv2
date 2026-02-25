@@ -1,4 +1,5 @@
 @use "sass:color";
+@use "styles/responsive" as r;
 
 .wizard-page-container {
   min-height: 90vh;
@@ -88,7 +89,7 @@
   width: 100%;
 }
 
-@media (max-width: 850px) {
+@include r.down(wizard-stack) {
   /* Adjusted breakpoint */
   .wizard-columns {
     flex-direction: column;
@@ -711,7 +712,7 @@ $skin: #00cec9; // Matches project primary
   }
 }
 
-@media (max-width: 480px) {
+@include r.down(mobile-xs) {
   .upload {
     width: 100%;
     min-height: auto;
@@ -1350,7 +1351,7 @@ a {
 }
 
 /* Keep form input to the right so it isn't squeezed */
-@media (min-width: 1025px) {
+@include r.up-next(laptop) {
   .flex-row-reverse-mobile {
     flex-direction: row-reverse;
     /* In RTL, right side goes first visually */
@@ -1359,7 +1360,7 @@ a {
   }
 }
 
-@media (max-width: 1024px) {
+@include r.down(laptop) {
   .responsive-container-block {
     flex-direction: column-reverse;
   }
@@ -1412,7 +1413,7 @@ a {
   }
 }
 
-@media (max-width: 768px) {
+@include r.down(tablet) {
   .text-blk.section-text {
     font-size: 18px;
   }
@@ -1423,7 +1424,7 @@ a {
   }
 }
 
-@media (max-width: 500px) {
+@include r.down(mobile) {
   .text-blk.section-head {
     font-size: 30px;
     line-height: 35px;
@@ -1476,19 +1477,19 @@ a {
   width: 100%;
 }
 
-@media (max-width: 1024px) {
+@include r.down(laptop) {
   .wk-ipadp-12 {
     width: 100%;
   }
 }
 
-@media (max-width: 768px) {
+@include r.down(tablet) {
   .wk-tab-12 {
     width: 100%;
   }
 }
 
-@media (max-width: 500px) {
+@include r.down(mobile) {
   .wk-mobile-12 {
     width: 100%;
   }
