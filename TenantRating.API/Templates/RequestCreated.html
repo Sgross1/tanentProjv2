@@ -1,125 +1,145 @@
-<html>
+<!doctype html>
+<html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&family=Rajdhani:wght@700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Rajdhani:wght@700&display=swap"
       rel="stylesheet"
     />
     <style>
       body {
-        font-family: "Rubik", sans-serif;
-        background-color: #f8fafc;
         margin: 0;
         padding: 0;
-        direction: rtl;
+        font-family: "Rubik", Arial, sans-serif;
+        background: #f5f8fc;
+        color: #2d3436;
       }
-      .outer-wrapper {
-        background-color: #f8fafc;
-        padding: 40px 10px;
+
+      .shell {
+        padding: 36px 12px;
+        background: #f5f8fc;
       }
-      .gradient-border {
-        max-width: 600px;
+
+      .frame {
+        max-width: 620px;
         margin: 0 auto;
         padding: 1px;
-        background: linear-gradient(45deg, #0984e3, #00cec9);
-        border-radius: 14px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2d7ef7 0%, #002f6c 100%);
       }
-      .container {
-        background-color: #ffffff;
-        border-radius: 13px;
+
+      .card {
+        background: #ffffff;
+        border-radius: 15px;
         overflow: hidden;
       }
+
       .header {
-        background-color: #ffffff;
-        padding: 34px 20px 28px;
         text-align: center;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 30px 18px 24px;
+        border-bottom: 1px solid #edf2f7;
       }
-      .logo-text {
-        font-family: "Rajdhani", sans-serif;
-        font-size: 48px;
-        font-weight: 800;
-        margin: 0;
-        display: inline-block;
-        background: linear-gradient(45deg, #0984e3, #00cec9);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        color: #0984e3;
-      }
+
       .logo-link {
         text-decoration: none;
       }
+
+      .logo {
+        margin: 0;
+        font-family: "Rubik", Arial, sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        line-height: 1;
+        color: #2d7ef7;
+        background: linear-gradient(135deg, #2d7ef7 0%, #002f6c 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
       .content {
-        padding: 36px 30px;
+        padding: 30px 24px 26px;
         text-align: right;
-        color: #2d3436;
       }
+
       .title {
-        font-size: 24px;
-        color: #2d3436;
-        margin: 0 0 12px;
-      }
-      .subtitle {
-        color: #636e72;
-        margin: 0 0 22px;
-        line-height: 1.5;
-      }
-      .greeting {
-        color: #2d3436;
         margin: 0 0 10px;
-        font-size: 18px;
+        font-size: 25px;
+        font-weight: 800;
+        color: #1f2d3d;
+      }
+
+      .greeting {
+        margin: 0 0 10px;
+        font-size: 17px;
+        color: #2d3436;
         font-weight: 600;
       }
+
+      .subtitle {
+        margin: 0 0 18px;
+        line-height: 1.55;
+        color: #5f6b7a;
+      }
+
       .score-box {
         background: linear-gradient(
           135deg,
           rgba(9, 132, 227, 0.06),
-          rgba(0, 206, 201, 0.08)
+          rgba(0, 206, 201, 0.09)
         );
-        border: 1px solid rgba(9, 132, 227, 0.25);
+        border: 1px solid rgba(9, 132, 227, 0.24);
         border-radius: 12px;
         padding: 14px 16px;
         margin-bottom: 14px;
       }
+
       .score-label {
         color: #636e72;
         font-size: 13px;
         margin-bottom: 6px;
       }
+
       .score-value {
-        color: #0984e3;
-        font-size: 28px;
+        color: #2d7ef7;
+        font-size: 30px;
         font-weight: 800;
       }
+
       .details {
-        background-color: #f8f9fa;
-        border: 1px solid #eceff1;
-        border-radius: 10px;
-        padding: 14px;
+        background: #f8fbff;
+        border: 1px solid #dde9f8;
+        border-radius: 12px;
+        padding: 12px 14px;
       }
+
       .row {
         color: #2d3436;
-        padding: 6px 0;
-        border-bottom: 1px dashed #e2e8f0;
+        padding: 7px 0;
+        border-bottom: 1px dashed #dbe4f0;
       }
+
       .row:last-child {
         border-bottom: none;
       }
+
       .footer {
-        background-color: #f9f9f9;
-        padding: 18px 20px;
+        border-top: 1px solid #edf2f7;
+        background: #fbfcfe;
         text-align: center;
-        color: #b2bec3;
+        padding: 14px 16px;
+        color: #9aa5b3;
         font-size: 12px;
-        line-height: 1.4;
+        line-height: 1.5;
       }
     </style>
   </head>
   <body>
-    <div class="outer-wrapper">
-      <div class="gradient-border">
-        <div class="container">
+    <div class="shell">
+      <div class="frame">
+        <div class="card">
           <div class="header">
             <a
               href="http://localhost:4200"
@@ -127,14 +147,14 @@
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div class="logo-text">KaLiScore</div>
+              <h1 class="logo">KaLiScore</h1>
             </a>
           </div>
 
           <div class="content">
-            <h1 class="title">הבקשה שלך נקלטה בהצלחה</h1>
-            <p class="greeting">,שלום {recipientName}</p>
-            <p class="subtitle">:להלן פרטי הבקשה האחרונה שלך במערכת</p>
+            <h2 class="title">הבקשה שלך נקלטה בהצלחה</h2>
+            <p class="greeting">שלום {recipientName},</p>
+            <p class="subtitle">אלה פרטי הבקשה האחרונה שנשמרה במערכת:</p>
 
             <div class="score-box">
               <div class="score-label">ציון אמינות</div>
@@ -152,7 +172,7 @@
           </div>
 
           <div class="footer">
-            אם לא אתה יצרת את הבקשה, מומלץ ליצור קשר עם התמיכה.<br />
+            אם לא את/ה יצרת את הבקשה הזו, מומלץ ליצור קשר עם התמיכה.<br />
             &copy; 2026 KaLiScore. כל הזכויות שמורות.
           </div>
         </div>

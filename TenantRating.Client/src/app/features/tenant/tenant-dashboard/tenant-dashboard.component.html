@@ -170,18 +170,10 @@
         </div>
 
         <div
-          class="request-row"
+          class="request-row saved-request-row"
           *ngFor="let saved of savedList"
-          style="flex-wrap: wrap"
         >
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              width: 100%;
-            "
-          >
+          <div class="saved-request-top">
             <div class="req-info">
               <span class="req-name">{{ saved.tenantName }}</span>
               <span class="req-city"
@@ -197,7 +189,7 @@
             >
               {{ saved.finalScore | number: "1.0-1" }}
             </div>
-            <div class="req-status" style="display: flex; gap: 10px">
+            <div class="req-status saved-request-actions">
               <button
                 class="action-btn small primary"
                 (click)="
