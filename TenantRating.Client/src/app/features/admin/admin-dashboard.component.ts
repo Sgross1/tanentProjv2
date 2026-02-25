@@ -14,6 +14,9 @@ import { FormsModule } from "@angular/forms";
   selector: "app-admin-dashboard",
   standalone: true,
   imports: [CommonModule, FormsModule],
+  templateUrl: "./admin-dashboard.component.html",
+  styleUrls: ["./admin-dashboard.component.scss"],
+  /*
   template: `
     <div class="admin-container">
       <header class="admin-header">
@@ -534,7 +537,7 @@ import { FormsModule } from "@angular/forms";
         }
       }
 
-      /* CHARTS STYLES */
+      // CHARTS STYLES
       .charts-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -705,6 +708,7 @@ import { FormsModule } from "@angular/forms";
       }
     `,
   ],
+  */
 })
 export class AdminDashboardComponent implements OnInit {
   activeTab = "overview";

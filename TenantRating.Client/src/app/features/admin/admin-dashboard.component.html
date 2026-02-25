@@ -1,0 +1,380 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <h1>לוח בקרה למנהל</h1>
+    <div class="tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'overview'"
+        (click)="activeTab = 'overview'"
+      >
+        סקירה כללית
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'analytics'"
+        (click)="loadAnalytics()"
+      >
+        סטטיסטיקה
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'users'"
+        (click)="loadUsers()"
+      >
+        ניהול משתמשים
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'requests'"
+        (click)="loadRequests()"
+      >
+        מעקב פניות
+      </button>
+    </div>
+  </header>
+
+  <div
+    class="inline-message"
+    *ngIf="uiMessage"
+    [class.error]="uiMessageType === 'error'"
+    [class.success]="uiMessageType === 'success'"
+  >
+    {{ uiMessage }}
+  </div>
+
+  <div class="inline-confirm" *ngIf="pendingConfirm.visible">
+    <div class="confirm-title">{{ pendingConfirm.title }}</div>
+    <div class="confirm-text">{{ pendingConfirm.message }}</div>
+    <div class="confirm-actions">
+      <button class="action-btn small" (click)="executePendingConfirm()">
+        אישור
+      </button>
+      <button class="action-btn small warning" (click)="cancelPendingConfirm()">
+        ביטול
+      </button>
+    </div>
+  </div>
+
+  <div class="inline-confirm" *ngIf="pendingRoleChange.visible">
+    <div class="confirm-title">שינוי תפקיד</div>
+    <div class="confirm-text">
+      בחר תפקיד חדש עבור {{ pendingRoleChange.userFirstName }}:
+    </div>
+    <div class="confirm-actions">
+      <select [(ngModel)]="pendingRoleChange.newRole" class="filter-select">
+        <option [ngValue]="0">שוכר</option>
+        <option [ngValue]="1">משכיר</option>
+        <option [ngValue]="2">מנהל</option>
+        <option [ngValue]="3">שוכר ומשכיר</option>
+      </select>
+      <button class="action-btn small" (click)="applyRoleChange()">שמור</button>
+      <button class="action-btn small warning" (click)="cancelRoleChange()">
+        ביטול
+      </button>
+    </div>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="tab-content" *ngIf="activeTab === 'overview'">
+    <div class="stats-grid" *ngIf="stats$ | async as stats">
+      <div class="stat-card">
+        <div class="icon">👥</div>
+        <div class="value">{{ stats.totalUsers }}</div>
+        <div class="label">סה"כ משתמשים</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">📝</div>
+        <div class="value">{{ stats.totalRequests }}</div>
+        <div class="label">בקשות דירוג</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">🏠</div>
+        <div class="value">{{ stats.totalLandlords }}</div>
+        <div class="label">משכירים רשומים</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">🏠</div>
+        <div class="value">{{ stats.totalTenants }}</div>
+        <div class="label">שוכרים רשומים</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div
+    class="tab-content fade-in"
+    *ngIf="activeTab === 'analytics' && (graphStats$ | async) as graphs"
+  >
+    <div class="charts-grid">
+      <!-- CHARTS 1: Requests By Month -->
+      <div class="chart-card">
+        <h3>בקשות לפי חודש</h3>
+        <div class="bar-chart">
+          <div
+            class="bar-item"
+            *ngFor="let m of graphs.requestsByMonth"
+            [style.height.%]="(m.count / getMax(graphs.requestsByMonth)) * 100"
+          >
+            <span class="bar-val">{{ m.count }}</span>
+            <span class="bar-label">{{ m.month }}/{{ m.year }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS 2: Score Distribution -->
+      <div class="chart-card">
+        <h3>התפלגות ציונים</h3>
+        <div class="bar-chart vertical">
+          <div
+            class="bar-item"
+            *ngFor="let s of graphs.scoreDistribution"
+            [style.height.%]="
+              (s.count / getMaxScore(graphs.scoreDistribution)) * 100
+            "
+          >
+            <span class="bar-val">{{ s.count }}</span>
+            <span class="bar-label">{{ s.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS 3: Status Distribution (Mini List as Donut is hard in pure CSS without complex calculations per item) -->
+      <div class="chart-card">
+        <h3>סטטוס בקשות</h3>
+        <div class="status-list">
+          <div class="status-item" *ngFor="let st of graphs.requestsByStatus">
+            <div class="st-label">{{ getStatusName(st.status) }}</div>
+            <div class="st-bar-bg">
+              <div
+                class="st-bar-fill"
+                [style.width.%]="
+                  (st.count / graphs.requestsByStatus.length) * 100 > 100
+                    ? 100
+                    : st.count * 10
+                "
+              ></div>
+              <!-- Note: Calculation above is approximate for demo, standardizing by max would be better -->
+            </div>
+            <div class="st-count">{{ st.count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div class="tab-content" *ngIf="activeTab === 'users'">
+    <div class="controls fa-border">
+      <input
+        type="text"
+        [(ngModel)]="userSearch"
+        (keyup.enter)="loadUsers()"
+        placeholder="חפש משתמש..."
+        class="search-input"
+      />
+      <select
+        [(ngModel)]="userRoleFilter"
+        (change)="loadUsers()"
+        class="filter-select"
+      >
+        <option [ngValue]="undefined">כל התפקידים</option>
+        <option [ngValue]="0">שוכר</option>
+        <option [ngValue]="1">משכיר</option>
+        <option [ngValue]="2">מנהל</option>
+        <option [ngValue]="3">שוכר ומשכיר</option>
+      </select>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sort('firstName')" class="sortable">
+            שם מלא
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'firstName'"
+              >{{
+                sortColumn === "firstName"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th (click)="sort('email')" class="sortable">
+            אימייל
+            <span class="sort-icon" [class.active]="sortColumn === 'email'">{{
+              sortColumn === "email"
+                ? sortDirection === "asc"
+                  ? "▲"
+                  : "▼"
+                : "⇅"
+            }}</span>
+          </th>
+          <th (click)="sort('role')" class="sortable">
+            תפקיד
+            <span class="sort-icon" [class.active]="sortColumn === 'role'">{{
+              sortColumn === "role"
+                ? sortDirection === "asc"
+                  ? "▲"
+                  : "▼"
+                : "⇅"
+            }}</span>
+          </th>
+          <th (click)="sort('isActive')" class="sortable">
+            סטטוס
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'isActive'"
+              >{{
+                sortColumn === "isActive"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ getRoleName(user.role) }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [class.active]="user.isActive"
+              [class.inactive]="!user.isActive"
+            >
+              {{ user.isActive ? "פעיל" : "מוקפא" }}
+            </span>
+          </td>
+          <td>
+            <button class="action-btn small" (click)="toggleUserStatus(user)">
+              {{ user.isActive ? "הקפא" : "הפעל" }}
+            </button>
+            <button
+              class="action-btn small warning"
+              (click)="resetPassword(user)"
+            >
+              איפוס סיסמה
+            </button>
+            <button
+              class="action-btn small"
+              style="background: #a29bfe"
+              (click)="changeRole(user)"
+            >
+              תפקיד
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REQUESTS TAB -->
+  <div class="tab-content" *ngIf="activeTab === 'requests'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sort('requestId')" class="sortable">
+            מזהה
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'requestId'"
+              >{{
+                sortColumn === "requestId"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th (click)="sort('tenantName')" class="sortable">
+            שם דייר
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'tenantName'"
+              >{{
+                sortColumn === "tenantName"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th (click)="sort('cityName')" class="sortable">
+            עיר
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'cityName'"
+              >{{
+                sortColumn === "cityName"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th (click)="sort('dateCreated')" class="sortable">
+            תאריך
+            <span
+              class="sort-icon"
+              [class.active]="sortColumn === 'dateCreated'"
+              >{{
+                sortColumn === "dateCreated"
+                  ? sortDirection === "asc"
+                    ? "▲"
+                    : "▼"
+                  : "⇅"
+              }}</span
+            >
+          </th>
+          <th (click)="sort('status')" class="sortable">
+            סטטוס
+            <span class="sort-icon" [class.active]="sortColumn === 'status'">{{
+              sortColumn === "status"
+                ? sortDirection === "asc"
+                  ? "▲"
+                  : "▼"
+                : "⇅"
+            }}</span>
+          </th>
+          <th>פעולות</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let req of requests">
+          <td>#{{ req.requestId }}</td>
+          <td>{{ req.tenantName }}</td>
+          <td>{{ req.cityName }}</td>
+          <td>{{ req.dateCreated | date: "dd/MM/yyyy" }}</td>
+          <td>{{ getStatusName(req.status) }}</td>
+          <td>
+            <button
+              class="action-btn small"
+              *ngIf="req.status === 0"
+              (click)="updateRequestStatus(req, 2)"
+            >
+              אשר
+            </button>
+            <button
+              class="action-btn small warning"
+              *ngIf="req.status === 0"
+              (click)="updateRequestStatus(req, 3)"
+            >
+              דחה
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

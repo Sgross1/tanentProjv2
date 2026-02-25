@@ -13,6 +13,9 @@ import { AuthService } from "../../core/services/auth.service";
   selector: "app-reset-password",
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  templateUrl: "./reset-password.component.html",
+  styleUrls: ["./reset-password.component.scss"],
+  /*
   template: `
     <div class="reset-container">
       <div class="card glass-panel" *ngIf="token; else noToken">
@@ -178,6 +181,7 @@ import { AuthService } from "../../core/services/auth.service";
       }
     `,
   ],
+  */
 })
 export class ResetPasswordComponent implements OnInit {
   resetForm: FormGroup;

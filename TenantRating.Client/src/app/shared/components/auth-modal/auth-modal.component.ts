@@ -246,29 +246,52 @@ export class AuthModalComponent {
         console.error("Auth error", err);
         this.isLoading = false;
         const serverMessage = this.extractServerErrorMessage(err);
+        const localizedMessage = this.localizeAuthErrorMessage(serverMessage);
 
         // Handle regular errors
         if (this.isLogin && !this.isForgot) {
           this.loginError =
-            serverMessage || "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+            localizedMessage || "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
           return;
         }
 
         if (!this.isLogin && !this.isForgot) {
-          if (serverMessage.includes("אימייל")) {
-            this.emailError = serverMessage;
+          if (localizedMessage.includes("אימייל")) {
+            this.emailError = localizedMessage;
           } else if (
-            serverMessage.includes("פלאפון") ||
-            serverMessage.includes("טלפון")
+            localizedMessage.includes("פלאפון") ||
+            localizedMessage.includes("טלפון")
           ) {
-            this.phoneError = serverMessage;
+            this.phoneError = localizedMessage;
           } else {
             this.registerError =
-              serverMessage || "לא ניתן להשלים הרשמה כרגע. נסה שוב.";
+              localizedMessage || "לא ניתן להשלים הרשמה כרגע. נסה שוב.";
           }
         }
       },
     });
+  }
+
+  private localizeAuthErrorMessage(message: string): string {
+    if (!message) {
+      return "";
+    }
+
+    const normalized = message.trim().toLowerCase();
+
+    if (
+      normalized === "invalid email or password" ||
+      normalized.includes("invalid credentials") ||
+      normalized.includes("unauthorized")
+    ) {
+      return "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+    }
+
+    if (normalized.includes("email already exists")) {
+      return "האימייל כבר קיים במערכת.";
+    }
+
+    return message;
   }
 
   private extractServerErrorMessage(err: any): string {

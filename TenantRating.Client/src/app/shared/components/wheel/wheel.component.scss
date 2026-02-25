@@ -1,0 +1,161 @@
+:host {
+  display: block;
+  --wheel-primary: #2d7ef7;
+  --wheel-secondary: #002f6c;
+  --wheel-success: #10b981;
+  --wheel-bg-ring: rgba(45, 126, 247, 0.1);
+}
+
+.wheel-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+
+.wheel-wrapper.mini {
+  transform: scale(0.6);
+  transform-origin: center;
+}
+
+.wheel-wrapper.small {
+  transform: scale(0.8);
+  transform-origin: center;
+}
+
+.ring-outer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgba(45, 126, 247, 0.3);
+  border-radius: 50%;
+  animation: spinSlow 60s linear infinite;
+}
+
+.ring-gears {
+  position: absolute;
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  border: 10px solid transparent;
+  border-top: 10px solid rgba(45, 126, 247, 0.2);
+  border-bottom: 10px solid rgba(45, 126, 247, 0.2);
+  animation: spinGears 10s linear infinite reverse;
+}
+
+.ring-progress-bg {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  border: 2px solid var(--wheel-bg-ring);
+}
+
+svg.main-progress {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+circle {
+  transition:
+    stroke-dashoffset 0.5s ease,
+    stroke 0.3s;
+}
+
+.core-reactor {
+  position: absolute;
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #f0f4f8 100%);
+  border: 2px solid var(--wheel-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  cursor: default;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.core-text {
+  font-family: "Rajdhani", "Rubik", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--wheel-secondary);
+  line-height: 1;
+}
+
+.core-label {
+  font-size: 0.9rem;
+  color: var(--wheel-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.spark {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: var(--wheel-primary);
+  animation: spinFast 1s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.core-reactor.ready {
+  border-color: var(--wheel-success);
+  background: radial-gradient(circle, #ecfdf5 0%, #ffffff 100%);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  cursor: pointer;
+  transform: scale(1.05);
+}
+
+.core-reactor.ready .core-text {
+  color: var(--wheel-success);
+}
+
+.core-reactor.ready .core-label {
+  color: var(--wheel-success);
+}
+
+.core-reactor.ready .spark {
+  border-top-color: var(--wheel-success);
+  animation-duration: 0.5s;
+}
+
+@keyframes spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinGears {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinFast {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.2;
+  }
+}

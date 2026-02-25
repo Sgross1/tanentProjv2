@@ -5,17 +5,17 @@ import { Router } from "@angular/router";
 import {
   RequestService,
   RequestResultDto,
-} from "../../core/services/request.service";
+} from "../../../core/services/request.service";
 import { Observable, combineLatest, map, shareReplay, take } from "rxjs";
-import { LandlordService } from "../../core/services/landlord.service";
-import { AuthService } from "../../core/services/auth.service";
+import { LandlordService } from "../../../core/services/landlord.service";
+import { AuthService } from "../../../core/services/auth.service";
 
 @Component({
   selector: "app-tenant-dashboard",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: "./tenant-dashboard/tenant-dashboard.component.html",
-  styleUrls: ["./tenant-dashboard/tenant-dashboard.component.scss"],
+  templateUrl: "./tenant-dashboard.component.html",
+  styleUrls: ["./tenant-dashboard.component.scss"],
   /*
   template: `
     <div class="dashboard-container" *ngIf="viewState$ | async as vs">
