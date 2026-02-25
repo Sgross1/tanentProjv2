@@ -28,9 +28,9 @@
             <!-- Animated Content -->
             <div class="bounce-content">
                 <div class="icon-wrapper">🏠</div>
-                <p>קבל דירוג
-                <p>והוכח אמינות ויציבות
-                    <!-- <div class="bounce-label">לחץ לכניסה</div> -->
+                <p>קבל דירוג</p>
+                <p>והוכח אמינות ויציבות</p>
+                <!-- <div class="bounce-label">לחץ לכניסה</div> -->
             </div>
         </div>
 
@@ -127,12 +127,73 @@
         </div>
     </section>
 
-    <!-- About Section -->
-    <section class="process-section" id="about"
-        style="background-color: #f8fafc; padding-top: 5rem; padding-bottom: 5rem;">
-        <div class="content-wrapper info-section-border section-capsule">
-            <h2 style="display: block; margin-bottom: 2rem; text-align: center;">🤝 אודות KaLiScore</h2>
+    <!-- About Section with Sticky Cards -->
+    <section class="about-section" id="about" style="overflow: visible;">
+        <div class="cards-container info-section-border section-capsule" style="position: relative;">
+            <!-- Card 1 -->
+            <div class="card-wrapper">
+                <div class="card about-card primary-gradient-card">
+                    <h2>אודות KaLiScore</h2>
+                    <p>שוק השכירות בישראל מבוסס היום על חששות ואי־ודאות.<br>
+                        משכירים חוששים. שוכרים צריכים “להוכיח את עצמם” שוב ושוב.</p>
+                    <p class="highlight-text">KaLiScore משנה את הכללים.</p>
+                    <div class="scroll-more">
+                        <span>גלול כאן וקרא עוד</span>
+                        <div class="mouse-icon"></div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Card 2 -->
+            <div class="card-wrapper">
+                <div class="card about-card">
+                    <h3>מה אנחנו עושים?</h3>
+                    <p>אנחנו מפיקים לשוכר ציון אמינות פיננסית אובייקטיבי — תעודה דיגיטלית שמוכיחה יכולת תשלום ומקלה
+                        על
+                        קבלת החלטות.</p>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card-wrapper">
+                <div class="card about-card info-card">
+                    <h3>למה זה משנה?</h3>
+                    <ul class="check-list">
+                        <li>משכירים מקבלים כלי סינון אמין ומהיר</li>
+                        <li>שוכרים טובים מתבלטים במקום להיחשד</li>
+                        <li>פחות בירוקרטיה, פחות חיכוך</li>
+                        <li>סטנדרט חדש לשוק השכירות</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="card-wrapper">
+                <div class="card about-card success-card">
+                    <h3>איך זה עובד ?</h3>
+                    <ul class="check-list">
+                        <li>המערכת מנתחת תלושי שכר</li>
+                        <li>המסמכים אינם נשמרים — פרטיות מלאה</li>
+                        <li>אלגוריתם מחשב ציון אמינות פיננסית</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="card-wrapper">
+                <div class="card about-card primary-gradient-card">
+                    <div class="summary-text">
+                        <p>במקום לשאול “מי לא ישלם?”<br>
+                            אנחנו שואלים “מי כן יכול לשלם?”</p>
+                        <h3> KaLiScore — ביטחון לשני הצדדים.</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 
+            Original Content (Commented Out for backup):
             <div style="line-height: 1.7; color: var(--color-text-main); display: grid; gap: 1.5rem;">
                 <p>
                     מטרתנו ליצור שקיפות ואמון בשוק השכירות בישראל באמצעות טכנולוגיה מתקדמת. המערכת מעניקה פתרון הוליסטי
@@ -195,39 +256,46 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+            -->
 
     <!-- FAQ Section -->
     <section class="process-section" id="faq"
         style="background-color: #f1f5f9; padding-top: 5rem; padding-bottom: 5rem;">
         <div class="content-wrapper info-section-border section-capsule">
             <h2 style="display: block; margin-bottom: 3rem; text-align: center;">❓ שאלות נפוצות (FAQ)</h2>
-            <div style="display: grid; gap: 2rem;">
-                <div
-                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">כיצד נקבע הציון שלי?</h4>
-                    <p>הציון נקבע על פי פרמטרים של ותק תעסוקתי, יציבות הכנסה, וניתוח היסטוריית תשלומים, ללא צורך בחשיפת
-                        פרטי הבנק המלאים למשכיר.</p>
+            <div class="faq-grid">
+                <div class="faq-item faq-link">
+                    <div class="faq-content">
+                        <h4 class="faq-title">כיצד נקבע הציון שלי?</h4>
+                        <p class="faq-text">
+                            הציון נקבע על פי פרמטרים של ותק תעסוקתי, יציבות הכנסה וגובהה, פנסיה, מספר ילדים ופרמטרים
+                            נוספים,
+                            ללא צורך בחשיפת פרטי הבנק המלאים למשכיר.
+                            האלגוריתם שלנו משקלל את הפרמטרים בהתבסס על מדיניות OECD, FICO, HUD והלמ"ס בישראל.
+                        </p>
+                    </div>
                 </div>
-                <div
-                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">האם המידע שלי מאובטח?</h4>
-                    <p>בהחלט. אנחנו משתמשים בהצפנה ברמה בנקאית (AES-256) וכל המידע האישי שלכם מוגן תחת תקני אבטחה
-                        מחמירים.</p>
+                <div class="faq-item faq-link">
+                    <div class="faq-content">
+                        <h4 class="faq-title">האם המידע שלי מאובטח?</h4>
+                        <p class="faq-text">בהחלט. התלושים והנתונים שבהם לא נשמרים כלל באף מסד נתונים.</p>
+                    </div>
                 </div>
-                <div
-                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">מה היתרון לשוכר בשימוש
-                        ב-KaLiScore?</h4>
-                    <p>השוכר יכול להוכיח את אמינותו למשכיר במהירות, לחסוך צורך בערבויות יקרות ולעמוד בראש רשימת המועמדים
-                        לדירה.</p>
+                <div class="faq-item faq-link">
+                    <div class="faq-content">
+                        <h4 class="faq-title">מה היתרון לשוכר בשימוש ב-KaLiScore?</h4>
+                        <p class="faq-text">השוכר יכול להוכיח את אמינותו למשכיר במהירות, לחסוך צורך בערבויות יקרות
+                            ולעמוד בראש רשימת המועמדים
+                            לדירה.</p>
+                    </div>
                 </div>
-                <div
-                    style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
-                    <h4 style="color: var(--color-action-blue); margin-bottom: 0.5rem;">האם השירות כרוך בתשלום?</h4>
-                    <p>הוצאת דו"ח בסיסי היא חינמית. קיימים שירותי פרימיום נוספים לאימות מעסיקים ובדיקות רקע מעמיקות
-                        יותר.</p>
+                <div class="faq-item faq-link">
+                    <div class="faq-content">
+                        <h4 class="faq-title">האם השירות כרוך בתשלום?</h4>
+                        <p class="faq-text">הנפקת ציון, פירסומו למשכירים, חיפוש שוכרים הם חינמיים. קיימים שירותי פרימיום
+                            נוספים לאימות
+                            מעסיקים ובדיקות רקע מעמיקות יותר.</p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -68,7 +68,7 @@
   align-items: flex-start;
   width: 100%;
 
-  > * {
+  >* {
     min-width: 0;
   }
 }
@@ -95,6 +95,7 @@
 }
 
 @include r.down(nav-collapse) {
+
   /* Adjusted breakpoint */
   .wizard-columns {
     flex-direction: column;
@@ -430,11 +431,9 @@ $skin: #00cec9; // Matches project primary
 
   .upload-files {
     header {
-      background: linear-gradient(
-        135deg,
-        #0984e3 0%,
-        #00cec9 100%
-      ); // matches your beautiful primary teal color!
+      background: linear-gradient(135deg,
+          #0984e3 0%,
+          #00cec9 100%); // matches your beautiful primary teal color!
       border-top-left-radius: 20px;
       border-top-right-radius: 20px;
       text-align: center;
@@ -637,11 +636,9 @@ $skin: #00cec9; // Matches project primary
               top: 0;
               bottom: 0;
               width: 100%;
-              background: linear-gradient(
-                to right,
-                $skin,
-                color.scale($skin, $lightness: 20%)
-              );
+              background: linear-gradient(to right,
+                  $skin,
+                  color.scale($skin, $lightness: 20%));
               transform: translateX(-100%);
             }
 
@@ -814,20 +811,46 @@ $skin: #00cec9; // Matches project primary
     box-sizing: border-box;
 
     &.btn-primary {
-      background: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
-      border: none;
-      color: white;
+      background: white; // Start with white
+      border: 1px solid #0984e3;
+      color: #0984e3;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      transition: all 0.4s ease;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.5s ease;
+        z-index: -1;
+      }
 
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         background: #b2bec3;
-        /* Gray when disabled */
+        color: white;
+        border: none;
       }
 
       &:hover:not(:disabled) {
+        color: white;
+        border-color: transparent;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(9, 132, 227, 0.4);
+
+        &::after {
+          transform: scaleX(1);
+          transform-origin: left;
+        }
       }
     }
 
@@ -1007,6 +1030,7 @@ $skin: #00cec9; // Matches project primary
 /* Closing .distribution-graph-container */
 
 @keyframes bounce {
+
   0%,
   100% {
     transform: translate(-50%, 0);
@@ -1492,11 +1516,9 @@ a {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0) 78%,
-        rgba(255, 255, 255, 0.9) 100%
-      );
+      background: linear-gradient(to right,
+          rgba(255, 255, 255, 0) 78%,
+          rgba(255, 255, 255, 0.9) 100%);
     }
   }
 }

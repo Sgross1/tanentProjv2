@@ -10,6 +10,10 @@ import { Router } from "@angular/router";
 import { AuthService } from "../../core/services/auth.service";
 import { AppComponent } from "../../app.component";
 import { ThreeCubeComponent } from "../../shared/components/three-cube/three-cube.component";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 @Component({
   selector: "app-home",
@@ -28,10 +32,45 @@ export class HomeComponent implements AfterViewInit {
     private authService: AuthService,
     private router: Router,
     private appComponent: AppComponent,
-  ) {}
+  ) { }
 
   ngAfterViewInit() {
     this.onWindowScroll(); // Initial check
+    this.initStickyCards();
+  }
+
+  private initStickyCards() {
+    const wrappers = document.querySelectorAll(".card-wrapper");
+
+    wrappers.forEach((wrapper, index) => {
+      const card = wrapper.querySelector(".about-card");
+
+      if (card) {
+        // For the last card, allow normal scroll without pinning.
+        if (index === wrappers.length - 1) {
+          gsap.set(card, { opacity: 1, scale: 1 });
+        } else {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: wrapper,
+                start: "top top",
+                end: "bottom top",
+                scrub: true,
+                pin: true,
+                pinSpacing: false,
+              },
+            })
+            .set(card, { opacity: 1, scale: 1 })
+            .to(card, { opacity: 0, scale: 0.6, ease: "none" }, 0.01);
+        }
+      }
+    });
+
+    // Refresh ScrollTrigger after a slight delay to ensure layout is ready
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 100);
   }
 
   @HostListener("window:scroll", ["$event"])

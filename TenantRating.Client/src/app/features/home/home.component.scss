@@ -61,12 +61,10 @@
        - Far Left (100%): Transparent (Transparent in mask = Invisible Background).
        - This hides the center card but shows the handshake on the left.
     */
-  -webkit-mask-image: linear-gradient(
-    to left,
-    black 0%,
-    black 60%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(to left,
+      black 0%,
+      black 60%,
+      transparent 100%);
   mask-image: linear-gradient(to left, black 0%, black 60%, transparent 100%);
 }
 
@@ -223,7 +221,7 @@ h1 {
 /* Unified Blue Theme (Hero Color) */
 .tenant-card h3,
 .landlord-card h3 {
-  color: #4a90e2;
+  color: #0984e3;
 }
 
 /* The bouncing content container */
@@ -268,8 +266,8 @@ h1 {
 /* Gradients - Unified Blue Scheme */
 .tenant-card .bounce-content,
 .landlord-card .bounce-content {
-  /* Linear gradient matching the Hero CTA roughly */
-  background: linear-gradient(135deg, #4a90e2 0%, #007bff 100%);
+  /* Logo Gradient */
+  background: linear-gradient(45deg, #0984e3, #00cec9);
 }
 
 /* Hover Effects */
@@ -548,21 +546,21 @@ h1 {
     line-height: 1.55;
   }
 
-  #about .content-wrapper > div[style*="grid-template-columns"] {
+  #about .content-wrapper>div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
   }
 
-  #about .content-wrapper > div[style*="border-right: 5px"] {
+  #about .content-wrapper>div[style*="border-right: 5px"] {
     padding: 1.2rem !important;
     border-right-width: 3px !important;
   }
 
-  #faq .content-wrapper > div[style*="display: grid"] {
+  #faq .content-wrapper>div[style*="display: grid"] {
     gap: 1rem !important;
   }
 
-  #faq .content-wrapper > div > div[style*="background: white"] {
+  #faq .content-wrapper>div>div[style*="background: white"] {
     padding: 1.1rem !important;
   }
 }
@@ -577,12 +575,246 @@ h1 {
     padding-right: 0.8rem;
   }
 
-  #about .content-wrapper > div[style*="line-height: 1.7"] {
+  #about .content-wrapper>div[style*="line-height: 1.7"] {
     gap: 1rem !important;
   }
 
-  #about .content-wrapper > div[style*="display: grid; grid-template-columns"] {
+  #about .content-wrapper>div[style*="display: grid; grid-template-columns"] {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@keyframes bounceSlow {
+
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -10px);
+  }
+}
+
+@keyframes scrollWheel {
+  0% {
+    top: 6px;
+    opacity: 1;
+  }
+
+  100% {
+    top: 18px;
+    opacity: 0;
+  }
+}
+
+/* --- STICKY ABOUT CARDS --- */
+.about-section {
+  background-color: #f8fafc;
+  padding: 5rem 0;
+  overflow: clip; // Important for ScrollTrigger pinning
+}
+
+.cards-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card-wrapper {
+  height: 70vh;
+  padding-top: 10vh;
+  position: relative;
+  width: 800px;
+  max-width: 90vw;
+  margin: auto;
+  perspective: 1000px;
+}
+
+.card-wrapper:last-of-type {
+  height: 85vh;
+  padding-bottom: 15vh;
+}
+
+.about-card {
+  width: 100%;
+  height: 55vh;
+  margin: 0 auto;
+  background: white;
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--color-border-subtle);
+  position: relative;
+  transition: transform 0.1s ease-out;
+
+  h2,
+  h3 {
+    color: var(--color-trust-blue);
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+  }
+
+  p {
+    font-size: 1.4rem;
+    line-height: 1.6;
+    color: var(--color-text-main);
+    margin-bottom: 1rem;
+  }
+
+  .highlight-text {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--color-action-blue);
+    margin-top: 1rem;
+  }
+
+  .check-list {
+    list-style: none;
+    padding: 0;
+    text-align: right;
+    display: inline-block;
+    margin: 0 auto;
+
+    li {
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  }
+
+  &.primary-gradient-card {
+    border: none;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      padding: 3px;
+      background: linear-gradient(135deg, #0984e3, #00cec9, #a855f7);
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+    }
+
+    // Colorful strip on the right for gradient cards
+    &::after {
+      content: "";
+      position: absolute;
+      top: 24px;
+      right: 0;
+      bottom: 24px;
+      width: 6px;
+      background: linear-gradient(to bottom, #0984e3, #00cec9);
+      border-radius: 3px 0 0 3px;
+      z-index: 2;
+    }
+  }
+
+  /* Default colored right strip for all cards */
+  &:not(.primary-gradient-card) {
+    border-right: 6px solid #0984e3;
+  }
+
+  &.info-card {
+    border-right-color: #0984e3;
+  }
+
+  &.success-card {
+    border-right-color: #22c55e;
+  }
+
+  /* Scroll Indicator Styling */
+  .scroll-more {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.8;
+    animation: bounceSlow 3s infinite ease-in-out;
+
+    span {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.5px;
+    }
+
+    .mouse-icon {
+      width: 20px;
+      height: 32px;
+      border: 2px solid #64748b;
+      border-radius: 12px;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        width: 4px;
+        height: 6px;
+        background: #00cec9;
+        border-radius: 2px;
+        transform: translateX(-50%);
+        animation: scrollWheel 2s infinite ease-in-out;
+      }
+    }
+  }
+
+  .summary-text {
+    p {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    h3 {
+      font-size: 2.2rem;
+      color: var(--color-action-blue);
+      margin-top: 2rem;
+    }
+  }
+}
+
+@include r.down(tablet) {
+  .card-wrapper {
+    width: 94vw;
+    padding-top: 5vh;
+    height: 60vh;
+  }
+
+  .about-card {
+    padding: 2rem 1.5rem;
+    height: 50vh;
+
+    h2,
+    h3 {
+      font-size: 1.8rem;
+    }
+
+    p,
+    .check-list li {
+      font-size: 1.1rem;
+    }
+
+    .highlight-text {
+      font-size: 1.4rem;
+    }
   }
 }
 
@@ -991,4 +1223,93 @@ $over: 8px;
     padding-top: 2.25rem !important;
     padding-bottom: 2.25rem !important;
   }
+}
+
+/* --- FAQ Hover Effect --- */
+.faq-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.faq-link {
+  filter: drop-shadow(0 0.5em 0.5em rgba(0, 0, 0, 0.05));
+  font-size: 1rem;
+  position: relative;
+  transform: translateZ(0);
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: white;
+  padding: 1.5rem;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.faq-link::before,
+.faq-link::after {
+  content: ' ';
+  display: block;
+  position: absolute;
+  transform-origin: right;
+  transition: transform 500ms;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.faq-link::before {
+  background-color: white;
+  z-index: 1;
+}
+
+.faq-link::after {
+  background: linear-gradient(45deg, #0984e3, #00cec9);
+  /* Logo Gradient */
+  transform: scaleX(0);
+  transition-duration: 450ms;
+  z-index: 2;
+}
+
+.faq-content {
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+  transition: color 500ms;
+}
+
+.faq-title {
+  color: var(--color-action-blue) !important;
+  margin-bottom: 0.5rem;
+  transition: color 500ms;
+}
+
+.faq-text {
+  margin-bottom: 0;
+  transition: color 500ms;
+}
+
+/* Hover States */
+.faq-link:hover {
+  transform: translateY(-5px);
+}
+
+.faq-link:hover::before {
+  transform: scaleX(0);
+  transition-duration: 450ms;
+  transition-timing-function: ease-in-out;
+}
+
+.faq-link:hover::after {
+  transform: scaleX(1);
+  transition-duration: 700ms;
+  transition-timing-function: ease-in-out;
+  transform-origin: left;
+}
+
+.faq-link:hover .faq-content,
+.faq-link:hover .faq-title,
+.faq-link:hover .faq-text {
+  color: white !important;
 }
