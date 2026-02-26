@@ -27,12 +27,12 @@
   background: #ffffff;
   padding: 1.5rem;
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border-strong);
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 3rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 
   .input-group {
     flex: 2;
@@ -138,14 +138,14 @@
 .tenant-card {
   background: #ffffff;
   /* White card */
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border-strong);
   border-radius: 16px;
   padding: 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 
   .save-btn {
     position: absolute;
@@ -169,7 +169,7 @@
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-xl);
   }
 
   .score-badge {

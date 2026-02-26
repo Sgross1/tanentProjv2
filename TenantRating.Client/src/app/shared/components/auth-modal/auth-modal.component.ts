@@ -22,6 +22,7 @@ export class AuthModalComponent {
   isLogin = true;
   isForgot = false; // New Mode
   isLoading = false;
+  showPassword = false;
   authForm: FormGroup;
 
   phoneError: string = "";
@@ -104,6 +105,10 @@ export class AuthModalComponent {
     this.emailError = emailRegex.test(emailValue)
       ? ""
       : "כתובת אימייל לא תקינה";
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   toggleMode() {
@@ -311,8 +316,8 @@ export class AuthModalComponent {
 
     const firstValidationMessage = payload?.errors
       ? Object.values(payload.errors)
-          .flat()
-          .find((v: unknown) => typeof v === "string")
+        .flat()
+        .find((v: unknown) => typeof v === "string")
       : undefined;
 
     return typeof firstValidationMessage === "string"

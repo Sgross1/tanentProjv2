@@ -9,6 +9,13 @@
   --color-text-muted: #666666;
   --color-border-subtle: #e0e0e0;
 
+  /* Shared Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 18px 50px rgba(0, 0, 0, 0.2);
+  --color-border-strong: rgba(0, 0, 0, 0.12);
+
   /* Legacy / Functional mappings */
   --primary: var(--color-action-blue);
   --primary-color: var(--color-action-blue);
@@ -100,7 +107,7 @@ h6 {
   border-radius: 12px;
   background: #ffffff;
   padding: 0.9rem 1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 }
 
 :where(.admin-container, .dashboard-container) .confirm-title {
@@ -124,6 +131,7 @@ h6 {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

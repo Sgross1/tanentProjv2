@@ -121,6 +121,45 @@
   }
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .toggle-password {
+    position: absolute;
+    left: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0;
+    line-height: 1;
+    color: #64748b;
+    transition: transform 0.2s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    z-index: 5;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+  }
+
+  input {
+    padding-left: 42px !important; // Room for eye icon
+  }
+}
+
 .form-group-row {
   display: flex;
   gap: 1rem;
@@ -143,7 +182,7 @@
       display: none;
     }
 
-    input:checked + .role-card {
+    input:checked+.role-card {
       background: rgba(45, 126, 247, 0.08);
       border-color: var(--primary-color);
       color: var(--color-trust-blue);

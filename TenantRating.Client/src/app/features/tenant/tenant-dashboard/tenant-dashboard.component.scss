@@ -4,14 +4,17 @@
   color: var(--text-color);
   animation: fadeIn 0.5s ease-out;
 }
+
 .welcome-header {
   text-align: center;
   margin-bottom: 2rem;
+
   h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
     color: var(--color-trust-blue);
   }
+
   p {
     color: var(--text-muted);
   }
@@ -30,16 +33,19 @@
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
+
 .stat-card {
   background: #ffffff;
   padding: 1.5rem;
   border-radius: 16px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
+
   .icon {
     font-size: 2rem;
     margin-bottom: 1rem;
   }
+
   .value {
     font-size: 2rem;
     font-weight: bold;
@@ -51,8 +57,9 @@
   background: #ffffff;
   border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 }
+
 .empty-state {
   text-align: center;
   padding: 3rem;
@@ -64,29 +71,35 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border-strong);
   transition: background 0.2s;
+
   &:last-child {
     border-bottom: none;
   }
+
   &:hover {
     background: #f8f9fa;
   }
 }
+
 .req-info {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
+
 .req-date,
 .req-name {
   font-weight: bold;
   font-size: 1.1rem;
 }
+
 .req-city {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
 .req-score {
   font-size: 1.5rem;
   font-weight: 800;
@@ -149,14 +162,17 @@
   font-weight: bold;
   cursor: pointer;
   transition: opacity 0.2s;
+
   &:hover {
     opacity: 0.9;
   }
 }
+
 .action-btn.small {
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
 }
+
 .action-btn.neutral {
   background: #ffffff;
   color: #374151;
@@ -164,6 +180,7 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
 .action-btn.danger {
   background: #ef4444;
   color: #ffffff;
@@ -171,6 +188,7 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
 .action-btn.warning {
   background: #ff7675;
   color: white;
@@ -191,7 +209,7 @@
   width: min(92vw, 720px);
   z-index: 1300;
   margin: 0;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-lg);
 }
 
 .verification-message {
@@ -228,7 +246,7 @@
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #d8e4f7;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-xl);
   padding: 1rem 1.15rem;
 }
 
@@ -238,18 +256,21 @@
   justify-content: center;
   padding: 2rem 0;
 }
+
 .empty-card {
   background: white;
   padding: 3rem;
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   text-align: center;
 }
+
 .options {
   display: flex;
   gap: 2rem;
   margin-top: 2rem;
 }
+
 .option-btn {
   background: white;
   border: 2px solid #eee;
@@ -262,18 +283,22 @@
   align-items: center;
   gap: 1rem;
   min-width: 200px;
+
   &:hover {
     border-color: var(--primary-color);
     transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
   }
+
   .icon {
     font-size: 2.5rem;
   }
+
   span {
     font-weight: bold;
     font-size: 1.2rem;
   }
+
   small {
     color: var(--text-muted);
   }

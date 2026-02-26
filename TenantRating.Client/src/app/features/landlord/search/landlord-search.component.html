@@ -7,37 +7,20 @@
   <div class="search-box">
     <div class="input-group">
       <span class="icon">🔍</span>
-      <input
-        type="text"
-        [(ngModel)]="searchCity"
-        (input)="onSearchInput()"
-        (keyup.enter)="onSearch()"
-        placeholder="חפש לפי עיר (למשל: תל אביב)"
-      />
+      <input type="text" [(ngModel)]="searchCity" (input)="onSearchInput()" (keyup.enter)="onSearch()"
+        placeholder="חפש לפי עיר (למשל: תל אביב)" />
 
       <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
-        <div
-          class="item"
-          *ngFor="let city of filteredCities"
-          (click)="selectCity(city)"
-        >
+        <div class="item" *ngFor="let city of filteredCities" (click)="selectCity(city)">
           {{ city }}
         </div>
       </div>
     </div>
 
     <div class="filters">
-      <input
-        type="number"
-        [(ngModel)]="minRent"
-        placeholder="שכר דירה מינימלי"
-      />
+      <input type="number" [(ngModel)]="minRent" placeholder="שכר דירה מינימלי" />
       <span>-</span>
-      <input
-        type="number"
-        [(ngModel)]="maxRent"
-        placeholder="שכר דירה מקסימלי"
-      />
+      <input type="number" [(ngModel)]="maxRent" placeholder="שכר דירה מקסימלי" />
     </div>
 
     <button class="search-btn" (click)="onSearch()">חפש</button>
@@ -51,18 +34,15 @@
     {{ actionError }}
   </div>
 
-  <div class="loading" *ngIf="isLoading">
+  <!-- Loading spinner removed per user request to speed up perception -->
+  <!-- <div class="loading" *ngIf="isLoading">
     <app-wheel [percent]="0" statusText="מחפש..." size="mini"></app-wheel>
     <p style="margin-top: 1rem">סורק את מאגר הדיירים...</p>
-  </div>
+  </div> -->
 
   <div class="results-grid" *ngIf="!isLoading && results.length > 0">
     <div class="tenant-card" *ngFor="let tenant of results">
-      <button
-        class="save-btn"
-        [class.active]="savedMap[tenant.requestId]"
-        (click)="toggleSave(tenant)"
-      >
+      <button class="save-btn" [class.active]="savedMap[tenant.requestId]" (click)="toggleSave(tenant)">
         {{ savedMap[tenant.requestId] ? "❤️" : "🤍" }}
       </button>
       <div class="score-badge" [style.color]="getScoreColor(tenant.finalScore)">
@@ -76,11 +56,7 @@
         <p class="date">📅 {{ tenant.dateOfRating | date: "dd/MM/yyyy" }}</p>
       </div>
 
-      <button
-        class="contact-btn"
-        (click)="togglePhone(tenant)"
-        *ngIf="!showPhoneMap[tenant.requestId]"
-      >
+      <button class="contact-btn" (click)="togglePhone(tenant)" *ngIf="!showPhoneMap[tenant.requestId]">
         📞 הצג טלפון
       </button>
       <div class="phone-display" *ngIf="showPhoneMap[tenant.requestId]">
@@ -89,10 +65,7 @@
     </div>
   </div>
 
-  <div
-    class="no-results"
-    *ngIf="hasSearched && !isLoading && results.length === 0"
-  >
+  <div class="no-results" *ngIf="hasSearched && !isLoading && results.length === 0">
     <div class="icon">🕵️</div>
     <h3>לא נמצאו תוצאות</h3>
     <p>נסה לשנות את פרמטרי החיפוש</p>

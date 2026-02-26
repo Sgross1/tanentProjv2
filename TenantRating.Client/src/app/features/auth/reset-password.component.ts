@@ -187,6 +187,8 @@ export class ResetPasswordComponent implements OnInit {
   resetForm: FormGroup;
   token: string | null = null;
   isLoading = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
   uiMessage = "";
   uiMessageType: "success" | "error" | "info" = "info";
 
@@ -213,6 +215,14 @@ export class ResetPasswordComponent implements OnInit {
     return g.get("newPassword")?.value === g.get("confirmPassword")?.value
       ? null
       : { mismatch: true };
+  }
+
+  toggleNewPasswordVisibility() {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPasswordVisibility() {
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   onSubmit() {
