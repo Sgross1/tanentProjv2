@@ -67,11 +67,6 @@ public class OcrService : IOcrService
                 int docIndex = 0;
                 foreach (var document in result.Documents)
                 {
-                    // Print all keys for debugging OCR changes
-                    foreach (var kvp in document.Fields)
-                    {
-                        _logger.LogInformation($"[OCR Debug] Found Field: '{kvp.Key}' = '{kvp.Value.Content}' (Confidence: {kvp.Value.Confidence})");
-                    }
 
                     // Only process fields with confidence > 80%
                     var validFields = document.Fields.Where(kvp => kvp.Value.Confidence > 0.8).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
