@@ -36,7 +36,7 @@ export class LandlordSearchComponent implements OnInit {
     private landlordService: LandlordService,
     private citiesService: CitiesService,
     private authService: AuthService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init

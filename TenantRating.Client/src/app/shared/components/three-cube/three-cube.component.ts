@@ -202,6 +202,62 @@ export class ThreeCubeComponent
 class RubiksCube {
   private group: THREE.Group;
   private cubies: THREE.Mesh[] = [];
+  private readonly faceLabels: string[] = [
+    "אלגו",
+    "מודל",
+    "נתונים",
+    "מאגר",
+    "טיוב",
+    "ניקוי",
+    "פיצ'ר",
+    "תכונה",
+    "שקילה",
+    "נרמול",
+    "תקנון",
+    "התמרה",
+    "קידוד",
+    "הטמעה",
+    "וקטור",
+    "מטריצה",
+    "מדגם",
+    "דגימה",
+    "אימון",
+    "אימות",
+    "בדיקה",
+    "חיזוי",
+    "ציון",
+    "סקור",
+    "דירוג",
+    "סף",
+    "דיוק",
+    "רגישות",
+    "ייחוד",
+    "שונות",
+    "הטיה",
+    "מתאם",
+    "רגרסיה",
+    "סיווג",
+    "צבר",
+    "אשכול",
+    "פילוח",
+    "חריגה",
+    "מגמה",
+    "סמן",
+    "מדד",
+    "משקל",
+    "מיטוב",
+    "חזרה",
+    "כינוס",
+    "יציבות",
+    "אמינות",
+    "פרשנות",
+    "הסבריות",
+    "שקיפות",
+    "החלטה",
+    "תוצאה",
+    "דוח",
+    "תובנה",
+  ];
   private offset: number;
   private lastAxis: "x" | "y" | "z" = "x";
   private textures: any;
@@ -242,6 +298,8 @@ class RubiksCube {
     const innerLight2 = new THREE.PointLight(0xaaccff, 3, 4);
     innerLight2.position.set(0.1, 0.1, 0.1);
     this.group.add(innerLight2);
+
+    this.validateUniqueLabels(this.faceLabels);
 
     this.textures = this.createTextures();
     this.offset = 0.85 + 0.04; // size + gap
@@ -343,38 +401,14 @@ class RubiksCube {
     const geometry = new THREE.BoxGeometry(size, size, size);
 
     // 1. Prepare the "Deck" of 54 external faces
-    // 13 Words + 41 Empty -> Updated with new words
+    // All external faces are filled with words (no empty faces)
     const wordKeys: string[] = [];
-    const texts = [
-      "פנסיה",
-      "נטו",
-      "ותק",
-      "ילדים",
-      "ברוטו",
-      "X",
-      "%",
-      "=",
-      "+",
-      "-",
-      "שכר",
-      "חודש",
-      "ממוצע",
-      "יציבות",
-      "שכר דירה",
-    ];
+    const texts = this.faceLabels;
 
     texts.forEach((_, i) => wordKeys.push(`text_${i}`));
 
     const totalExternalFaces = 54; // 9 faces * 6 sides
-    const emptyCount = totalExternalFaces - wordKeys.length; // Adjusted automatically
-
     const deck: string[] = [...wordKeys];
-
-    // Fill remaining spots with a mix of Dark and Silver empty textures
-    for (let i = 0; i < emptyCount; i++) {
-      // Alternate or random mix. Let's do roughly half/half
-      deck.push(Math.random() > 0.5 ? "empty_dark" : "empty_silver");
-    }
 
     // Shuffle the deck (Fisher-Yates)
     for (let i = deck.length - 1; i > 0; i--) {
@@ -408,8 +442,8 @@ class RubiksCube {
           const getFaceMat = (isExternal: boolean) => {
             if (isExternal) {
               const textureKey = deck[deckIndex++];
-              // If we run out of deck (shouldn't happen for 54 faces), fallback to empty_dark
-              return this.getMaterial(textureKey || "empty_dark");
+              // If we run out of deck (shouldn't happen), fallback to first word texture
+              return this.getMaterial(textureKey || wordKeys[0]);
             } else {
               return internalMaterial;
             }
@@ -449,23 +483,7 @@ class RubiksCube {
 
   private createTextures() {
     // --- NEW TEXT TEXTURE GENERATION ---
-    const texts = [
-      "פנסיה",
-      "נטו",
-      "ותק",
-      "ילדים",
-      "ברוטו",
-      "X",
-      "%",
-      "=",
-      "+",
-      "-",
-      "שכר",
-      "חודש",
-      "ממוצע",
-      "יציבות",
-      "שכר דירה",
-    ];
+    const texts = this.faceLabels;
     const textures: any = {};
 
     // Helper to draw the base style (Dark Background + Silver Border)
@@ -578,6 +596,24 @@ class RubiksCube {
       metalness: 0.6,
       envMapIntensity: 1.0,
     });
+  }
+
+  private validateUniqueLabels(labels: string[]) {
+    const normalizedLabels = labels.map((label) => label.trim());
+    const uniqueLabels = new Set(normalizedLabels);
+    const totalExternalFaces = 54;
+
+    if (uniqueLabels.size !== normalizedLabels.length) {
+      throw new Error(
+        "Rubiks cube labels must be unique to avoid duplicate words on a side.",
+      );
+    }
+
+    if (normalizedLabels.length < totalExternalFaces) {
+      throw new Error(
+        "Rubiks cube must have at least 54 unique labels to fill all external faces.",
+      );
+    }
   }
 
   public setScale(scale: number) {

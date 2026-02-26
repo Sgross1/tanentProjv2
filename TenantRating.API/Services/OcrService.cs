@@ -23,6 +23,9 @@ public class OcrService : IOcrService
 
     public async Task<CreateRequestDto> AnalyzePayslipsAsync(List<IFormFile> files)
     {
+        if (string.IsNullOrWhiteSpace(_endpoint) || string.IsNullOrWhiteSpace(_apiKey) || string.IsNullOrWhiteSpace(_modelId))
+            throw new InvalidOperationException("חסרות הגדרות OCR בקובץ appsettings (Endpoint / ApiKey / ModelId).");
+
         var credential = new AzureKeyCredential(_apiKey);
         var client = new DocumentIntelligenceClient(new Uri(_endpoint), credential);
 
