@@ -121,10 +121,12 @@
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
 
     &:hover {
-      transform: scale(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
+      opacity: 0.92;
     }
   }
 }
@@ -217,14 +219,16 @@
     color: white;
     border-radius: 8px;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
 
     &:hover {
-      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
+      opacity: 0.92;
     }
   }
 

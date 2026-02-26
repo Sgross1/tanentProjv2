@@ -9,7 +9,6 @@ namespace TenantRating.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize] // Should strictly be Authorize(Roles = "Landlord"), but keeping flexible for dev
 public class LandlordsController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -19,11 +18,12 @@ public class LandlordsController : ControllerBase
         _context = context;
     }
 
-    [Authorize] // Allow any authenticated user (Tenant/Landlord) to save/search
+    [AllowAnonymous]
     [HttpGet("search")]
     public async Task<IActionResult> SearchTenants([FromQuery] string city, [FromQuery] decimal? minRent, [FromQuery] decimal? maxRent)
     {
-        var landlordId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var landlordId = string.IsNullOrEmpty(userIdString) ? 0 : int.Parse(userIdString);
 
         var query = _context.Requests
             .Include(r => r.User)

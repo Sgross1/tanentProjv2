@@ -285,6 +285,8 @@ public class RequestsController : ControllerBase
         }
         catch (Exception ex)
         {
+            // FALLBACK DISABLED - Commented out as requested
+            /*
             // FALLBACK FOR DEBUG/TESTING: Return a fake successful result if OCR fails
             Console.WriteLine($"[CRITICAL FALLBACK] OCR failed, returning dummy data. Error: {ex.Message}");
 
@@ -311,6 +313,8 @@ public class RequestsController : ControllerBase
                 MaxAffordableRent = fakeRequest.TempScore * 3000, // Dummy calc
                 Percentile = 75
             };
+            */
+            throw; // Re-throw to be caught by global error handler or primary catch
         }
     }
 

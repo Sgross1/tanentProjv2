@@ -79,9 +79,6 @@ import { AuthService } from "../../core/services/auth.service";
           *ngIf="hasScore"
           style="background: #ffffff; padding: 2rem; border-radius: 16px; margin-bottom: 3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"
         >
-          <h3 style="margin-bottom: 1rem; color: var(--primary-color);">
-            סימולטור דירוג
-          </h3>
           <p style="margin-bottom: 15px; color: var(--text-muted);">
             הזז את הסליידר כדי לבדוק איך הציון משתנה בהתאם לשכר הדירה המבוקש.
           </p>
@@ -848,7 +845,7 @@ export class TenantDashboardComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   uploadNewRequest() {
     this.router.navigate(["/tenant/wizard"]);
