@@ -11,6 +11,8 @@ public class OcrService : IOcrService
     private readonly string _endpoint;
     private readonly string _apiKey;
     private readonly string _modelId;
+    private readonly int _throttleMs;
+    private readonly int _maxParallelism;
     private readonly ILogger<OcrService> _logger;
 
     public OcrService(IConfiguration config, ILogger<OcrService> logger)
@@ -18,6 +20,8 @@ public class OcrService : IOcrService
         _endpoint = config["AzureDocumentIntelligence:Endpoint"]!;
         _apiKey = config["AzureDocumentIntelligence:ApiKey"]!;
         _modelId = config["AzureDocumentIntelligence:ModelId"]!;
+        _throttleMs = Math.Max(0, config.GetValue<int?>("Ocr:ThrottleMs") ?? 0);
+        _maxParallelism = Math.Max(1, config.GetValue<int?>("Ocr:MaxParallelism") ?? 6);
         _logger = logger;
     }
 
@@ -46,10 +50,14 @@ public class OcrService : IOcrService
 
         // Accumulate all raw fields for debugging
         var allDebugFields = new Dictionary<string, object>();
+        var syncRoot = new object();
 
-        foreach (var file in files)
+        await Parallel.ForEachAsync(
+            files,
+            new ParallelOptions { MaxDegreeOfParallelism = _maxParallelism },
+            async (file, cancellationToken) =>
         {
-            if (file.Length == 0) continue;
+            if (file.Length == 0) return;
 
             try
             {
@@ -57,189 +65,197 @@ public class OcrService : IOcrService
                 var content = BinaryData.FromStream(stream);
                 var analyzeOptions = new AnalyzeDocumentContent() { Base64Source = content };
 
-                // Throttling for free tier
-                await Task.Delay(1000);
+                if (_throttleMs > 0)
+                {
+                    await Task.Delay(_throttleMs, cancellationToken);
+                }
 
                 var operation = await client.AnalyzeDocumentAsync(WaitUntil.Completed, _modelId, analyzeOptions);
                 var result = operation.Value;
 
                 // Add to debug raw data (only the fields part to be concise)
-                int docIndex = 0;
-                foreach (var document in result.Documents)
+                lock (syncRoot)
                 {
-                    // Print all keys for debugging OCR changes
-                    foreach (var kvp in document.Fields)
+                    int docIndex = 0;
+                    foreach (var document in result.Documents)
                     {
-                        _logger.LogInformation($"[OCR Debug] Found Field: '{kvp.Key}' = '{kvp.Value.Content}' (Confidence: {kvp.Value.Confidence})");
-                    }
-
-                    // Only process fields with confidence > 80%
-                    var validFields = document.Fields.Where(kvp => kvp.Value.Confidence > 0.8).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-                    // Map Hebrew fields - robust checking
-
-                    // Check for Minus field
-                    bool currentHasMinus = false;
-                    if (validFields.TryGetValue("מינוס", out var minusField))
-                    {
-                        if (minusField != null && !string.IsNullOrWhiteSpace(minusField.Content))
+                        // Print all keys for debugging OCR changes
+                        foreach (var kvp in document.Fields)
                         {
-                            currentHasMinus = true;
-                        }
-                    }
-
-                    // Net Income: "שכר נטו" with minus logic if exists
-                    if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
-                    {
-                        if (TryGetDecimal(netIncomeField, out var val))
-                        {
-                            countNetIncome++;
-
-                            // If this payslip has minus, subtract from total; otherwise add
-                            if (currentHasMinus)
-                                totalNetIncome -= val;
-                            else
-                                totalNetIncome += val;
-                        }
-                    }
-
-                    // ID Number: "מספר זהות"
-                    string? extractedId = null;
-                    if (document.Fields.TryGetValue("מספר זהות", out var idField))
-                    {
-                        var idContent = idField.Content?.Replace(" ", "").Replace("-", "");
-                        if (!string.IsNullOrEmpty(idContent) && Regex.IsMatch(idContent, @"^\d{9}$"))
-                        {
-                            extractedId = idContent;
-                            idNumbers.Add(idContent);
-                        }
-                    }
-
-                    if (extractedId != null)
-                    {
-                        if (!slipCountById.ContainsKey(extractedId))
-                        {
-                            slipCountById[extractedId] = 0;
-                            payDatesById[extractedId] = new List<DateTime>();
+                            _logger.LogInformation($"[OCR Debug] Found Field: '{kvp.Key}' = '{kvp.Value.Content}' (Confidence: {kvp.Value.Confidence})");
                         }
 
-                        slipCountById[extractedId]++;
-                    }
+                        // Only process fields with confidence > 80%
+                        var validFields = document.Fields.Where(kvp => kvp.Value.Confidence > 0.8).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                    // Children: "מספר ילדים"
-                    // Parse as decimal first to safely handle "2.0", then cast to int
-                    if (validFields.TryGetValue("מספר ילדים", out var childrenField))
-                    {
-                        if (TryGetDecimal(childrenField, out var val))
-                        {
-                            int intVal = (int)val;
-                            if (intVal > maxChildren) maxChildren = intVal;
-                        }
-                    }
+                        // Map Hebrew fields - robust checking
 
-                    // Seniority: "וותק"
-                    bool seniorityFound = false;
-                    if (validFields.TryGetValue("וותק", out var seniorityField))
-                    {
-                        if (TryGetDecimal(seniorityField, out var val))
+                        // Check for Minus field
+                        bool currentHasMinus = false;
+                        if (validFields.TryGetValue("מינוס", out var minusField))
                         {
-                            if (val > maxSeniority) maxSeniority = val;
-                            seniorityFound = true;
-                        }
-                    }
-
-                    // If seniority not found, try to calculate from dates
-                    if (!seniorityFound)
-                    {
-                        if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField))
-                        {
-                            if (TryGetDate(startDateField, out var startDate))
+                            if (minusField != null && !string.IsNullOrWhiteSpace(minusField.Content))
                             {
-                                var seniorityCalc = (decimal)((DateTime.Now - startDate).TotalDays / 365.25);
-                                if (seniorityCalc > maxSeniority) maxSeniority = seniorityCalc;
+                                currentHasMinus = true;
                             }
                         }
-                    }
 
-                    // Pension: "ברוטו לפנסיה"
-                    decimal currentGross = 0;
-                    if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField))
-                    {
-                        if (TryGetDecimal(pensionField, out var val))
+                        // Net Income: "שכר נטו" with minus logic if exists
+                        if (validFields.TryGetValue("שכר נטו", out var netIncomeField))
                         {
-                            if (val > maxPension) maxPension = val;
-                            currentGross = val;
-                        }
-                    }
-
-                    // Pension Deduction: "ניכויים לפנסיה", calculate percent
-                    if (validFields.TryGetValue("ניכויים לפנסיה", out var deductionField) && currentGross > 0)
-                    {
-                        if (TryGetDecimal(deductionField, out var deduction))
-                        {
-                            var percent = (deduction / currentGross) * 100;
-                            if (percent > pensionDeductionPercent) pensionDeductionPercent = percent;
-                        }
-                    }
-
-                    // Marital Status: "מצב משפחתי"
-                    if (validFields.TryGetValue("מצב משפחתי", out var maritalField) && maritalField != null)
-                    {
-                        var maritalContent = maritalField.Content;
-                        if (!string.IsNullOrEmpty(maritalContent))
-                        {
-                            // Check single letters: נ/ר/ג/א
-                            if (maritalContent.Length == 1)
+                            if (TryGetDecimal(netIncomeField, out var val))
                             {
-                                if (maritalContent == "נ") isMarriedInText = true;
-                                // ר, ג, א - assume not married
-                            }
-                            else
-                            {
-                                // Check words: נש/רו/גר/אל
-                                if (maritalContent.Contains("נש")) isMarriedInText = true;
-                                // Others not married
+                                countNetIncome++;
+
+                                // If this payslip has minus, subtract from total; otherwise add
+                                if (currentHasMinus)
+                                    totalNetIncome -= val;
+                                else
+                                    totalNetIncome += val;
                             }
                         }
-                    }
 
-                    // Pay Date: "חודש ושנה"
-                    // For this specific field, try high-confidence first, then fallback to raw field
-                    // because OCR often identifies month/year with lower confidence.
-                    if (!validFields.TryGetValue("חודש ושנה", out var dateField))
-                    {
-                        document.Fields.TryGetValue("חודש ושנה", out dateField);
-                    }
-
-                    if (dateField != null && TryGetDate(dateField, out var payDate))
-                    {
-                        // Normalize to first day of month
-                        payDate = new DateTime(payDate.Year, payDate.Month, 1);
+                        // ID Number: "מספר זהות"
+                        string? extractedId = null;
+                        if (document.Fields.TryGetValue("מספר זהות", out var idField))
+                        {
+                            var idContent = idField.Content?.Replace(" ", "").Replace("-", "");
+                            if (!string.IsNullOrEmpty(idContent) && Regex.IsMatch(idContent, @"^\d{9}$"))
+                            {
+                                extractedId = idContent;
+                                idNumbers.Add(idContent);
+                            }
+                        }
 
                         if (extractedId != null)
                         {
-                            payDatesById[extractedId].Add(payDate);
-                        }
-                    }
-                    else
-                    {
-                        payDateMissing = true;
-                    }
+                            if (!slipCountById.ContainsKey(extractedId))
+                            {
+                                slipCountById[extractedId] = 0;
+                                payDatesById[extractedId] = new List<DateTime>();
+                            }
 
-                    // Collect raw fields for debug
-                    var docFields = document.Fields.ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value.Content // Store the string content 
-                    );
-                    allDebugFields.Add($"File_{file.FileName}_Doc_{docIndex++}", docFields);
+                            slipCountById[extractedId]++;
+                        }
+
+                        // Children: "מספר ילדים"
+                        // Parse as decimal first to safely handle "2.0", then cast to int
+                        if (validFields.TryGetValue("מספר ילדים", out var childrenField))
+                        {
+                            if (TryGetDecimal(childrenField, out var val))
+                            {
+                                int intVal = (int)val;
+                                if (intVal > maxChildren) maxChildren = intVal;
+                            }
+                        }
+
+                        // Seniority: "וותק"
+                        bool seniorityFound = false;
+                        if (validFields.TryGetValue("וותק", out var seniorityField))
+                        {
+                            if (TryGetDecimal(seniorityField, out var val))
+                            {
+                                if (val > maxSeniority) maxSeniority = val;
+                                seniorityFound = true;
+                            }
+                        }
+
+                        // If seniority not found, try to calculate from dates
+                        if (!seniorityFound)
+                        {
+                            if (validFields.TryGetValue("תאריך תחילת עבודה", out var startDateField))
+                            {
+                                if (TryGetDate(startDateField, out var startDate))
+                                {
+                                    var seniorityCalc = (decimal)((DateTime.Now - startDate).TotalDays / 365.25);
+                                    if (seniorityCalc > maxSeniority) maxSeniority = seniorityCalc;
+                                }
+                            }
+                        }
+
+                        // Pension: "ברוטו לפנסיה"
+                        decimal currentGross = 0;
+                        if (validFields.TryGetValue("ברוטו לפנסיה", out var pensionField))
+                        {
+                            if (TryGetDecimal(pensionField, out var val))
+                            {
+                                if (val > maxPension) maxPension = val;
+                                currentGross = val;
+                            }
+                        }
+
+                        // Pension Deduction: "ניכויים לפנסיה", calculate percent
+                        if (validFields.TryGetValue("ניכויים לפנסיה", out var deductionField) && currentGross > 0)
+                        {
+                            if (TryGetDecimal(deductionField, out var deduction))
+                            {
+                                var percent = (deduction / currentGross) * 100;
+                                if (percent > pensionDeductionPercent) pensionDeductionPercent = percent;
+                            }
+                        }
+
+                        // Marital Status: "מצב משפחתי"
+                        if (validFields.TryGetValue("מצב משפחתי", out var maritalField) && maritalField != null)
+                        {
+                            var maritalContent = maritalField.Content;
+                            if (!string.IsNullOrEmpty(maritalContent))
+                            {
+                                // Check single letters: נ/ר/ג/א
+                                if (maritalContent.Length == 1)
+                                {
+                                    if (maritalContent == "נ") isMarriedInText = true;
+                                    // ר, ג, א - assume not married
+                                }
+                                else
+                                {
+                                    // Check words: נש/רו/גר/אל
+                                    if (maritalContent.Contains("נש")) isMarriedInText = true;
+                                    // Others not married
+                                }
+                            }
+                        }
+
+                        // Pay Date: "חודש ושנה"
+                        // For this specific field, try high-confidence first, then fallback to raw field
+                        // because OCR often identifies month/year with lower confidence.
+                        if (!validFields.TryGetValue("חודש ושנה", out var dateField))
+                        {
+                            document.Fields.TryGetValue("חודש ושנה", out dateField);
+                        }
+
+                        if (dateField != null && TryGetDate(dateField, out var payDate))
+                        {
+                            // Normalize to first day of month
+                            payDate = new DateTime(payDate.Year, payDate.Month, 1);
+
+                            if (extractedId != null)
+                            {
+                                payDatesById[extractedId].Add(payDate);
+                            }
+                        }
+                        else
+                        {
+                            payDateMissing = true;
+                        }
+
+                        // Collect raw fields for debug
+                        var docFields = document.Fields.ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Content // Store the string content 
+                        );
+                        allDebugFields.Add($"File_{file.FileName}_Doc_{docIndex++}", docFields);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error analyzing file {FileName}", file.FileName);
-                allDebugFields.Add($"Error_{file.FileName}", ex.Message);
+                lock (syncRoot)
+                {
+                    allDebugFields.Add($"Error_{file.FileName}", ex.Message);
+                }
             }
-        }
+        });
 
         // Fully bypassed ID validation 
         if (idNumbers.Count == 0)
