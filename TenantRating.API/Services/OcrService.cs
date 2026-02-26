@@ -51,6 +51,7 @@ public class OcrService : IOcrService
         // Accumulate all raw fields for debugging
         var allDebugFields = new Dictionary<string, object>();
         var syncRoot = new object();
+        var captureDebugDetails = _logger.IsEnabled(LogLevel.Debug);
 
         await Parallel.ForEachAsync(
             files,
@@ -79,10 +80,13 @@ public class OcrService : IOcrService
                     int docIndex = 0;
                     foreach (var document in result.Documents)
                     {
-                        // Print all keys for debugging OCR changes
-                        foreach (var kvp in document.Fields)
+                        if (captureDebugDetails)
                         {
-                            _logger.LogInformation($"[OCR Debug] Found Field: '{kvp.Key}' = '{kvp.Value.Content}' (Confidence: {kvp.Value.Confidence})");
+                            // Print all keys for debugging OCR changes
+                            foreach (var kvp in document.Fields)
+                            {
+                                _logger.LogDebug("[OCR Debug] Found Field: '{FieldKey}' = '{FieldValue}' (Confidence: {Confidence})", kvp.Key, kvp.Value.Content, kvp.Value.Confidence);
+                            }
                         }
 
                         // Only process fields with confidence > 80%
@@ -238,12 +242,15 @@ public class OcrService : IOcrService
                             payDateMissing = true;
                         }
 
-                        // Collect raw fields for debug
-                        var docFields = document.Fields.ToDictionary(
-                            kvp => kvp.Key,
-                            kvp => kvp.Value.Content // Store the string content 
-                        );
-                        allDebugFields.Add($"File_{file.FileName}_Doc_{docIndex++}", docFields);
+                        if (captureDebugDetails)
+                        {
+                            // Collect raw fields for debug
+                            var docFields = document.Fields.ToDictionary(
+                                kvp => kvp.Key,
+                                kvp => kvp.Value.Content // Store the string content 
+                            );
+                            allDebugFields.Add($"File_{file.FileName}_Doc_{docIndex++}", docFields);
+                        }
                     }
                 }
             }
