@@ -15,7 +15,7 @@ import { Router } from "@angular/router";
 export class AppComponent {
   title = "TenantRating.Client";
   showAuthModal = false;
-  activeDropdown: string | null = null;
+  // activeDropdown: string | null = null;
 
   isMenuOpen = false;
 
@@ -39,19 +39,7 @@ export class AppComponent {
 
   closeMenu() {
     this.isMenuOpen = false;
-    this.activeDropdown = null; // Also close dropdowns
-  }
-
-  toggleDropdown(menuName: string) {
-    if (this.activeDropdown === menuName) {
-      this.activeDropdown = null;
-    } else {
-      this.activeDropdown = menuName;
-    }
-  }
-
-  closeDropdown() {
-    this.activeDropdown = null;
+    // this.activeDropdown = null;
   }
 
   logout() {

@@ -11,10 +11,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // Not logged in so redirect to home/login
-  // Assuming home page has the login form or button
+
   router.navigate(["/"]);
-  // קוד קודם שנשמר לבקשתך:
-  // alert('אנא התחבר למערכת כדי להשתמש באשף הדירוג');
   return false;
 };

@@ -49,7 +49,7 @@
         <div class="value">
           {{ (latestScore$ | async | number: "1.0-1") || "-" }}
         </div>
-        <div class="label">דירוג נוכחי</div>
+        <div class="label">דירוג אחרון</div>
       </div>
     </div>
 
@@ -281,17 +281,6 @@
                 {{ verificationInputError }}
               </div>
             </ng-container>
-
-            <!-- קוד קודם שנשמר לבקשתך:
-            <div
-              class="inline-message"
-              *ngIf="uiMessage"
-              [class.error]="uiMessageType === 'error'"
-              [class.success]="uiMessageType === 'success'"
-            >
-              {{ uiMessage }}
-            </div>
-            -->
             <div
               class="inline-message verification-message"
               *ngIf="verificationMessage"

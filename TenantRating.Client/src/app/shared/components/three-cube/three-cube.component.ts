@@ -3,7 +3,6 @@ import {
   ElementRef,
   Input,
   OnDestroy,
-  OnInit,
   ViewChild,
   NgZone,
   AfterViewInit,
@@ -17,26 +16,8 @@ import * as THREE from "three";
   standalone: true,
   templateUrl: "./three-cube.component.html",
   styleUrls: ["./three-cube.component.scss"],
-  /*
-  template: `<div #canvasContainer class="canvas-container"></div>`,
-  styles: [`
-    :host {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .canvas-container {
-      width: 100%;
-      height: 100%;
-      min-height: 300px;
-      display: block;
-    }
-  `]
-  */
 })
-export class ThreeCubeComponent
-  implements OnInit, OnDestroy, AfterViewInit, OnChanges
-{
+export class ThreeCubeComponent implements OnDestroy, AfterViewInit, OnChanges {
   @ViewChild("canvasContainer", { static: true }) canvasContainer!: ElementRef;
   @Input() mode: "hero" | "loading" = "hero";
   @Input() globalRotationSpeed: number = 1.0;
@@ -51,10 +32,6 @@ export class ThreeCubeComponent
   private resizeObserver!: ResizeObserver;
 
   constructor(private ngZone: NgZone) {}
-
-  ngOnInit(): void {
-    // Moved to AfterViewInit
-  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["scale"] && !changes["scale"].firstChange) {

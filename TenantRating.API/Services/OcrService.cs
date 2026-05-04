@@ -48,7 +48,7 @@ public class OcrService : IOcrService
         var payDatesById = new Dictionary<string, List<DateTime>>();
         bool payDateMissing = false;
 
-        // Accumulate all raw fields for debugging
+        // אסוף את כל השדות הגולמיים לצורך ניפוי שגיאות
         var allDebugFields = new Dictionary<string, object>();
         var syncRoot = new object();
         var captureDebugDetails = _logger.IsEnabled(LogLevel.Debug);
@@ -197,7 +197,7 @@ public class OcrService : IOcrService
                                 if (percent > pensionDeductionPercent) pensionDeductionPercent = percent;
                             }
                         }
-
+                        //כנראה כפל בדיקות נאל
                         // Marital Status: "מצב משפחתי"
                         if (validFields.TryGetValue("מצב משפחתי", out var maritalField) && maritalField != null)
                         {
@@ -222,6 +222,8 @@ public class OcrService : IOcrService
                         // Pay Date: "חודש ושנה"
                         // For this specific field, try high-confidence first, then fallback to raw field
                         // because OCR often identifies month/year with lower confidence.
+
+                        //האיף מיותר לכאורה, כי בכל מקרה הוא יקח את התאריך
                         if (!validFields.TryGetValue("חודש ושנה", out var dateField))
                         {
                             document.Fields.TryGetValue("חודש ושנה", out dateField);
@@ -321,8 +323,8 @@ public class OcrService : IOcrService
             isMarriedInText = true;
         }
 
-        // מושבת זמנית לבדיקת עדכניות תלושים ("האחרונים") במסלול 6 תלושים:
-        // if (files.Count == 6)
+        // מושבת זמנית לבדיקת עדכניות תלושים ("האחרונים"):
+        // if (files.Count == 3 || files.Count == 6)
         // {
         //     foreach (var id in idNumbers)
         //     {
@@ -330,7 +332,7 @@ public class OcrService : IOcrService
         //         {
         //             throw new InvalidOperationException($"לא נמצאו תאריכים עבור מספר זהות {id}.");
         //         }
-        //
+
         //         var lastDateForId = datesForId.Max();
         //         if ((DateTime.Now - lastDateForId).TotalDays > 90) // 3 חודשים
         //         {

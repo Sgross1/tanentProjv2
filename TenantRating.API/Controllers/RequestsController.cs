@@ -283,39 +283,6 @@ public class RequestsController : ControllerBase
         {
             return ValidationError("אימות התלושים נכשל.", ex.Message);
         }
-        catch (Exception ex)
-        {
-            // FALLBACK DISABLED - Commented out as requested
-            /*
-            // FALLBACK FOR DEBUG/TESTING: Return a fake successful result if OCR fails
-            Console.WriteLine($"[CRITICAL FALLBACK] OCR failed, returning dummy data. Error: {ex.Message}");
-
-            var fakeRequest = new Request
-            {
-                UserId = userId,
-                DesiredRent = desiredRent,
-                CityName = cityName,
-                TenantIdNumbers = idNumber ?? "123456789",
-                DateCreated = DateTime.UtcNow,
-                FinalScore = 750.5m, // "Fake 75" as requested (75% or 750 score)
-                TempScore = 7.5m
-            };
-
-            _context.Requests.Add(fakeRequest);
-            await _context.SaveChangesAsync();
-
-            return new RequestResultDto
-            {
-                RequestId = fakeRequest.RequestId,
-                FinalScore = fakeRequest.FinalScore,
-                CityName = fakeRequest.CityName,
-                DateCreated = fakeRequest.DateCreated,
-                MaxAffordableRent = fakeRequest.TempScore * 3000, // Dummy calc
-                Percentile = 75
-            };
-            */
-            throw; // Re-throw to be caught by global error handler or primary catch
-        }
     }
 
     private ActionResult ValidationError(string message, params string[] details)

@@ -67,7 +67,7 @@ export class TenantWizardComponent implements OnInit {
     private router: Router,
     private requestService: RequestService,
     private citiesService: CitiesService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -275,7 +275,8 @@ export class TenantWizardComponent implements OnInit {
           // Set userPercentile from backend
           this.userPercentile = result.percentile;
           // Baseline for Inverse Logic: Product of rent and score
-          this.maxAffordableRent = (this.requestData.desiredRent! * result.finalScore);
+          this.maxAffordableRent =
+            this.requestData.desiredRent! * result.finalScore;
           this.createdRequestId = result.requestId;
 
           this.sliderValue = Math.round(this.finalScore);
@@ -420,8 +421,8 @@ export class TenantWizardComponent implements OnInit {
 
     const validationErrors = payload?.errors
       ? Object.values(payload.errors)
-        .flat()
-        .filter((v: unknown) => typeof v === "string")
+          .flat()
+          .filter((v: unknown) => typeof v === "string")
       : [];
 
     const messages = [
@@ -483,23 +484,18 @@ export class TenantWizardComponent implements OnInit {
 
   sendSms() {
     // מכאן נוסף רק כדי לעשות סימולציה של שליחת SMS בלי לקרוא לשרת.
-    if (this.smsMockMode) {
+    /* if (this.smsMockMode) {
       if (!this.createdRequestId) return;
       console.log(
         `[SMS MOCK] Skipped real SMS send for requestId=${this.createdRequestId}`,
       );
-      // קוד קודם שנשמר לבקשתך:
-      // alert("הודעת SMS סומנה כנשלחה (מצב סימולציה)");
       this.setActionMessage("הודעת SMS סומנה כנשלחה (מצב סימולציה)", "info");
       return;
-    }
+    }*/
     //ע ד כאן.
     if (!this.createdRequestId) return;
     this.requestService.sendSms(this.createdRequestId).subscribe({
       next: (response) => {
-        // קוד קודם שנשמר לבקשתך:
-        // alert(response?.message ?? "SMS נשלח!");
-        // alert("הודעת SMS נשלחה בהצלחה!");
         this.setActionMessage(
           response?.message ?? "הודעת SMS נשלחה בהצלחה!",
           "success",
@@ -507,8 +503,6 @@ export class TenantWizardComponent implements OnInit {
       },
       error: (error) => {
         const serverError = error?.error?.error ?? "שליחת SMS נכשלה";
-        // קוד קודם שנשמר לבקשתך:
-        // alert(serverError);
         this.setActionMessage(serverError, "error");
       },
     });
@@ -518,8 +512,6 @@ export class TenantWizardComponent implements OnInit {
     if (!this.createdRequestId) return;
     this.requestService.sendEmail(this.createdRequestId).subscribe({
       next: () => {
-        // קוד קודם שנשמר לבקשתך:
-        // alert("הודעת אימייל נשלחה בהצלחה!");
         this.setActionMessage("הודעת אימייל נשלחה בהצלחה!", "success");
       },
       error: (error) => {

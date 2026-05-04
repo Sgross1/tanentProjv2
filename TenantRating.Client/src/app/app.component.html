@@ -15,7 +15,6 @@
   <!-- Center side: Navigation Pill -->
   <div class="nav-center">
     <div class="nav-pill" [class.mobile-active]="isMenuOpen">
-      <!-- <a routerLink="/" fragment="home" class="nav-pill-item" (click)="closeMenu()">דף הבית</a> -->
       <a routerLink="/" fragment="how-it-works" class="nav-pill-item"
         >איך זה עובד</a
       >
@@ -24,13 +23,14 @@
       <a routerLink="/" fragment="contact" class="nav-pill-item">צור קשר</a>
 
       <ng-container *ngIf="authService.currentUser$ | async as user">
+        <!--מיותרת ngIf לכאורה השורה  -->
+
         <a
           routerLink="/tenant/dashboard"
           *ngIf="user.role !== 'Admin'"
           class="nav-pill-item mobile-account-link"
           >איזור אישי</a
         >
-
         <a
           routerLink="/admin"
           *ngIf="user.role === 'Admin'"

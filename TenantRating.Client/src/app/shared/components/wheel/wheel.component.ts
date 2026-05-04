@@ -7,13 +7,6 @@ import { CommonModule } from "@angular/common";
   imports: [CommonModule],
   templateUrl: "./wheel.component.html",
   styleUrls: ["./wheel.component.scss"],
-  /*
-  קוד קודם שנשמר לבקשתך:
-  template: `<div class="wheel-wrapper" ... >...</div>`
-  styles: [`:host { ... } .wheel-wrapper { ... } ...`]
-  (הקוד המלא הועבר ללא שינוי ל-files:
-  wheel.component.html + wheel.component.scss)
-  */
 })
 export class WheelComponent implements OnInit {
   @Input() percent: number = 0;

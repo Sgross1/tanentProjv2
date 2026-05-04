@@ -101,7 +101,6 @@ export class LandlordSearchComponent implements OnInit {
     this.isLoading = true;
     this.hasSearched = true;
     this.showPhoneMap = {}; // Reset phones on new search
-
     this.landlordService
       .searchTenants(
         this.searchCity,

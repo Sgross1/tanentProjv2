@@ -5,23 +5,30 @@
     </div>
     <div class="responsive-container-block flex-row-reverse-mobile">
       <!-- Right Side (Stripes Image) -->
-      <div class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 img-one">
-        <!-- Replaced image tag with a styled div for mixed color stripes -->
+      <div
+        class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 img-one"
+      >
+
         <div class="image-block bg-image mixed-stripes"></div>
       </div>
 
       <!-- Left Side (Wizard Content) -->
-      <div class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 content-one form-side">
+      <div
+        class="responsive-cell-block wk-tab-12 wk-mobile-12 wk-desk-6 wk-ipadp-12 content-one form-side"
+      >
         <div class="wizard-card wizard-card-shell">
           <!-- Result Step (Full Width) -->
-          <div class="step-content result fade-in result-step" *ngIf="currentStep === 4">
+          <div
+            class="step-content result fade-in result-step"
+            *ngIf="currentStep === 4"
+          >
             <h2 class="result-title">הדירוג שלך מוכן!</h2>
 
             <div class="score-display">
               <div class="score-circle">
                 <span class="score-value">{{
                   finalScore | number: "1.0-1"
-                  }}</span>
+                }}</span>
                 <span class="score-label">ציון אמינות</span>
               </div>
             </div>
@@ -34,7 +41,11 @@
               <h3 class="result-graph-title">איפה אתה ביחס לאחרים?</h3>
 
               <div class="radial-progress-wrapper result-radial-wrap">
-                <div class="radial-progress result-radial-progress" [style.--value]="userPercentile" role="progressbar">
+                <div
+                  class="radial-progress result-radial-progress"
+                  [style.--value]="userPercentile"
+                  role="progressbar"
+                >
                   <div class="percent-text">
                     {{ userPercentile }}<span class="symbol">%</span>
                   </div>
@@ -47,11 +58,20 @@
             </div>
 
             <div class="slider-box result-slider-box">
-              <input type="range" min="10" max="100" step="1" [(ngModel)]="sliderValue"
-                (input)="updateRentCalculation()" dir="ltr" class="result-slider-input" />
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="1"
+                [(ngModel)]="sliderValue"
+                (input)="updateRentCalculation()"
+                dir="ltr"
+                class="result-slider-input"
+              />
 
               <p class="result-slider-note">
-                כדי לקבל ציון <strong>{{ sliderValue }}</strong>, עליך לבקש שכירות של עד:
+                כדי לקבל ציון <strong>{{ sliderValue }}</strong
+                >, עליך לבקש שכירות של עד:
                 <br />
                 <strong>{{ calculatedRent | number }} ₪</strong>
               </p>
@@ -62,8 +82,12 @@
               <button class="btn-outline" (click)="sendEmail()">📧 מייל</button>
             </div>
 
-            <div class="inline-message" *ngIf="actionMessage" [class.success]="actionMessageType === 'success'"
-              [class.error]="actionMessageType === 'error'">
+            <div
+              class="inline-message"
+              *ngIf="actionMessage"
+              [class.success]="actionMessageType === 'success'"
+              [class.error]="actionMessageType === 'error'"
+            >
               {{ actionMessage }}
             </div>
 
@@ -79,8 +103,15 @@
             <!-- Wheel / Visual Column -->
             <div class="wheel-column wheel-column-centered">
               <!-- Wheel for Steps 1, 2 -->
-              <div class="wheel-wrapper-inline wheel-wrapper-inline-scaled" *ngIf="currentStep !== 3">
-                <app-wheel [percent]="calculateProgress()" [statusText]="getProgressText()" size="small">
+              <div
+                class="wheel-wrapper-inline wheel-wrapper-inline-scaled"
+                *ngIf="currentStep !== 3"
+              >
+                <app-wheel
+                  [percent]="calculateProgress()"
+                  [statusText]="getProgressText()"
+                  size="small"
+                >
                 </app-wheel>
               </div>
 
@@ -99,8 +130,12 @@
 
                 <div class="form-group">
                   <label>תעודת זהות</label>
-                  <input type="text" [(ngModel)]="requestData.idNumber" (blur)="onIdNumberBlur()"
-                    placeholder="מספר תעודת זהות תקין (9 ספרות)" />
+                  <input
+                    type="text"
+                    [(ngModel)]="requestData.idNumber"
+                    (blur)="onIdNumberBlur()"
+                    placeholder="מספר תעודת זהות תקין (9 ספרות)"
+                  />
                   <div class="error-message" *ngIf="idNumberError">
                     {{ idNumberError }}
                   </div>
@@ -114,10 +149,22 @@
                       <span class="remove" (click)="removeCity(city)">×</span>
                     </div>
                   </div>
-                  <input type="text" [(ngModel)]="citySearchQuery" (input)="searchCities()"
-                    placeholder="הקלד שם ישוב..." [disabled]="requestData.cities.length >= 5" />
-                  <div class="autocomplete-dropdown" *ngIf="filteredCities.length > 0">
-                    <div class="suggestion" *ngFor="let city of filteredCities" (click)="addCity(city)">
+                  <input
+                    type="text"
+                    [(ngModel)]="citySearchQuery"
+                    (input)="searchCities()"
+                    placeholder="הקלד שם ישוב..."
+                    [disabled]="requestData.cities.length >= 5"
+                  />
+                  <div
+                    class="autocomplete-dropdown"
+                    *ngIf="filteredCities.length > 0"
+                  >
+                    <div
+                      class="suggestion"
+                      *ngFor="let city of filteredCities"
+                      (click)="addCity(city)"
+                    >
                       {{ city }}
                     </div>
                   </div>
@@ -125,20 +172,28 @@
 
                 <div class="form-group">
                   <label>שכר דירה רצוי (₪)</label>
-                  <input type="number" [(ngModel)]="requestData.desiredRent" (blur)="onDesiredRentBlur()"
-                    placeholder="לדוגמה: 6000" />
+                  <input
+                    type="number"
+                    [(ngModel)]="requestData.desiredRent"
+                    (blur)="onDesiredRentBlur()"
+                    placeholder="לדוגמה: 6000"
+                  />
                 </div>
 
                 <div class="actions">
                   <button class="btn-secondary" routerLink="/tenant/dashboard">
                     ביטול
                   </button>
-                  <button class="btn-primary" (click)="nextStep()" [disabled]="
+                  <button
+                    class="btn-primary"
+                    (click)="nextStep()"
+                    [disabled]="
                       requestData.cities.length === 0 ||
                       !requestData.desiredRent ||
                       !requestData.idNumber ||
                       !isIdNumberValid
-                    ">
+                    "
+                  >
                     המשך
                   </button>
                 </div>
@@ -147,7 +202,7 @@
               <!-- Step 2: Upload -->
               <div class="step-content fade-in" *ngIf="currentStep === 2">
                 <div class="inline-errors" *ngIf="stepErrors.length > 0">
-                  <div class="error-title">הבקשה לא נשלחה:</div>
+                  <div class="error-title">שגיאה ביצירת הבקשה:</div>
                   <ul>
                     <li *ngFor="let error of stepErrors">{{ error }}</li>
                   </ul>
@@ -155,54 +210,105 @@
 
                 <!-- New Decorative Upload Design -->
                 <div class="upload">
-                  <div class="upload-files" (dragover)="onDragOver($event)" (drop)="onDropFiles($event)">
+                  <div
+                    class="upload-files"
+                    (dragover)="onDragOver($event)"
+                    (drop)="onDropFiles($event)"
+                  >
                     <header>
                       <p class="upload-header-text">
-                        <i class="fa fa-cloud-upload" aria-hidden="true" class="upload-header-icon"></i>
+                        <i
+                          class="fa fa-cloud-upload"
+                          aria-hidden="true"
+                          class="upload-header-icon"
+                        ></i>
                         <span class="load upload-header-load">{{
                           spouseFilesRequested
-                          ? "העלה 3 תלושים של בן/בת הזוג"
-                          : "העלה 3 תלושי שכר שלך"
-                          }}</span>
+                            ? "העלה 3 תלושים של בן/בת הזוג"
+                            : "העלה 3 תלושי שכר שלך"
+                        }}</span>
                       </p>
                     </header>
-                    <div class="body" id="drop" (click)="fileInput.click()" (dragover)="onDragOver($event)"
-                      (drop)="onDropFiles($event)" [class.hidden]="uploadedFiles.length > 0">
-                      <i class="fa fa-file-text-o pointer-none" aria-hidden="true"></i>
+                    <div
+                      class="body"
+                      id="drop"
+                      (click)="fileInput.click()"
+                      (dragover)="onDragOver($event)"
+                      (drop)="onDropFiles($event)"
+                      [class.hidden]="uploadedFiles.length > 0"
+                    >
+                      <i
+                        class="fa fa-file-text-o pointer-none"
+                        aria-hidden="true"
+                      ></i>
                       <p class="pointer-none upload-body-text">
                         <b>גרור ושחרר</b> קבצים כאן <br />
                         או
-                        <a href="javascript:void(0)" id="triggerFile">לחץ לבחירה</a>
+                        <a href="javascript:void(0)" id="triggerFile"
+                          >לחץ לבחירה</a
+                        >
                       </p>
-                      <input #fileInput type="file" multiple (change)="onFileSelected($event)" />
+                      <input
+                        #fileInput
+                        type="file"
+                        multiple
+                        (change)="onFileSelected($event)"
+                      />
                     </div>
                     <footer [class.hasFiles]="uploadedFiles.length > 0">
                       <div class="divider">
                         <span>קבצים</span>
                       </div>
                       <div class="list-files">
-                        <div class="file" *ngFor="let file of uploadedFiles; let i = index">
+                        <div
+                          class="file"
+                          *ngFor="let file of uploadedFiles; let i = index"
+                        >
                           <div class="name">
-                            <i class="fa fa-times remove-icon" (click)="removeFile(i); $event.stopPropagation()"></i>
+                            <i
+                              class="fa fa-times remove-icon"
+                              (click)="removeFile(i); $event.stopPropagation()"
+                            ></i>
                             <span>{{ file.name }}</span>
                           </div>
-                          <div class="progress" [class.active]="
+                          <div
+                            class="progress"
+                            [class.active]="
                               fileStatuses[file.name] === 'loading'
-                            "></div>
-                          <div class="done" [class.anim]="fileStatuses[file.name] === 'done'">
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="white" stroke-width="2" fill="none"
-                              stroke-linecap="round" stroke-linejoin="round">
+                            "
+                          ></div>
+                          <div
+                            class="done"
+                            [class.anim]="fileStatuses[file.name] === 'done'"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="18"
+                              height="18"
+                              stroke="white"
+                              stroke-width="2"
+                              fill="none"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                           </div>
                         </div>
                       </div>
                       <div class="upload-footer-actions">
-                        <button class="importar" [class.active]="uploadedFiles.length > 0" (click)="fileInput.click()">
+                        <button
+                          class="importar"
+                          [class.active]="uploadedFiles.length > 0"
+                          (click)="fileInput.click()"
+                        >
                           צרף קובץ
                         </button>
-                        <button class="importar" [class.active]="uploadedFiles.length > 0"
-                          (click)="uploadedFiles = []; fileStatuses = {}">
+                        <button
+                          class="importar"
+                          [class.active]="uploadedFiles.length > 0"
+                          (click)="uploadedFiles = []; fileStatuses = {}"
+                        >
                           נקה הכל
                         </button>
                       </div>
@@ -217,19 +323,33 @@
                     הניתוח והדירוג.
                   </p>
                   <div class="promo-actions">
-                    <button class="promo-btn primary" (click)="acceptSpouseUpload()">
+                    <button
+                      class="promo-btn primary"
+                      (click)="acceptSpouseUpload()"
+                    >
                       הוסף עוד 3
                     </button>
-                    <button class="promo-btn secondary" (click)="declineSpouseUpload()">
+                    <button
+                      class="promo-btn secondary"
+                      (click)="declineSpouseUpload()"
+                    >
                       המשך עם 3
                     </button>
                   </div>
                 </div>
 
-                <div class="form-group" *ngIf="spouseFilesRequested || uploadedFiles.length === 6">
+                <div
+                  class="form-group"
+                  *ngIf="spouseFilesRequested || uploadedFiles.length === 6"
+                >
                   <label>תעודת זהות בן/בת זוג</label>
-                  <input type="text" [(ngModel)]="requestData.spouseIdNumber" (input)="onSpouseIdNumberInput()"
-                    (blur)="onSpouseIdNumberBlur()" placeholder="מספר תעודת זהות של בן/בת הזוג" />
+                  <input
+                    type="text"
+                    [(ngModel)]="requestData.spouseIdNumber"
+                    (input)="onSpouseIdNumberInput()"
+                    (blur)="onSpouseIdNumberBlur()"
+                    placeholder="מספר תעודת זהות של בן/בת הזוג"
+                  />
                   <div class="error-message" *ngIf="spouseIdNumberError">
                     {{ spouseIdNumberError }}
                   </div>
@@ -239,7 +359,11 @@
                   <button class="btn-secondary" (click)="prevStep()">
                     חזור
                   </button>
-                  <button class="btn-primary" (click)="nextStep()" [disabled]="uploadedFiles.length === 0">
+                  <button
+                    class="btn-primary"
+                    (click)="nextStep()"
+                    [disabled]="uploadedFiles.length === 0"
+                  >
                     נתח מסמכים
                   </button>
                 </div>
@@ -249,7 +373,8 @@
               <div class="step-content processing" *ngIf="currentStep === 3">
                 <h2 class="processing-center-text">מנתח נתונים...</h2>
                 <p class="processing-center-text">
-                  המערכת שלנו סורקת את המסמכים ומכניסה לאלגוריתם את הנתונים הרלוונטים.
+                  המערכת שלנו סורקת את המסמכים ומכניסה לאלגוריתם את הנתונים
+                  הרלוונטים.
                 </p>
 
                 <div class="scanner-animation">

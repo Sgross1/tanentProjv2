@@ -7,7 +7,6 @@ using TenantRating.API.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -60,12 +59,6 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.EnsureCreated();
-
-    // --- Manual Schema Update (Safe) ---
-    // Removed: Columns already exist in DB
-    // try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetToken TEXT NULL"); } catch { }
-    // try { context.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN ResetTokenExpiration TEXT NULL"); } catch { }
-    // -----------------------------------
 
     await DataSeeder.SeedAsync(context);
 }

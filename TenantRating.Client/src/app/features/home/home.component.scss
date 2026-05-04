@@ -61,10 +61,12 @@
        - Far Left (100%): Transparent (Transparent in mask = Invisible Background).
        - This hides the center card but shows the handshake on the left.
     */
-  -webkit-mask-image: linear-gradient(to left,
-      black 0%,
-      black 60%,
-      transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to left,
+    black 0%,
+    black 60%,
+    transparent 100%
+  );
   mask-image: linear-gradient(to left, black 0%, black 60%, transparent 100%);
 }
 
@@ -546,21 +548,21 @@ h1 {
     line-height: 1.55;
   }
 
-  #about .content-wrapper>div[style*="grid-template-columns"] {
+  #about .content-wrapper > div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
   }
 
-  #about .content-wrapper>div[style*="border-right: 5px"] {
+  #about .content-wrapper > div[style*="border-right: 5px"] {
     padding: 1.2rem !important;
     border-right-width: 3px !important;
   }
 
-  #faq .content-wrapper>div[style*="display: grid"] {
+  #faq .content-wrapper > div[style*="display: grid"] {
     gap: 1rem !important;
   }
 
-  #faq .content-wrapper>div>div[style*="background: white"] {
+  #faq .content-wrapper > div > div[style*="background: white"] {
     padding: 1.1rem !important;
   }
 }
@@ -575,17 +577,16 @@ h1 {
     padding-right: 0.8rem;
   }
 
-  #about .content-wrapper>div[style*="line-height: 1.7"] {
+  #about .content-wrapper > div[style*="line-height: 1.7"] {
     gap: 1rem !important;
   }
 
-  #about .content-wrapper>div[style*="display: grid; grid-template-columns"] {
+  #about .content-wrapper > div[style*="display: grid; grid-template-columns"] {
     grid-template-columns: 1fr !important;
   }
 }
 
 @keyframes bounceSlow {
-
   0%,
   100% {
     transform: translate(-50%, 0);
@@ -704,12 +705,14 @@ h1 {
         linear-gradient(#fff 0 0) content-box,
         linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
       mask-composite: exclude;
     }
 
-    // Colorful strip on the right for gradient cards
-    &::after {
+    // הורדתי את הקו בצד ימין של הכרטיס הראשון והאחרון
+    /* &::after {
       content: "";
       position: absolute;
       top: 24px;
@@ -719,7 +722,7 @@ h1 {
       background: linear-gradient(to bottom, #0984e3, #00cec9);
       border-radius: 3px 0 0 3px;
       z-index: 2;
-    }
+    }*/
   }
 
   /* Default colored right strip for all cards */
@@ -838,53 +841,6 @@ $y-base: 58.5px;
 /* $mid - $half-line: The EXACT TOP for all horizontal edges */
 $over: 8px;
 /* Deep overlap for browser math smoothing */
-
-/* 
-   --- BACKUP: PRE-SEAM-REFINEMENT STATE ---
-   To restore: Uncomment below and remove the refined block after it.
-
-.how-it-works-section { background-color: $timeline-bg-color; padding: 6rem 0; }
-.blue-bg { background-color: $timeline-bg-color; color: $timeline-primary-color; }
-.timeline-grid {
-    display: grid !important; grid-template-columns: repeat(6, 1fr) !important;
-    margin: 0 !important; width: 100% !important; position: relative; padding: 0 !important; gap: 0 !important;
-}
-.circle {
-    font-weight: bold; width: 66px; height: 66px; border-radius: 50%;
-    background-color: $timeline-primary-color; color: $timeline-bg-color;
-    z-index: 20; display: flex; align-items: center; justify-content: center;
-    font-size: 1.7rem; position: relative; box-shadow: 0 0 0 5px $timeline-bg-color;
-}
-.how-it-works.timeline-grid {
-    height: auto; min-height: 120px; align-items: center;
-    .indicator-col {
-        display: flex; justify-content: center; align-items: center; position: relative; height: 100%;
-        &::after { content: ''; position: absolute; width: $line-w; background-color: $timeline-primary-color; z-index: 10; left: calc(50% - #{$half-line}); }
-    }
-    .indicator-col.bottom::after { height: calc(50% + 6px); top: 50%; }
-    .indicator-col.full::after   { height: calc(100% + 12px); top: -6px; }
-    .indicator-col.top::after    { height: calc(50% + 6px); top: -6px; }
-    .text-content-col { padding: 2rem 4rem; z-index: 5; }
-}
-.step-content-text {
-    direction: rtl;
-    h5 { font-size: 2.2rem; margin-bottom: 0.75rem; color: $timeline-primary-color; font-weight: 700; }
-    p { font-size: 1.3rem; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0; }
-}
-.timeline.timeline-grid {
-    height: $row-h;
-    .path-col {
-        grid-column: 2 / 6; position: relative;
-        hr { border: none; border-top: $line-w solid $timeline-primary-color; margin: 0; top: $mid; position: absolute; width: calc(100% + 24px); left: -12px; transform: translateY(-$half-line); z-index: 15; opacity: 1; }
-    }
-    .corner-col { position: relative; }
-    .corner { position: absolute; width: calc(100% + 12px); height: calc(#{$mid} + 6px); border: $line-w solid $timeline-primary-color; box-sizing: border-box; z-index: 12; }
-    .tr-curve { right: calc(50% - #{$half-line}); top: -6px; border-radius: 0 0 $mid 0; border-top: none; border-left: none; }
-    .mr-curve { left: calc(50% - #{$half-line}); top: -6px; border-radius: 0 0 0 $mid; border-top: none; border-right: none; }
-    .ml-curve { left: calc(50% - #{$half-line}); top: $mid; border-radius: $mid 0 0 0; border-bottom: none; border-right: none; }
-    .br-curve { right: calc(50% - #{$half-line}); top: $mid; border-radius: 0 $mid 0 0; border-bottom: none; border-left: none; }
-}
-*/
 
 /* --- REFINED SEAMLESS TIMELINE - MATHEMATICAL ALIGNMENT --- */
 .how-it-works-section {
@@ -1247,7 +1203,7 @@ $over: 8px;
 
 .faq-link::before,
 .faq-link::after {
-  content: ' ';
+  content: " ";
   display: block;
   position: absolute;
   transform-origin: right;

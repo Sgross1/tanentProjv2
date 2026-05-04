@@ -20,7 +20,7 @@ export class AuthModalComponent {
 
   isOpen = true;
   isLogin = true;
-  isForgot = false; // New Mode
+  isForgot = false;
   isLoading = false;
   showPassword = false;
   authForm: FormGroup;
@@ -48,7 +48,6 @@ export class AuthModalComponent {
       role: ["Tenant"],
     });
 
-    // בדיקת תקינות פלאפון תוך כדי הקלדה
     this.authForm.get("phoneNumber")?.valueChanges.subscribe((val) => {
       this.phoneError = "";
       if (!val) return;
@@ -57,18 +56,6 @@ export class AuthModalComponent {
         this.phoneError = "מספר פלאפון לא תקין";
       }
     });
-
-    // קוד קודם שנשמר לבקשתך:
-    // בדיקת תקינות אימייל תוך כדי הקלדה (Regex מחמיר)
-    // this.authForm.get("email")?.valueChanges.subscribe((val) => {
-    //   this.emailError = "";
-    //   if (!val) return;
-    //   const strictEmailRegex =
-    //     /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-    //   if (!strictEmailRegex.test(val)) {
-    //     this.emailError = "כתובת אימייל לא תקינה";
-    //   }
-    // });
   }
 
   onEmailInput() {
@@ -120,7 +107,7 @@ export class AuthModalComponent {
 
   toggleForgot() {
     this.isForgot = !this.isForgot;
-    this.isLogin = true; // Return to login context if canceling forgot
+    this.isLogin = true;
     this.infoMessage = "";
     this.registerError = "";
   }
@@ -145,7 +132,6 @@ export class AuthModalComponent {
     hasValidationError = !!this.emailError;
 
     if (this.isForgot) {
-      // Email already validated above
       if (hasValidationError) {
         return;
       }
@@ -214,7 +200,7 @@ export class AuthModalComponent {
 
     this.isLoading = true;
     const val = this.authForm.value;
-    // המרת אימייל ל-lowercase לפני שליחה לשרת
+
     if (val.email) {
       val.email = val.email.trim().toLowerCase();
     }
@@ -236,8 +222,6 @@ export class AuthModalComponent {
       next: (res) => {
         this.isLoading = false;
         if (this.isForgot) {
-          // קוד קודם שנשמר לבקשתך:
-          // alert("אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.");
           this.infoMessage =
             "אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.";
           this.isForgot = false;
@@ -316,8 +300,8 @@ export class AuthModalComponent {
 
     const firstValidationMessage = payload?.errors
       ? Object.values(payload.errors)
-        .flat()
-        .find((v: unknown) => typeof v === "string")
+          .flat()
+          .find((v: unknown) => typeof v === "string")
       : undefined;
 
     return typeof firstValidationMessage === "string"
