@@ -180,60 +180,33 @@ class RubiksCube {
   private group: THREE.Group;
   private cubies: THREE.Mesh[] = [];
   private readonly faceLabels: string[] = [
-    "אלגו",
-    "מודל",
-    "נתונים",
-    "מאגר",
-    "טיוב",
-    "ניקוי",
-    "פיצ'ר",
-    "תכונה",
-    "שקילה",
-    "נרמול",
-    "תקנון",
-    "התמרה",
-    "קידוד",
-    "הטמעה",
-    "וקטור",
-    "מטריצה",
-    "מדגם",
-    "דגימה",
-    "אימון",
-    "אימות",
-    "בדיקה",
-    "חיזוי",
-    "ציון",
-    "סקור",
-    "דירוג",
-    "סף",
-    "דיוק",
-    "רגישות",
-    "ייחוד",
-    "שונות",
-    "הטיה",
-    "מתאם",
-    "רגרסיה",
-    "סיווג",
-    "צבר",
-    "אשכול",
-    "פילוח",
-    "חריגה",
-    "מגמה",
-    "סמן",
-    "מדד",
-    "משקל",
-    "מיטוב",
-    "חזרה",
-    "כינוס",
+    "פנסיה",
+    "ותק",
+    "משכורת",
+    "ילדים",
+    "בן זוג",
+    "נטו",
+    "ברוטו",
+    "הכנסה",
+    "יחסיות",
     "יציבות",
-    "אמינות",
-    "פרשנות",
-    "הסבריות",
-    "שקיפות",
-    "החלטה",
-    "תוצאה",
-    "דוח",
-    "תובנה",
+    "OECD",
+    "FICO",
+    "√",
+    "+",
+    "×",
+    "÷",
+    "=",
+    "תלוש",
+    "OCR",
+    "AI",
+    "MODEL",
+    "דירוג",
+    "ציון",
+    "מיקום",
+    "%",
+    "נוסחה",
+    "פרמטר"
   ];
   private offset: number;
   private lastAxis: "x" | "y" | "z" = "x";
@@ -276,7 +249,7 @@ class RubiksCube {
     innerLight2.position.set(0.1, 0.1, 0.1);
     this.group.add(innerLight2);
 
-    this.validateUniqueLabels(this.faceLabels);
+    // this.validateUniqueLabels(this.faceLabels); // Disabled because we allow repeating labels
 
     this.textures = this.createTextures();
     this.offset = 0.85 + 0.04; // size + gap
@@ -378,14 +351,23 @@ class RubiksCube {
     const geometry = new THREE.BoxGeometry(size, size, size);
 
     // 1. Prepare the "Deck" of 54 external faces
-    // All external faces are filled with words (no empty faces)
+    // All external faces are filled with words, remaining with empty squares
     const wordKeys: string[] = [];
     const texts = this.faceLabels;
 
     texts.forEach((_, i) => wordKeys.push(`text_${i}`));
 
     const totalExternalFaces = 54; // 9 faces * 6 sides
-    const deck: string[] = [...wordKeys];
+    const deck: string[] = [];
+
+    // Fill the deck to 54: use words first, then alternating empty textures
+    for (let i = 0; i < totalExternalFaces; i++) {
+      if (i < wordKeys.length) {
+        deck.push(wordKeys[i]);
+      } else {
+        deck.push(i % 2 === 0 ? "empty_dark" : "empty_silver");
+      }
+    }
 
     // Shuffle the deck (Fisher-Yates)
     for (let i = deck.length - 1; i > 0; i--) {
