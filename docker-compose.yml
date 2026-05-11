@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-rating-client
     ports:
-      - "80:80"
+      - "800:80"
     depends_on:
       - api
     restart: always
