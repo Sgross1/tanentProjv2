@@ -13,6 +13,7 @@ public class ScoringService : IScoringService
     {
         // 1. Calculate Temp Score (Adjusted Income)
         decimal tempScore = Logic.RentabilityScoreCalculator.CalculateTempScore(netIncome, children, isMarried, seniority, pension, pensionDeductionPercent);
+        tempScore = Math.Round(tempScore, 2, MidpointRounding.AwayFromZero);
 
         // 2. Update Request with Temp Score
         request.TempScore = tempScore;

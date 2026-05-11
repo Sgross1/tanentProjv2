@@ -20,8 +20,8 @@
 
 1.  **סגור את כל החלונות השחורים** (טרמינלים) הפתוחים כרגע.
 2.  פתח חלון CMD או PowerShell חדש.
-3.  כנס לתיקיית הפרויקט:
-    `C:\Users\shlgr\.gemini\antigravity\scratch\tenant-rating`
+3.  כנס לתיקיית השורש של הפרויקט:
+    לתיקייה שבה נמצאות `TenantRating.API` ו-`TenantRating.Client`.
 4.  הפעל שוב את הקובץ האוטומטי:
     `run_app.bat`
 

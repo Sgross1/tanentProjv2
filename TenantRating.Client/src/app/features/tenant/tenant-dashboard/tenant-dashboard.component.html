@@ -99,9 +99,6 @@
       <div *ngIf="requests$ | async as requests">
         <div class="empty-state" *ngIf="requests.length === 0">
           <p>טרם יצרת בקשות דירוג.</p>
-          <button class="action-btn primary" (click)="uploadNewRequest()">
-            צור בקשה ראשונה
-          </button>
         </div>
 
         <div class="request-row" *ngFor="let req of requests">

@@ -46,6 +46,7 @@ export class RequestService {
     );
   }
 
+  // מסלול דיבאג/בדיקות בלבד: מחזיר פירוט OCR וחישוב, ולא מסלול הלקוח הרגיל.
   analyzePayslip(
     files: File[],
     desiredRent?: number,
