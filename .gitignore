@@ -23,6 +23,7 @@ Thumbs.db
 
 # Secrets
 secrets.bat
+.env
 
 # Database
 *.db

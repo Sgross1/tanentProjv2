@@ -6,7 +6,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     const user = authService.getCurrentUserValue();
     const token = user?.token;
-    const isApiUrl = req.url.startsWith('http://localhost:5000/api');
+    const isApiUrl = req.url.startsWith('/api');
 
     if (token && isApiUrl) {
         req = req.clone({

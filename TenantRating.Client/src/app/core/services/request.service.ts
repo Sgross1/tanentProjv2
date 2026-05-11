@@ -30,7 +30,7 @@ export interface CreateRequestDto {
   providedIn: "root",
 })
 export class RequestService {
-  private apiUrl = "http://localhost:5000/api/requests";
+  private apiUrl = "/api/requests";
 
   private requestsSubject = new BehaviorSubject<RequestResultDto[]>([]);
   public requests$ = this.requestsSubject.asObservable();
