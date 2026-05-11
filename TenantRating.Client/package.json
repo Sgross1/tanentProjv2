@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
     "@tweenjs/tween.js": "^25.0.0",
+    "gsap": "^3.14.2",
     "rxjs": "~7.8.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.36.1",

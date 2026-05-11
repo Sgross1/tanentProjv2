@@ -5,11 +5,12 @@ import { BehaviorSubject, Observable, tap } from "rxjs";
 export interface RequestResultDto {
   requestId: number;
   finalScore: number;
-  tempScore: number;
   cityName: string;
+  desiredRent?: number;
 
   dateCreated: string;
   maxAffordableRent?: number;
+  percentile: number;
 }
 
 export interface CreateRequestDto {
@@ -29,12 +30,12 @@ export interface CreateRequestDto {
   providedIn: "root",
 })
 export class RequestService {
-  private apiUrl = "http://localhost:5000/api/requests";
+  private apiUrl = "/api/requests";
 
   private requestsSubject = new BehaviorSubject<RequestResultDto[]>([]);
   public requests$ = this.requestsSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   createRequest(dto: CreateRequestDto): Observable<RequestResultDto> {
     return this.http.post<RequestResultDto>(this.apiUrl, dto).pipe(
@@ -59,6 +60,34 @@ export class RequestService {
     return this.http.post<CreateRequestDto>(`${this.apiUrl}/analyze`, formData);
   }
 
+  submitRequest(
+    files: File[],
+    idNumber: string,
+    spouseIdNumber: string | null,
+    desiredRent: number,
+    cityName: string,
+  ): Observable<RequestResultDto> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    formData.append("idNumber", idNumber);
+    if (spouseIdNumber) {
+      formData.append("spouseIdNumber", spouseIdNumber);
+    }
+    formData.append("desiredRent", desiredRent.toString());
+    formData.append("cityName", cityName);
+
+    return this.http
+      .post<RequestResultDto>(`${this.apiUrl}/submit`, formData)
+      .pipe(
+        tap((newRequest) => {
+          const currentRequests = this.requestsSubject.value;
+          this.requestsSubject.next([...currentRequests, newRequest]);
+        }),
+      );
+  }
+
   sendSms(requestId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${requestId}/notify-sms`, {});
   }
@@ -75,6 +104,21 @@ export class RequestService {
       requestId,
       idNumber,
     });
+  }
+
+  deleteRequest(requestId: number): Observable<{ message?: string }> {
+    return this.http
+      .delete<{ message?: string }>(`${this.apiUrl}/${requestId}`)
+      .pipe(
+        tap(() => {
+          const currentRequests = this.requestsSubject.value;
+          this.requestsSubject.next(
+            currentRequests.filter(
+              (request) => request.requestId !== requestId,
+            ),
+          );
+        }),
+      );
   }
 
   getMyRequests(): Observable<RequestResultDto[]> {

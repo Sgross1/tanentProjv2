@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Rajdhani:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Rubik", Arial, sans-serif;
+        background: #f5f8fc;
+        color: #2d3436;
+      }
+
+      .shell {
+        padding: 36px 12px;
+        background: #f5f8fc;
+      }
+
+      .frame {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 1px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #2d7ef7 0%, #002f6c 100%);
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 15px;
+        overflow: hidden;
+      }
+
+      .header {
+        text-align: center;
+        padding: 30px 18px 24px;
+        border-bottom: 1px solid #edf2f7;
+      }
+
+      .logo-link {
+        text-decoration: none;
+      }
+
+      .logo {
+        margin: 0;
+        font-family: "Rubik", Arial, sans-serif;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        line-height: 1;
+        color: #2d7ef7;
+        background: linear-gradient(135deg, #2d7ef7 0%, #002f6c 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .content {
+        padding: 30px 24px 26px;
+        text-align: right;
+      }
+
+      .title {
+        margin: 0 0 10px;
+        font-size: 25px;
+        font-weight: 800;
+        color: #1f2d3d;
+      }
+
+      .greeting {
+        margin: 0 0 10px;
+        font-size: 17px;
+        color: #2d3436;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        margin: 0 0 18px;
+        line-height: 1.55;
+        color: #5f6b7a;
+      }
+
+      .score-box {
+        background: linear-gradient(
+          135deg,
+          rgba(9, 132, 227, 0.06),
+          rgba(0, 206, 201, 0.09)
+        );
+        border: 1px solid rgba(9, 132, 227, 0.24);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+      }
+
+      .score-label {
+        color: #636e72;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      .score-value {
+        color: #2d7ef7;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .details {
+        background: #f8fbff;
+        border: 1px solid #dde9f8;
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+
+      .row {
+        color: #2d3436;
+        padding: 7px 0;
+        border-bottom: 1px dashed #dbe4f0;
+      }
+
+      .row:last-child {
+        border-bottom: none;
+      }
+
+      .footer {
+        border-top: 1px solid #edf2f7;
+        background: #fbfcfe;
+        text-align: center;
+        padding: 14px 16px;
+        color: #9aa5b3;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="frame">
+        <div class="card">
+          <div class="header">
+            <a
+              href="http://localhost:4200"
+              class="logo-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <h1 class="logo">KaLiScore</h1>
+            </a>
+          </div>
+
+          <div class="content">
+            <h2 class="title">הבקשה שלך נקלטה בהצלחה</h2>
+            <p class="greeting">שלום {recipientName},</p>
+            <p class="subtitle">אלה פרטי הבקשה האחרונה שנשמרה במערכת:</p>
+
+            <div class="score-box">
+              <div class="score-label">ציון אמינות</div>
+              <div class="score-value">{finalScore}</div>
+            </div>
+
+            <div class="details">
+              <div class="row"><strong>מספר בקשה:</strong> {requestId}</div>
+              <div class="row"><strong>תאריך יצירה:</strong> {dateCreated}</div>
+              <div class="row"><strong>יישוב:</strong> {cityName}</div>
+              <div class="row">
+                <strong>שכר דירה רצוי:</strong> ₪{desiredRent}
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            אם לא את/ה יצרת את הבקשה הזו, מומלץ ליצור קשר עם התמיכה.<br />
+            &copy; 2026 KaLiScore. כל הזכויות שמורות.
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

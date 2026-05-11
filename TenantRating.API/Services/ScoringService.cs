@@ -19,6 +19,7 @@ public class ScoringService : IScoringService
 
         // 3. Calculate Final Score (0-100)
         decimal finalScore = Logic.RentabilityScoreCalculator.CalculateFinalScore(tempScore, request.DesiredRent);
+        finalScore = Math.Round(finalScore, 2, MidpointRounding.AwayFromZero);
 
         request.FinalScore = finalScore;
 

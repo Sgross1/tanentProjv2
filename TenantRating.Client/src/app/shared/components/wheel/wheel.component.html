@@ -1,0 +1,29 @@
+<div
+  class="wheel-wrapper"
+  [class.mini]="size === 'mini'"
+  [class.small]="size === 'small'"
+>
+  <div class="ring-outer"></div>
+  <div class="ring-gears"></div>
+  <div class="ring-progress-bg"></div>
+
+  <svg class="main-progress" [attr.width]="viewSize" [attr.height]="viewSize">
+    <circle
+      [attr.stroke]="isComplete ? '#10b981' : '#2d7ef7'"
+      stroke-width="8"
+      fill="transparent"
+      [attr.r]="radius"
+      [attr.cx]="center"
+      [attr.cy]="center"
+      [style.stroke-dasharray]="circumference"
+      [style.stroke-dashoffset]="dashOffset"
+      stroke-linecap="round"
+    />
+  </svg>
+
+  <div class="core-reactor" [class.ready]="isComplete" (click)="onCoreClick()">
+    <div class="spark"></div>
+    <div class="core-text">{{ percent }}%</div>
+    <div class="core-label">{{ statusText }}</div>
+  </div>
+</div>

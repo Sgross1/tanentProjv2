@@ -23,9 +23,12 @@ Thumbs.db
 
 # Secrets
 secrets.bat
+.env
 
 # Database
 *.db
+*.db-wal
+*.db-shm
 
 # Database
 *.db

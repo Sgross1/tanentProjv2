@@ -1,20 +1,17 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
 import {
   LandlordService,
   TenantSearchResult,
 } from "../../../core/services/landlord.service";
 import { CitiesService } from "../../../core/services/cities.service";
-import { debounceTime, distinctUntilChanged, Subject, switchMap } from "rxjs";
-
-import { WheelComponent } from "../../../shared/components/wheel/wheel.component";
+import { AuthService } from "../../../core/services/auth.service";
 
 @Component({
   selector: "app-landlord-search",
   standalone: true,
-  imports: [CommonModule, FormsModule, WheelComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: "./landlord-search.component.html",
   styleUrls: ["./landlord-search.component.scss"],
 })
@@ -28,6 +25,8 @@ export class LandlordSearchComponent implements OnInit {
   hasSearched = false;
   showPhoneMap: { [key: number]: boolean } = {};
   savedMap: { [key: number]: boolean } = {};
+  actionError = "";
+  searchError = "";
 
   // Autocomplete Data
   filteredCities: string[] = [];
@@ -35,9 +34,9 @@ export class LandlordSearchComponent implements OnInit {
 
   constructor(
     private landlordService: LandlordService,
-    private router: Router,
     private citiesService: CitiesService,
-  ) { }
+    private authService: AuthService,
+  ) {}
 
   ngOnInit() {
     // Load cities from MyGov API on component init
@@ -53,27 +52,55 @@ export class LandlordSearchComponent implements OnInit {
   }
 
   onSearchInput() {
-    if (!this.searchCity.trim()) {
+    const query = this.searchCity.trim();
+    this.searchError = "";
+
+    if (!query) {
       this.filteredCities = [];
       return;
     }
-    this.filteredCities = this.availableCities.filter((city) =>
-      city.includes(this.searchCity),
+
+    const matchingCities = this.availableCities.filter((city) =>
+      city.includes(query),
     );
+
+    this.filteredCities = matchingCities.sort((firstCity, secondCity) => {
+      const firstStartsWith = firstCity.startsWith(query);
+      const secondStartsWith = secondCity.startsWith(query);
+
+      if (firstStartsWith !== secondStartsWith) {
+        return firstStartsWith ? -1 : 1;
+      }
+
+      return firstCity.localeCompare(secondCity, "he");
+    });
   }
 
   selectCity(city: string) {
     this.searchCity = city;
+    this.searchError = "";
     this.filteredCities = []; // Close dropdown
     this.onSearch(); // Trigger search immediately on selection
   }
 
   onSearch() {
+    const normalizedCity = this.searchCity.trim();
+
+    if (!normalizedCity) {
+      this.hasSearched = true;
+      this.isLoading = false;
+      this.results = [];
+      this.filteredCities = [];
+      this.searchError = "יש להזין עיר כדי לבצע חיפוש שוכרים.";
+      return;
+    }
+
+    this.searchCity = normalizedCity;
+    this.searchError = "";
     this.filteredCities = []; // Ensure dropdown closed
     this.isLoading = true;
     this.hasSearched = true;
     this.showPhoneMap = {}; // Reset phones on new search
-
     this.landlordService
       .searchTenants(
         this.searchCity,
@@ -91,6 +118,7 @@ export class LandlordSearchComponent implements OnInit {
         },
         error: (err) => {
           console.error("Search failed", err);
+          this.searchError = "החיפוש נכשל. נסה שוב בעוד רגע.";
           this.isLoading = false;
         },
       });
@@ -107,29 +135,50 @@ export class LandlordSearchComponent implements OnInit {
   }
 
   toggleSave(tenant: TenantSearchResult) {
-    // Check if user is logged in
-    const currentUser = localStorage.getItem("user");
-    if (!currentUser) {
-      if (
-        confirm("עליך להתחבר כדי לשמור פניות. האם לעבור לדף הרשמה/התחברות?")
-      ) {
-        // We should ideally redirect to login, but we don't have Router injected.
-        // Let's reload to login or use window.location for quick fix, or better: inject Router.
-        this.router.navigate(["/"]); // Redirect to home for login
-      }
+    this.actionError = "";
+
+    const currentUser = this.authService.getCurrentUserValue();
+    if (!currentUser?.token) {
+      this.actionError = "כדי לשמור פנייה יש להתחבר לחשבון.";
       return;
     }
 
     const isSaved = this.savedMap[tenant.requestId];
 
     if (isSaved) {
-      this.landlordService.unsaveRequest(tenant.requestId).subscribe(() => {
-        this.savedMap[tenant.requestId] = false;
+      this.landlordService.unsaveRequest(tenant.requestId).subscribe({
+        next: () => {
+          this.savedMap[tenant.requestId] = false;
+        },
+        error: (err) => {
+          this.actionError = this.mapSaveError(err);
+        },
       });
     } else {
-      this.landlordService.saveRequest(tenant.requestId).subscribe(() => {
-        this.savedMap[tenant.requestId] = true;
+      this.landlordService.saveRequest(tenant.requestId).subscribe({
+        next: () => {
+          this.savedMap[tenant.requestId] = true;
+        },
+        error: (err) => {
+          this.actionError = this.mapSaveError(err);
+        },
       });
     }
+  }
+
+  private mapSaveError(err: any): string {
+    if (err?.status === 401) {
+      return "כדי לשמור פנייה יש להתחבר לחשבון.";
+    }
+
+    if (typeof err?.error === "string" && err.error.trim()) {
+      return err.error;
+    }
+
+    if (typeof err?.error?.message === "string" && err.error.message.trim()) {
+      return err.error.message;
+    }
+
+    return "פעולת שמירה נכשלה. נסה שוב.";
   }
 }

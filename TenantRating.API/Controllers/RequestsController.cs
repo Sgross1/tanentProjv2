@@ -17,12 +17,16 @@ public class RequestsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly IScoringService _scoringService;
     private readonly IOcrService _ocrService;
+    private readonly ISmsService _smsService;
+    private readonly IEmailService _emailService;
 
-    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService)
+    public RequestsController(AppDbContext context, IScoringService scoringService, IOcrService ocrService, ISmsService smsService, IEmailService emailService)
     {
         _context = context;
         _scoringService = scoringService;
         _ocrService = ocrService;
+        _smsService = smsService;
+        _emailService = emailService;
     }
 
     [HttpPost("analyze")]
@@ -63,6 +67,7 @@ public class RequestsController : ControllerBase
         }
     }
 
+    // ⚠️ FOR TESTING ONLY - Use /submit endpoint from client UI
     [HttpPost]
     public async Task<ActionResult<RequestResultDto>> CreateRequest(CreateRequestDto dto)
     {
@@ -100,15 +105,216 @@ public class RequestsController : ControllerBase
         _context.Requests.Add(request);
         await _context.SaveChangesAsync();
 
+        // Calculate real percentile vs. peers with similar rent requests (±400 NIS)
+        decimal rentLowerBound = request.DesiredRent - 400m;
+        decimal rentUpperBound = request.DesiredRent + 400m;
+
+        var peersQuery = _context.Requests.Where(r => r.DesiredRent >= rentLowerBound && r.DesiredRent <= rentUpperBound);
+        int totalPeers = await peersQuery.CountAsync();
+        int peersBelow = await peersQuery.CountAsync(r => r.FinalScore < request.FinalScore);
+
+        int percentile = 50;
+        if (totalPeers > 0)
+        {
+            percentile = (int)Math.Round((double)peersBelow / totalPeers * 100);
+        }
+
         return new RequestResultDto
         {
             RequestId = request.RequestId,
             FinalScore = request.FinalScore,
-            TempScore = request.TempScore,
             CityName = request.CityName,
+            DesiredRent = request.DesiredRent,
             DateCreated = request.DateCreated,
-            MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio
+            MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio,
+            Percentile = percentile
         };
+    }
+
+    // ✅ SECURE ENDPOINT - For production client UI
+    [HttpPost("submit")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<RequestResultDto>> SubmitRequest(
+        [FromForm] List<IFormFile> files,
+        [FromForm] string idNumber,
+        [FromForm] string? spouseIdNumber,
+        [FromForm] decimal desiredRent,
+        [FromForm] string cityName)
+    {
+        if (files == null || (files.Count != 3 && files.Count != 6))
+        {
+            return ValidationError("יש להעלות בדיוק 3 או 6 תלושי שכר.");
+        }
+
+        if (!TryNormalizeIsraeliId(idNumber, out var normalizedPrimaryId))
+        {
+            return ValidationError("מספר הזהות הראשי אינו תקין.");
+        }
+
+        string? normalizedSpouseId = null;
+        if (!string.IsNullOrWhiteSpace(spouseIdNumber))
+        {
+            if (!TryNormalizeIsraeliId(spouseIdNumber, out var parsedSpouseId))
+            {
+                return ValidationError("מספר הזהות של בן/בת הזוג אינו תקין.");
+            }
+
+            normalizedSpouseId = parsedSpouseId;
+        }
+
+        if (files.Count == 3 && !string.IsNullOrWhiteSpace(normalizedSpouseId))
+        {
+            return ValidationError("במסלול של 3 תלושים יש להזין רק מספר זהות אחד.");
+        }
+
+        if (files.Count == 6 && string.IsNullOrWhiteSpace(normalizedSpouseId))
+        {
+            return ValidationError("במסלול של 6 תלושים חובה להזין גם מספר זהות של בן/בת הזוג.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedSpouseId) && normalizedPrimaryId == normalizedSpouseId)
+        {
+            return ValidationError("מספר הזהות של בן/בת הזוג חייב להיות שונה מהמספר הראשי.");
+        }
+
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+        try
+        {
+            // Extract data from files (server-side OCR)
+            var extracted = await _ocrService.AnalyzePayslipsAsync(files);
+
+            // Verify ID match between user input and extracted IDs
+            var extractedIds = extracted.IdNumbers
+                .Select(id => NormalizeDigitsOnly(id))
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .OrderBy(id => id)
+                .ToList();
+
+            if (files.Count == 3)
+            {
+                if (extractedIds.Count != 1 || extractedIds[0] != normalizedPrimaryId)
+                {
+                    return ValidationError(
+                        "מספר הזהות שהוזן אינו תואם לתלושים שהועלו.",
+                        "נדרש שמספר הזהות הראשי יתאים לכל 3 התלושים במסלול יחיד.");
+                }
+            }
+            else
+            {
+                var submittedIds = new[] { normalizedPrimaryId, normalizedSpouseId! }
+                    .Distinct()
+                    .OrderBy(id => id)
+                    .ToList();
+
+                if (submittedIds.Count != 2)
+                {
+                    return ValidationError("נדרשים שני מספרי זהות שונים עבור מסלול של 6 תלושים.");
+                }
+
+                if (extractedIds.Count != 2 || !submittedIds.SequenceEqual(extractedIds))
+                {
+                    return ValidationError(
+                        "מספרי הזהות שהוזנו אינם תואמים למספרים שחולצו מהתלושים.",
+                        "ודא שהזנת את מספר הזהות של בעל הבקשה ושל בן/בת הזוג בדיוק כפי שמופיעים בתלושים.");
+                }
+            }
+
+
+            // Create request entity
+            var request = new Request
+            {
+                UserId = userId,
+                DesiredRent = desiredRent,
+                CityName = cityName,
+                TenantIdNumbers = string.Join(",", extractedIds),
+                DateCreated = DateTime.UtcNow
+            };
+
+            // Calculate score using extracted data (not from client!)
+            _scoringService.CalculateScoreForRequest(
+                request,
+                extracted.NetIncome,
+                extracted.NumChildren,
+                extracted.IsMarried,
+                extracted.SeniorityYears,
+                extracted.PensionGrossAmount,
+                extracted.PensionDeductionPercent
+            );
+
+            _context.Requests.Add(request);
+            await _context.SaveChangesAsync();
+
+            // Calculate real percentile vs. peers with similar rent requests (±400 NIS)
+            decimal rentLowerBound = request.DesiredRent - 400m;
+            decimal rentUpperBound = request.DesiredRent + 400m;
+
+            var peersQuery = _context.Requests.Where(r => r.DesiredRent >= rentLowerBound && r.DesiredRent <= rentUpperBound);
+            int totalPeers = await peersQuery.CountAsync();
+
+            // To be accurate, we find how many peers scored LESS than or equal to this request, minus self
+            int peersBelow = await peersQuery.CountAsync(r => r.FinalScore < request.FinalScore);
+
+            int percentile = 50;
+            if (totalPeers > 1)
+            {
+                // totalPeers will always be at least 1 since we just appended `request` to the DB and saved.
+                percentile = (int)Math.Round((double)peersBelow / (totalPeers - 1) * 100);
+            }
+            else if (totalPeers == 1)
+            {
+                // First request in this range
+                percentile = 100;
+            }
+
+            return new RequestResultDto
+            {
+                RequestId = request.RequestId,
+                FinalScore = request.FinalScore,
+                CityName = request.CityName,
+                DesiredRent = request.DesiredRent,
+                DateCreated = request.DateCreated,
+                MaxAffordableRent = request.TempScore * TenantRating.API.Logic.RentabilityScoreCalculator.RentToIncomeRatio,
+                Percentile = Math.Min(Math.Max(percentile, 1), 99) // Keep 1-99 for UI visual semantics 
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ValidationError("אימות התלושים נכשל.", ex.Message);
+        }
+    }
+
+    private ActionResult ValidationError(string message, params string[] details)
+    {
+        return BadRequest(new
+        {
+            message,
+            details = details.Where(d => !string.IsNullOrWhiteSpace(d)).ToArray()
+        });
+    }
+
+    private static string NormalizeDigitsOnly(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+        return new string(raw.Where(char.IsDigit).ToArray());
+    }
+
+    private static bool TryNormalizeIsraeliId(string? raw, out string normalized)
+    {
+        normalized = NormalizeDigitsOnly(raw);
+        if (normalized.Length != 9) return false;
+
+        var sum = normalized
+            .Select((ch, index) =>
+            {
+                var digit = ch - '0';
+                var multiplied = digit * ((index % 2) + 1);
+                return multiplied > 9 ? multiplied - 9 : multiplied;
+            })
+            .Sum();
+
+        return sum % 10 == 0;
     }
 
     [HttpPost("verify-id")]
@@ -145,8 +351,8 @@ public class RequestsController : ControllerBase
             {
                 RequestId = r.RequestId,
                 FinalScore = r.FinalScore,
-                TempScore = r.TempScore,
                 CityName = r.CityName,
+                DesiredRent = r.DesiredRent,
                 DateCreated = r.DateCreated
             })
             .ToListAsync();
@@ -154,35 +360,107 @@ public class RequestsController : ControllerBase
         return requests;
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteRequest(int id)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+        var request = await _context.Requests
+            .FirstOrDefaultAsync(r => r.RequestId == id && r.UserId == userId);
+
+        if (request == null)
+        {
+            return NotFound(new { message = "הפנייה לא נמצאה." });
+        }
+
+        var savedRefs = await _context.SavedRequests
+            .Where(sr => sr.TenantRequestId == id)
+            .ToListAsync();
+
+        if (savedRefs.Count > 0)
+        {
+            _context.SavedRequests.RemoveRange(savedRefs);
+        }
+
+        _context.Requests.Remove(request);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"פנייה #{id} נמחקה בהצלחה." });
+    }
+
     [HttpPost("{id}/notify-sms")]
     public async Task<IActionResult> NotifySms(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send SMS via Twilio/etc using request.User.PhoneNumber
-        Console.WriteLine($"[SMS SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var phoneNumber = request.User?.PhoneNumber?.Trim();
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return BadRequest(new { error = "לא נמצא מספר פלאפון עבור המשתמש." });
+        }
 
-        return Ok();
+        var message = $"ציון הבקשה שלך הוא {request.FinalScore}. שכר דירה רצוי: {request.DesiredRent}.";
+        var result = await _smsService.SendSmsAsync(phoneNumber, message);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[SMS SENT] Request #{id} to {phoneNumber}: {result.Status}");
+            return Ok(new { message = "ה-SMS נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[SMS FAILED] Request #{id} to {phoneNumber}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 
     [HttpPost("{id}/notify-email")]
     public async Task<IActionResult> NotifyEmail(int id)
     {
-        var request = await _context.Requests.FindAsync(id);
+        var request = await _context.Requests
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
         if (request == null) return NotFound();
 
         // Check ownership
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         if (request.UserId != userId) return Forbid();
 
-        // In real app: Send Email via SendGrid/SMTP using request.User.Email
-        Console.WriteLine($"[EMAIL SENT] To Request #{id}: Your score for rent {request.DesiredRent} is {request.FinalScore}");
+        var recipientEmail = request.User?.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(recipientEmail))
+        {
+            return BadRequest(new { error = "לא נמצאה כתובת אימייל עבור המשתמש." });
+        }
 
-        return Ok();
+        var firstName = request.User?.FirstName?.Trim();
+        var lastName = request.User?.LastName?.Trim();
+        var recipientName = string.Join(" ", new[] { firstName, lastName }.Where(v => !string.IsNullOrWhiteSpace(v))).Trim();
+        if (string.IsNullOrWhiteSpace(recipientName))
+        {
+            recipientName = "משתמש";
+        }
+
+        var result = await _emailService.SendRequestCreatedEmailAsync(
+            recipientEmail,
+            recipientName,
+            request.RequestId,
+            request.FinalScore,
+            request.DesiredRent,
+            request.CityName,
+            request.DateCreated);
+
+        if (result.IsSuccess)
+        {
+            Console.WriteLine($"[EMAIL SENT] Request #{id} to {recipientEmail}: {result.Status}");
+            return Ok(new { message = "האימייל נשלח בהצלחה", status = result.Status });
+        }
+
+        Console.WriteLine($"[EMAIL FAILED] Request #{id} to {recipientEmail}: {result.Status}");
+        return BadRequest(new { error = result.Status });
     }
 }

@@ -1,38 +1,53 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, NgZone, AfterViewInit } from '@angular/core';
-import * as THREE from 'three';
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  ViewChild,
+  NgZone,
+  AfterViewInit,
+  OnChanges,
+  SimpleChanges,
+} from "@angular/core";
+import * as THREE from "three";
 
 @Component({
-  selector: 'app-three-cube',
+  selector: "app-three-cube",
   standalone: true,
-  template: `<div #canvasContainer class="canvas-container"></div>`,
-  styles: [`
-    :host {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .canvas-container {
-      width: 100%;
-      height: 100%;
-      min-height: 300px;
-      display: block;
-    }
-  `]
+  templateUrl: "./three-cube.component.html",
+  styleUrls: ["./three-cube.component.scss"],
 })
-export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
-  @Input() mode: 'hero' | 'loading' = 'hero';
+export class ThreeCubeComponent implements OnDestroy, AfterViewInit, OnChanges {
+  @ViewChild("canvasContainer", { static: true }) canvasContainer!: ElementRef;
+  @Input() mode: "hero" | "loading" = "hero";
+  @Input() globalRotationSpeed: number = 1.0;
+  @Input() internalRotationSpeed: number = 1.0;
+  @Input() scale: number = 1.0;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private cube!: RubiksCube;
   private animationId!: number;
+  private resizeObserver!: ResizeObserver;
 
-  constructor(private ngZone: NgZone) { }
+  constructor(private ngZone: NgZone) {}
 
-  ngOnInit(): void {
-    // Moved to AfterViewInit
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["scale"] && !changes["scale"].firstChange) {
+      if (this.cube) {
+        // Update existing cube scale
+        this.cube.setScale(this.scale);
+      }
+    }
+    if (
+      changes["internalRotationSpeed"] &&
+      !changes["internalRotationSpeed"].firstChange
+    ) {
+      if (this.cube) {
+        this.cube.setSpeed(this.internalRotationSpeed);
+      }
+    }
   }
 
   ngAfterViewInit(): void {
@@ -47,6 +62,9 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.renderer) {
       this.renderer.dispose();
     }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
     // Clean up scene objects if needed
   }
 
@@ -59,6 +77,7 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     const width = this.canvasContainer.nativeElement.clientWidth;
     const height = this.canvasContainer.nativeElement.clientHeight;
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    // Initial position - will be overridden in animate
     this.camera.position.set(6, 5, 8);
     this.camera.lookAt(0, 0, 0);
 
@@ -68,7 +87,7 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     // Fix for color management in newer Three.js
-    (this.renderer as any).outputColorSpace = 'srgb'; // or THREE.SRGBColorSpace if types allowed
+    (this.renderer as any).outputColorSpace = "srgb"; // or THREE.SRGBColorSpace if types allowed
     (this.renderer as any).toneMapping = THREE.ACESFilmicToneMapping;
 
     this.canvasContainer.nativeElement.appendChild(this.renderer.domElement);
@@ -92,15 +111,23 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     this.scene.add(rimLight);
 
     // 5. Cube
-    this.cube = new RubiksCube(this.scene, this.mode);
+    this.cube = new RubiksCube(
+      this.scene,
+      this.mode,
+      this.internalRotationSpeed,
+      this.scale,
+    );
 
     // 6. Animation Loop
     this.ngZone.runOutsideAngular(() => {
       this.animate();
     });
 
-    // Handle Resize
-    window.addEventListener('resize', () => this.onResize());
+    // Handle Resize using ResizeObserver for better responsiveness in any container
+    this.resizeObserver = new ResizeObserver(() => {
+      this.onResize();
+    });
+    this.resizeObserver.observe(this.canvasContainer.nativeElement);
   }
 
   private animate(): void {
@@ -111,17 +138,24 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cube.update(now);
 
     // Global rotation logic
-    const time = now * 0.0001872;
-    const radius = 9;
+    const factor = this.globalRotationSpeed || 1.0;
+    const timeScaled = now * 0.0001872 * factor;
 
-    const theta = time * 2;
-    const phi = Math.sin(time * 1.5) * 1.2;
+    // Fixed radius increased to 12 (from 9) to provide more breathing room for larger scales
+    const radius = 12;
+
+    const theta = timeScaled * 2;
+    const phi = Math.sin(timeScaled * 1.5) * 1.2;
 
     this.camera.position.x = radius * Math.sin(theta) * Math.cos(phi);
     this.camera.position.y = radius * Math.sin(phi);
     this.camera.position.z = radius * Math.cos(theta) * Math.cos(phi);
 
-    this.camera.up.set(Math.sin(time * 0.5) * 0.2, 1, Math.cos(time * 0.5) * 0.2);
+    this.camera.up.set(
+      Math.sin(timeScaled * 0.5) * 0.2,
+      1,
+      Math.cos(timeScaled * 0.5) * 0.2,
+    );
     this.camera.lookAt(0, 0, 0);
 
     this.renderer.render(this.scene, this.camera);
@@ -131,6 +165,8 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.canvasContainer) return;
     const width = this.canvasContainer.nativeElement.clientWidth;
     const height = this.canvasContainer.nativeElement.clientHeight;
+
+    if (width === 0 || height === 0) return;
 
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
@@ -143,10 +179,41 @@ export class ThreeCubeComponent implements OnInit, OnDestroy, AfterViewInit {
 class RubiksCube {
   private group: THREE.Group;
   private cubies: THREE.Mesh[] = [];
+  private readonly faceLabels: string[] = [
+    "פנסיה",
+    "ותק",
+    "משכורת",
+    "ילדים",
+    "בן זוג",
+    "נטו",
+    "ברוטו",
+    "הכנסה",
+    "יחסיות",
+    "יציבות",
+    "OECD",
+    "FICO",
+    "√",
+    "+",
+    "×",
+    "÷",
+    "=",
+    "תלוש",
+    "OCR",
+    "AI",
+    "MODEL",
+    "דירוג",
+    "ציון",
+    "מיקום",
+    "%",
+    "נוסחה",
+    "פרמטר"
+  ];
   private offset: number;
-  private lastAxis: 'x' | 'y' | 'z' = 'x';
+  private lastAxis: "x" | "y" | "z" = "x";
   private textures: any;
-  private mode: string = 'hero';
+  private mode: string = "hero";
+  private rotationSpeed: number = 1.0;
+  private scale: number = 1.0;
 
   // Animation State
   private isAnimating = false;
@@ -154,12 +221,23 @@ class RubiksCube {
   private animStartTime = 0;
   private animDuration = 600; // ms
   private targetRotation = 0;
-  private animAxis: 'x' | 'y' | 'z' = 'x';
+  private animAxis: "x" | "y" | "z" = "x";
   private activeCubies: THREE.Mesh[] = [];
 
-  constructor(scene: THREE.Scene, mode: 'hero' | 'loading' = 'hero') {
+  constructor(
+    scene: THREE.Scene,
+    mode: "hero" | "loading" = "hero",
+    rotationSpeed: number = 1.0,
+    scale: number = 1.0,
+  ) {
     this.mode = mode;
+    this.rotationSpeed = rotationSpeed || 1.0;
+    this.scale = scale || 1.0;
+
     this.group = new THREE.Group();
+    // Apply Scale to the entire group
+    this.group.scale.set(this.scale, this.scale, this.scale);
+
     scene.add(this.group);
 
     // Inner Lights
@@ -170,6 +248,8 @@ class RubiksCube {
     const innerLight2 = new THREE.PointLight(0xaaccff, 3, 4);
     innerLight2.position.set(0.1, 0.1, 0.1);
     this.group.add(innerLight2);
+
+    // this.validateUniqueLabels(this.faceLabels); // Disabled because we allow repeating labels
 
     this.textures = this.createTextures();
     this.offset = 0.85 + 0.04; // size + gap
@@ -200,7 +280,7 @@ class RubiksCube {
   private startRotation() {
     if (this.isAnimating) return;
 
-    const axes = ['x', 'y', 'z'] as const;
+    const axes = ["x", "y", "z"] as const;
     let axisIdx;
 
     // Ensure distinct axis
@@ -208,14 +288,14 @@ class RubiksCube {
       axisIdx = Math.floor(Math.random() * 3);
     } while (axes[axisIdx] === this.lastAxis);
 
-    this.lastAxis = axes[axisIdx] as 'x' | 'y' | 'z';
+    this.lastAxis = axes[axisIdx] as "x" | "y" | "z";
     const axis = this.lastAxis;
     const slice = Math.floor(Math.random() * 3) - 1;
 
-    const targetCubies = this.cubies.filter(mesh => {
+    const targetCubies = this.cubies.filter((mesh) => {
       const pos = mesh.position[axis];
       // Widen tolerance to ensure we catch slightly drifting cubes
-      return Math.abs(pos - (slice * this.offset)) < 0.25;
+      return Math.abs(pos - slice * this.offset) < 0.25;
     });
 
     if (targetCubies.length === 0) {
@@ -226,7 +306,9 @@ class RubiksCube {
 
     this.isAnimating = true;
     this.animStartTime = performance.now();
-    this.animDuration = 800; // Slower for visibility
+    // Dynamic Duration based on Speed
+    this.animDuration = 600 / this.rotationSpeed;
+
     this.activeCubies = targetCubies;
     this.animAxis = axis;
 
@@ -236,7 +318,7 @@ class RubiksCube {
     this.pivot = new THREE.Group();
     this.group.add(this.pivot);
     // Attach cubies correctly
-    targetCubies.forEach(mesh => this.pivot!.attach(mesh));
+    targetCubies.forEach((mesh) => this.pivot!.attach(mesh));
   }
 
   private finishRotation() {
@@ -246,7 +328,7 @@ class RubiksCube {
       this.pivot.updateMatrixWorld();
 
       // Detach and save
-      this.activeCubies.forEach(mesh => {
+      this.activeCubies.forEach((mesh) => {
         this.group.attach(mesh);
         this.roundPosition(mesh);
       });
@@ -256,23 +338,97 @@ class RubiksCube {
     }
 
     this.isAnimating = false;
-    setTimeout(() => this.startRotation(), 500);
+
+    // Dynamic Pause based on Speed
+    const pause = 500 / this.rotationSpeed;
+    setTimeout(() => this.startRotation(), pause);
   }
 
   private initGeometry() {
     const size = 0.85;
-    const gap = 0.04;
+    // BoxGeometry expects materials in this order: Right, Left, Top, Bottom, Front, Back
+    // x+, x-, y+, y-, z+, z-
     const geometry = new THREE.BoxGeometry(size, size, size);
+
+    // 1. Prepare the "Deck" of 54 external faces
+    // All external faces are filled with words, remaining with empty squares
+    const wordKeys: string[] = [];
+    const texts = this.faceLabels;
+
+    texts.forEach((_, i) => wordKeys.push(`text_${i}`));
+
+    const totalExternalFaces = 54; // 9 faces * 6 sides
+    const deck: string[] = [];
+
+    // Fill the deck to 54: use words first, then alternating empty textures
+    for (let i = 0; i < totalExternalFaces; i++) {
+      if (i < wordKeys.length) {
+        deck.push(wordKeys[i]);
+      } else {
+        deck.push(i % 2 === 0 ? "empty_dark" : "empty_silver");
+      }
+    }
+
+    // Shuffle the deck (Fisher-Yates)
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    let deckIndex = 0;
+
+    // Default internal material (dark/black)
+    const internalMaterial = new THREE.MeshStandardMaterial({
+      color: 0x111111,
+      roughness: 0.9,
+      metalness: 0.1,
+    });
 
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
         for (let z = -1; z <= 1; z++) {
-          const material = this.getMaterial();
-          const mesh = new THREE.Mesh(geometry, material);
+          // Determine materials for 6 faces: [Right, Left, Top, Bottom, Front, Back]
+          const materials = [];
 
+          const isRight = x === 1;
+          const isLeft = x === -1;
+          const isTop = y === 1;
+          const isBottom = y === -1;
+          const isFront = z === 1;
+          const isBack = z === -1;
+
+          // Helper to pick texture if external, or internal mat if not
+          const getFaceMat = (isExternal: boolean) => {
+            if (isExternal) {
+              const textureKey = deck[deckIndex++];
+              // If we run out of deck (shouldn't happen), fallback to first word texture
+              return this.getMaterial(textureKey || wordKeys[0]);
+            } else {
+              return internalMaterial;
+            }
+          };
+
+          materials.push(getFaceMat(isRight)); // 0: Right (x+)
+          materials.push(getFaceMat(isLeft)); // 1: Left (x-)
+          materials.push(getFaceMat(isTop)); // 2: Top (y+)
+          materials.push(getFaceMat(isBottom)); // 3: Bottom (y-)
+          materials.push(getFaceMat(isFront)); // 4: Front (z+)
+          materials.push(getFaceMat(isBack)); // 5: Back (z-)
+
+          // Create mesh with array of materials
+          const mesh = new THREE.Mesh(geometry, materials);
+
+          // Edges (Black outline)
           const edges = new THREE.EdgesGeometry(geometry);
-          const line = new THREE.LineSegments(edges,
-            new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1, transparent: true, opacity: 0.3 }));
+          const line = new THREE.LineSegments(
+            edges,
+            new THREE.LineBasicMaterial({
+              color: 0x000000,
+              linewidth: 2,
+              transparent: true,
+              opacity: 0.5,
+            }),
+          );
           mesh.add(line);
 
           mesh.position.set(x * this.offset, y * this.offset, z * this.offset);
@@ -285,83 +441,149 @@ class RubiksCube {
   }
 
   private createTextures() {
-    const createTex = (type: string) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d')!;
+    // --- NEW TEXT TEXTURE GENERATION ---
+    const texts = this.faceLabels;
+    const textures: any = {};
 
-      ctx.fillStyle = '#111';
-      ctx.fillRect(0, 0, 512, 512);
+    // Helper to draw the base style (Dark Background + Silver Border)
+    const drawBase = (ctx: CanvasRenderingContext2D, isSilver: boolean) => {
+      if (isSilver) {
+        // Silver/Gray Background
+        ctx.fillStyle = "#444444";
+        ctx.fillRect(0, 0, 512, 512);
 
-      if (type === 'mesh') {
-        ctx.fillStyle = '#222';
-        for (let i = 0; i < 512; i += 16) {
-          for (let j = 0; j < 512; j += 16) {
-            ctx.beginPath();
-            ctx.arc(i, j, 6, 0, Math.PI * 2);
-            ctx.fill();
+        // Noise
+        ctx.fillStyle = "#555";
+        for (let i = 0; i < 512; i += 20) {
+          for (let j = 0; j < 512; j += 20) {
+            if (Math.random() > 0.8) ctx.fillRect(i, j, 2, 2);
           }
         }
-      } else if (type === 'brushed') {
-        ctx.strokeStyle = '#1a1a1a';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 500; i++) {
-          ctx.beginPath();
-          ctx.moveTo(0, Math.random() * 512);
-          ctx.lineTo(512, Math.random() * 512);
-          ctx.stroke();
+        // Border (Lighter Silver)
+        ctx.strokeStyle = "#888";
+      } else {
+        // Dark Metallic Background
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Noise
+        ctx.fillStyle = "#222";
+        for (let i = 0; i < 512; i += 20) {
+          for (let j = 0; j < 512; j += 20) {
+            if (Math.random() > 0.8) ctx.fillRect(i, j, 2, 2);
+          }
         }
-      } else if (type === 'noise') {
-        for (let i = 0; i < 50000; i++) {
-          ctx.fillStyle = Math.random() > 0.5 ? '#1a1a1a' : '#0a0a0a';
-          ctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
-        }
+        // Border (Silver/Metallic)
+        ctx.strokeStyle = "#555";
       }
 
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      return tex;
+      ctx.lineWidth = 15;
+      ctx.strokeRect(10, 10, 492, 492);
     };
 
-    return {
-      mesh: createTex('mesh'),
-      brushed: createTex('brushed'),
-      noise: createTex('noise')
-    };
+    // 1. Create Text Textures
+    texts.forEach((text, index) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext("2d")!;
+
+      // Determine background color: Alternate or Random?
+      // User said "Half of the squares were silver".
+      // Let's alternate based on index to ensure even distribution.
+      const isSilver = index % 2 !== 0;
+      drawBase(ctx, isSilver);
+
+      // Text: Gold with GLOW
+      ctx.fillStyle = "#FFD700"; // Gold
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // GLOW EFFECT - REDUCED INTENSITY
+      ctx.shadowColor = "rgba(255, 215, 0, 0.5)"; // Reduced opacity
+      ctx.shadowBlur = 15; // Reduced blur radius
+      ctx.shadowOffsetX = 0; // Centered glow
+      ctx.shadowOffsetY = 0;
+
+      if (text === "שכר דירה") {
+        // Stack Vertically
+        const fontSize = 160;
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        // Draw "שכר"
+        ctx.fillText("שכר", 256, 180);
+        // Draw "דירה"
+        ctx.fillText("דירה", 256, 380);
+      } else {
+        // Normal Single Line
+        const fontSize = text.length > 3 ? 140 : 220;
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.fillText(text, 256, 256);
+      }
+
+      textures[`text_${index}`] = new THREE.CanvasTexture(canvas);
+    });
+
+    // 2. Create Empty Textures (Dark and Silver)
+
+    // Empty Dark
+    const emptyDarkCanvas = document.createElement("canvas");
+    emptyDarkCanvas.width = 512;
+    emptyDarkCanvas.height = 512;
+    const ctxDark = emptyDarkCanvas.getContext("2d")!;
+    drawBase(ctxDark, false); // false = Dark
+    textures["empty_dark"] = new THREE.CanvasTexture(emptyDarkCanvas);
+
+    // Empty Silver
+    const emptySilverCanvas = document.createElement("canvas");
+    emptySilverCanvas.width = 512;
+    emptySilverCanvas.height = 512;
+    const ctxSilver = emptySilverCanvas.getContext("2d")!;
+    drawBase(ctxSilver, true); // true = Silver
+    textures["empty_silver"] = new THREE.CanvasTexture(emptySilverCanvas);
+
+    return textures;
   }
 
-  private getMaterial() {
-    // Unified Style: Bright Cyan/White/Metallic (Hero Style) for all modes
-    // This matches the user request to have the same cube everywhere.
-
-    // Original Hero Logic:
-    const rand = Math.random();
-    let map = null, roughness = 0.1, color = new THREE.Color(0.0, 0.8, 0.8); // Cyan base
-
-    if (rand < 0.25) {
-      map = this.textures.mesh;
-      color = new THREE.Color(0.8, 0.9, 1.0); // Whitish
-      roughness = 0.4;
-    } else if (rand < 0.5) {
-      map = this.textures.brushed;
-      color = new THREE.Color(0.0, 0.6, 0.7); // Darker Cyan
-      roughness = 0.2;
-    } else if (rand < 0.75) {
-      map = this.textures.noise;
-      color = new THREE.Color(0.2, 0.9, 0.9); // Bright Cyan
-      roughness = 0.5;
-    } else {
-      color = new THREE.Color(1.0, 1.0, 1.0); // Pure White accents
-      roughness = 0.05;
-    }
+  private getMaterial(textureKey: string) {
+    // --- NEW LOGIC: Use specific key ---
+    const map = this.textures[textureKey]; // Should always exist
 
     return new THREE.MeshStandardMaterial({
-      color: color, map: map, bumpMap: map, bumpScale: 0.02,
-      roughness: roughness, metalness: 0.9, envMapIntensity: 3.0,
-      emissive: new THREE.Color(0.0, 0.2, 0.2), emissiveIntensity: 0.2
+      color: 0xffffff,
+      map: map,
+      roughness: 0.3,
+      metalness: 0.6,
+      envMapIntensity: 1.0,
     });
+  }
+
+  private validateUniqueLabels(labels: string[]) {
+    const normalizedLabels = labels.map((label) => label.trim());
+    const uniqueLabels = new Set(normalizedLabels);
+    const totalExternalFaces = 54;
+
+    if (uniqueLabels.size !== normalizedLabels.length) {
+      throw new Error(
+        "Rubiks cube labels must be unique to avoid duplicate words on a side.",
+      );
+    }
+
+    if (normalizedLabels.length < totalExternalFaces) {
+      throw new Error(
+        "Rubiks cube must have at least 54 unique labels to fill all external faces.",
+      );
+    }
+  }
+
+  public setScale(scale: number) {
+    this.scale = scale;
+    if (this.group) {
+      this.group.scale.set(scale, scale, scale);
+    }
+  }
+
+  public setSpeed(speed: number) {
+    this.rotationSpeed = speed;
   }
 
   private roundPosition(mesh: THREE.Mesh) {
@@ -369,9 +591,12 @@ class RubiksCube {
     mesh.position.x = Math.round(mesh.position.x / off) * off;
     mesh.position.y = Math.round(mesh.position.y / off) * off;
     mesh.position.z = Math.round(mesh.position.z / off) * off;
-    mesh.rotation.x = Math.round(mesh.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
-    mesh.rotation.y = Math.round(mesh.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
-    mesh.rotation.z = Math.round(mesh.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
+    mesh.rotation.x =
+      Math.round(mesh.rotation.x / (Math.PI / 2)) * (Math.PI / 2);
+    mesh.rotation.y =
+      Math.round(mesh.rotation.y / (Math.PI / 2)) * (Math.PI / 2);
+    mesh.rotation.z =
+      Math.round(mesh.rotation.z / (Math.PI / 2)) * (Math.PI / 2);
     mesh.updateMatrixWorld();
   }
 }

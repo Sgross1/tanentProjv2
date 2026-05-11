@@ -10,6 +10,7 @@ export interface TenantSearchResult {
     cityName: string;
     dateOfRating: string;
     phoneNumber?: string;
+    hasSecondId?: boolean;
     isSaved?: boolean;
 }
 
@@ -17,7 +18,7 @@ export interface TenantSearchResult {
     providedIn: 'root'
 })
 export class LandlordService {
-    private apiUrl = 'http://localhost:5000/api/landlords';
+    private apiUrl = '/api/landlords';
 
     constructor(private http: HttpClient) { }
 

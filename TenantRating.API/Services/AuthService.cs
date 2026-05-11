@@ -32,6 +32,8 @@ public class AuthService : IAuthService
 
     public async Task<User?> Register(User user, string password)
     {
+        user.Email = NormalizeEmail(user.Email);
+
         if (await UserExists(user.Email)) return null;
 
         CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -40,17 +42,27 @@ public class AuthService : IAuthService
         user.PasswordSalt = passwordSalt;
 
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (IsDuplicateEmailException(ex))
+        {
+            return null;
+        }
 
         return user;
     }
 
     public async Task<string?> Login(string email, string password)
     {
+        var normalizedEmail = NormalizeEmail(email);
+
         var user = await _context.Users
             .Include(u => u.Requests)
             .Include(u => u.SavedRequests)
-            .FirstOrDefaultAsync(x => x.Email == email);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail);
 
         if (user == null) return null;
 
@@ -66,10 +78,12 @@ public class AuthService : IAuthService
 
     public async Task<User?> GetUser(string email)
     {
+        var normalizedEmail = NormalizeEmail(email);
+
         var user = await _context.Users
             .Include(u => u.Requests)
             .Include(u => u.SavedRequests)
-            .FirstOrDefaultAsync(x => x.Email == email);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == normalizedEmail);
 
         if (user != null)
         {
@@ -83,12 +97,14 @@ public class AuthService : IAuthService
 
     public async Task<bool> UserExists(string email)
     {
-        return await _context.Users.AnyAsync(x => x.Email == email);
+        var normalizedEmail = NormalizeEmail(email);
+        return await _context.Users.AnyAsync(x => x.Email.ToLower() == normalizedEmail);
     }
 
     public async Task<string?> GeneratePasswordResetToken(string email)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var normalizedEmail = NormalizeEmail(email);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
         if (user == null) return null;
 
         // Generate simple 6-digit code for "Mock" simulation ease
@@ -100,6 +116,18 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
         return token;
+    }
+
+    private static string NormalizeEmail(string? email)
+    {
+        return (email ?? string.Empty).Trim().ToLowerInvariant();
+    }
+
+    private static bool IsDuplicateEmailException(DbUpdateException ex)
+    {
+        var message = ex.InnerException?.Message ?? ex.Message;
+        return message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase)
+            && message.Contains("Email", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<bool> ResetPassword(string token, string newPassword)

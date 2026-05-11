@@ -20,13 +20,20 @@ export class AuthModalComponent {
 
   isOpen = true;
   isLogin = true;
-  isForgot = false; // New Mode
+  isForgot = false;
   isLoading = false;
+  showPassword = false;
   authForm: FormGroup;
 
   phoneError: string = "";
   emailError: string = "";
+  firstNameError: string = "";
+  lastNameError: string = "";
+  passwordError: string = "";
+  roleError: string = "";
   loginError: string = "";
+  registerError: string = "";
+  infoMessage: string = "";
 
   constructor(
     private fb: FormBuilder,
@@ -41,7 +48,6 @@ export class AuthModalComponent {
       role: ["Tenant"],
     });
 
-    // בדיקת תקינות פלאפון תוך כדי הקלדה
     this.authForm.get("phoneNumber")?.valueChanges.subscribe((val) => {
       this.phoneError = "";
       if (!val) return;
@@ -50,27 +56,60 @@ export class AuthModalComponent {
         this.phoneError = "מספר פלאפון לא תקין";
       }
     });
+  }
 
-    // בדיקת תקינות אימייל תוך כדי הקלדה (Regex מחמיר)
-    this.authForm.get("email")?.valueChanges.subscribe((val) => {
-      this.emailError = "";
-      if (!val) return;
-      const strictEmailRegex =
-        /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-      if (!strictEmailRegex.test(val)) {
-        this.emailError = "כתובת אימייל לא תקינה";
-      }
-    });
+  onEmailInput() {
+    this.emailError = "";
+  }
+
+  onFirstNameInput() {
+    this.firstNameError = "";
+  }
+
+  onLastNameInput() {
+    this.lastNameError = "";
+  }
+
+  onPasswordInput() {
+    this.passwordError = "";
+  }
+
+  onRoleChange() {
+    this.roleError = "";
+  }
+
+  onEmailBlur() {
+    const emailValue = (this.authForm.get("email")?.value ?? "")
+      .toString()
+      .trim();
+
+    if (!emailValue) {
+      this.emailError = "יש להזין כתובת אימייל.";
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    this.emailError = emailRegex.test(emailValue)
+      ? ""
+      : "כתובת אימייל לא תקינה";
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 
   toggleMode() {
     this.isLogin = !this.isLogin;
     this.isForgot = false;
+    this.infoMessage = "";
+    this.registerError = "";
   }
 
   toggleForgot() {
     this.isForgot = !this.isForgot;
-    this.isLogin = true; // Return to login context if canceling forgot
+    this.isLogin = true;
+    this.infoMessage = "";
+    this.registerError = "";
   }
 
   close() {
@@ -80,28 +119,88 @@ export class AuthModalComponent {
 
   onSubmit() {
     this.loginError = "";
-    if (this.authForm.invalid) {
-      // Allow partial validation for Forgot Password (only email needed)
-      if (this.isForgot && this.authForm.get("email")?.valid) {
-        // Continue
-      } else if (this.isForgot) {
+    this.registerError = "";
+    this.infoMessage = "";
+    this.phoneError = "";
+    this.firstNameError = "";
+    this.lastNameError = "";
+    this.passwordError = "";
+    this.roleError = "";
+    let hasValidationError = false;
+
+    this.onEmailBlur();
+    hasValidationError = !!this.emailError;
+
+    if (this.isForgot) {
+      if (hasValidationError) {
         return;
-      } else if (
-        this.isLogin &&
-        this.authForm.get("email")?.valid &&
-        this.authForm.get("password")?.value
-      ) {
-        // Simple login check
-      } else if (this.isLogin) {
+      }
+    } else if (this.isLogin) {
+      const passwordValue = (this.authForm.get("password")?.value ?? "")
+        .toString()
+        .trim();
+      if (!passwordValue) {
+        this.passwordError = "יש להזין סיסמה.";
+        hasValidationError = true;
+      }
+
+      if (hasValidationError) {
         return;
-      } else {
-        return; // Register needs all
+      }
+    } else {
+      const firstNameValue = (this.authForm.get("firstName")?.value ?? "")
+        .toString()
+        .trim();
+      const lastNameValue = (this.authForm.get("lastName")?.value ?? "")
+        .toString()
+        .trim();
+      const passwordValue = (this.authForm.get("password")?.value ?? "")
+        .toString()
+        .trim();
+      const roleValue = (this.authForm.get("role")?.value ?? "")
+        .toString()
+        .trim();
+      const phoneRaw = (
+        this.authForm.get("phoneNumber")?.value ?? ""
+      ).toString();
+      const normalizedPhone = phoneRaw.trim().replace(/[-\s]/g, "");
+
+      if (!firstNameValue) {
+        this.firstNameError = "יש להזין שם פרטי.";
+        hasValidationError = true;
+      }
+
+      if (!lastNameValue) {
+        this.lastNameError = "יש להזין שם משפחה.";
+        hasValidationError = true;
+      }
+
+      if (!passwordValue) {
+        this.passwordError = "יש להזין סיסמה.";
+        hasValidationError = true;
+      }
+
+      if (!normalizedPhone) {
+        this.phoneError = "יש להזין מספר פלאפון.";
+        hasValidationError = true;
+      } else if (!/^05[0-8][0-9]{7}$/.test(normalizedPhone)) {
+        this.phoneError = "מספר פלאפון לא תקין";
+        hasValidationError = true;
+      }
+
+      if (!roleValue) {
+        this.roleError = "יש לבחור סוג משתמש.";
+        hasValidationError = true;
+      }
+
+      if (hasValidationError) {
+        return;
       }
     }
 
     this.isLoading = true;
     const val = this.authForm.value;
-    // המרת אימייל ל-lowercase לפני שליחה לשרת
+
     if (val.email) {
       val.email = val.email.trim().toLowerCase();
     }
@@ -123,8 +222,10 @@ export class AuthModalComponent {
       next: (res) => {
         this.isLoading = false;
         if (this.isForgot) {
-          alert("אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.");
-          this.toggleForgot(); // Go back to login
+          this.infoMessage =
+            "אם המייל קיים במערכת, נשלח אליך קישור לאיפוס סיסמה.";
+          this.isForgot = false;
+          this.isLogin = true;
         } else {
           console.log("Auth success", res);
           this.close();
@@ -133,11 +234,78 @@ export class AuthModalComponent {
       error: (err) => {
         console.error("Auth error", err);
         this.isLoading = false;
+        const serverMessage = this.extractServerErrorMessage(err);
+        const localizedMessage = this.localizeAuthErrorMessage(serverMessage);
+
         // Handle regular errors
         if (this.isLogin && !this.isForgot) {
-          this.loginError = "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+          this.loginError =
+            localizedMessage || "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+          return;
+        }
+
+        if (!this.isLogin && !this.isForgot) {
+          if (localizedMessage.includes("אימייל")) {
+            this.emailError = localizedMessage;
+          } else if (
+            localizedMessage.includes("פלאפון") ||
+            localizedMessage.includes("טלפון")
+          ) {
+            this.phoneError = localizedMessage;
+          } else {
+            this.registerError =
+              localizedMessage || "לא ניתן להשלים הרשמה כרגע. נסה שוב.";
+          }
         }
       },
     });
+  }
+
+  private localizeAuthErrorMessage(message: string): string {
+    if (!message) {
+      return "";
+    }
+
+    const normalized = message.trim().toLowerCase();
+
+    if (
+      normalized === "invalid email or password" ||
+      normalized.includes("invalid credentials") ||
+      normalized.includes("unauthorized")
+    ) {
+      return "האימייל או הסיסמה אינם נכונים. אנא נסה שוב.";
+    }
+
+    if (normalized.includes("email already exists")) {
+      return "האימייל כבר קיים במערכת.";
+    }
+
+    return message;
+  }
+
+  private extractServerErrorMessage(err: any): string {
+    const payload = err?.error;
+
+    if (typeof payload === "string") {
+      return payload;
+    }
+
+    if (typeof payload?.message === "string") {
+      return payload.message;
+    }
+
+    if (typeof payload?.title === "string") {
+      return payload.title;
+    }
+
+    const firstValidationMessage = payload?.errors
+      ? Object.values(payload.errors)
+          .flat()
+          .find((v: unknown) => typeof v === "string")
+      : undefined;
+
+    return typeof firstValidationMessage === "string"
+      ? firstValidationMessage
+      : "";
   }
 }
