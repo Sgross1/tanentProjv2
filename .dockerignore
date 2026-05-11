@@ -1,0 +1,22 @@
+# Version control
+.git
+.gitignore
+
+# Personal / Unused files
+OLD/
+*.bat
+debug_log.txt
+INSTALL_INSTRUCTIONS.md
+README.md
+
+# Build artifacts
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+.angular/
+
+# Docker files
+Dockerfile
+docker-compose*
+.env

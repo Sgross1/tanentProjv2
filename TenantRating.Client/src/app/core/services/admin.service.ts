@@ -22,7 +22,7 @@ export interface RecentRequest {
   providedIn: "root",
 })
 export class AdminService {
-  private apiUrl = "http://localhost:5000/api/admin";
+  private apiUrl = "/api/admin";
 
   constructor(private http: HttpClient) {}
 
