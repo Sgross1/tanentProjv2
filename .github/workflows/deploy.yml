@@ -19,6 +19,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_is_base64: true
           port: 22
           script: |
             cd tanentProjv2
