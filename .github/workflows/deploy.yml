@@ -13,13 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug Secrets
-        run: |
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "KEY IS EMPTY"; else echo "KEY IS SET"; fi
-          if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "HOST IS EMPTY"; else echo "HOST IS SET"; fi
-
       - name: Deploy to AWS via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
