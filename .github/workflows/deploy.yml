@@ -1,0 +1,26 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+      - azriel/features
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to AWS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd tanentProjv2
+            git pull origin ${{ github.ref_name }}
+            sudo docker compose up --build -d
+            sudo docker system prune -f
