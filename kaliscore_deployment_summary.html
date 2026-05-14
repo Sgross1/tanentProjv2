@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaLiScore - סיכום הגנה טכני</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Inter:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0984e3;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --accent: #6c5ce7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-size: 13px;
+            color: var(--dark);
+            line-height: 1.3;
+            padding: 8mm;
+            background: white;
+        }
+
+        .page { width: 100%; max-width: 210mm; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; color: var(--primary); }
+        .subtitle { font-weight: 600; color: #636e72; font-size: 1rem; }
+
+        .intro-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .intro-box p { margin-bottom: 5px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .col-name { width: 22%; font-weight: 700; background: var(--light); }
+        .col-content { width: 78%; }
+
+        .highlight { font-weight: 700; color: var(--primary); }
+
+        .diagram-container {
+            text-align: center;
+            margin-top: 10px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .diagram-container img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .diagram-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .page { width: 100%; border: none; }
+            th { background-color: #0984e3 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <header>
+            <h1>KaLiScore - קל לשכור</h1>
+            <p class="subtitle">מפרט טכני וסיכום פרויקט פולסטאק</p>
+        </header>
+
+        <div class="intro-box">
+            <p><strong>הקונספט:</strong> מערכת לדירוג כלכלי אוטומטי של שוכרים המבוססת על אלגוריתם חכם וניתוח מסמכים (OCR).</p>
+            <p><strong>הערך המוסף:</strong> חסכון בזמן למשכירים, ייעול תהליך המיון והצגת "תעודת זהות פיננסית" אמינה לשוכרים.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">ניתוח טכנולוגי וארכיטקטורה</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-name">1. ארכיטקטורת Fullstack</td>
+                    <td class="col-content">
+                        הפרדה מלאה בין <span class="highlight">Angular 19</span> (לקוח), <span class="highlight">.NET 9</span> (שרת) ו-<span class="highlight">SQLite</span> (נתונים).
+                        <br><strong>יתרונות:</strong> <span class="highlight">Scalability</span> (שדרוג משאבים בנפרד) ו<span class="highlight">אבטחה</span> מרכזית דרך API מאובטח (JWT).
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-name">2. צד השרת (Clean Arch)</td>
+                    <td class="col-content">
+                        חלוקה לשכבות <span class="highlight">Presentation, Logic, Infrastructure</span>.
+                        <br><strong>דוגמת OCR:</strong> הקונטרולר מקבל קובץ, הסרוויס מנהל את הניתוח, והתשתית פונה ל-Azure.
+                        <br><strong>יתרון:</strong> <span class="highlight">Decoupling</span> המאפשר תחזוקה קלה והחלפת טכנולוגיות ללא שינוי הלוגיקה העסקית.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-name">3. צד הלקוח (SPA & UX)</td>
+                    <td class="col-content">
+                        מערכת <span class="highlight">SPA</span> המבוססת קומפוננטות וניתוב (Router) ללא טעינת דפים.
+                        <br><strong>ביצועים:</strong> שימוש ב**אסינכרוניות** (Observables) לתגובתיות מקסימלית.
+                        <br><strong>אלמנט ויזואלי:</strong> קומפוננטת <span class="highlight">קוביה תלת-ממדית</span> אינטראקטיבית לניהול State ויזואלי.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-name">4. ניהול נתונים (ORM)</td>
+                    <td class="col-content">
+                        עבודה בשיטת <span class="highlight">Code First</span> עם **Entity Framework Core**.
+                        <br>שימוש ב-<span class="highlight">Entities</span> ו-<span class="highlight">Migrations</span> לסנכרון הסכמה.
+                        <br><strong>יתרון:</strong> ניהול נתונים רלציוני גמיש ומהיר המותאם בצורה אופטימלית לשרת ה-AWS.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-name">5. פריסה (Cloud & Docker)</td>
+                    <td class="col-content">
+                        אירוח ב-**AWS** על שרת **EC2** עם אחסון **EBS**.
+                        <br>אורקסטרציה דרך **Docker Compose** בתוך Containers מבודדים.
+                        <br><strong>יתרון:</strong> <span class="highlight">Environment Consistency</span> מלא בין הפיתוח המקומי לסביבת הייצור החיה.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="diagram-container">
+            <p class="diagram-title">איור מבנה הנתונים (ERD) - סכמת המערכת</p>
+            <img src="file:///c:/Users/shlgr/.gemini/antigravity/scratch/tenant-rating/kaliscore_database_schema_v2.png" alt="Database Schema ERD">
+        </div>
+
+    </div>
+
+</body>
+</html>
