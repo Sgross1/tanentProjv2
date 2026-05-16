@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
 
         if (token != null)
         {
-            var resetLink = $"http://localhost:4200/reset-password?token={token}";
+            var resetLink = $"https://kaliscore.tech/reset-password?token={token}";
             var user = await _authService.GetUser(normalizedEmail);
             var firstName = user?.FirstName?.Trim();
             var lastName = user?.LastName?.Trim();
