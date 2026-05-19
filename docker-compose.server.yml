@@ -20,6 +20,8 @@ services:
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Resend__ApiKey=${RESEND_API_KEY}
+      - Resend__FromEmail=no-reply@kaliscore.tech
+      - Resend__UseSandboxRecipient=false
       - SmsSettings__Key=${SMS_KEY}
       - SmsSettings__User=${SMS_USER}
       - SmsSettings__Pass=${SMS_PASS}
