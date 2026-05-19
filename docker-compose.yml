@@ -10,6 +10,7 @@ services:
       - ./data:/app/data
       - ./certs:/usr/local/share/ca-certificates/custom:ro
     environment:
+      - ASPNETCORE_ENVIRONMENT=Development
       - AzureDocumentIntelligence__ApiKey=${AZURE_API_KEY}
       - AzureDocumentIntelligence__Endpoint=${AZURE_ENDPOINT}
       - AzureDocumentIntelligence__ModelId=${AZURE_MODEL_ID}

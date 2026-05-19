@@ -141,8 +141,8 @@ export class LandlordSearchComponent implements OnInit {
 
     const currentUser = this.authService.getCurrentUserValue();
     if (!currentUser?.token) {
-      this.actionError = "כדי לשמור פנייה יש להתחבר לחשבון.";
       this.appComponent.openAuth();
+      this.actionError = "כדי לשמור פנייה יש להתחבר לחשבון.";
       return;
     }
 

@@ -8,17 +8,20 @@ public class ResendEmailService : IEmailService
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
     private readonly IEmailTemplateService _templateService;
     private readonly ILogger<ResendEmailService> _logger;
 
     public ResendEmailService(
         HttpClient httpClient,
         IConfiguration configuration,
+        IWebHostEnvironment environment,
         IEmailTemplateService templateService,
         ILogger<ResendEmailService> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _environment = environment;
         _templateService = templateService;
         _logger = logger;
     }
@@ -34,10 +37,8 @@ public class ResendEmailService : IEmailService
                 ["{token}"] = token
             });
 
-        var fromEmail = _configuration["Resend:FromEmail"] ?? "onboarding@resend.dev";
-        var useSandboxRecipient = bool.TryParse(_configuration["Resend:UseSandboxRecipient"], out var parsed) ? parsed : true;
-        var sandboxRecipient = _configuration["Resend:SandboxRecipient"] ?? recipientEmail;
-        var effectiveRecipient = useSandboxRecipient ? sandboxRecipient : recipientEmail;
+        var fromEmail = ResolveFromEmail();
+        var effectiveRecipient = ResolveRecipient(recipientEmail);
 
         var payload = new
         {
@@ -64,10 +65,8 @@ public class ResendEmailService : IEmailService
                 ["{dateCreated}"] = dateCreated.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)
             });
 
-        var fromEmail = _configuration["Resend:FromEmail"] ?? "onboarding@resend.dev";
-        var useSandboxRecipient = bool.TryParse(_configuration["Resend:UseSandboxRecipient"], out var parsed) ? parsed : true;
-        var sandboxRecipient = _configuration["Resend:SandboxRecipient"] ?? recipientEmail;
-        var effectiveRecipient = useSandboxRecipient ? sandboxRecipient : recipientEmail;
+        var fromEmail = ResolveFromEmail();
+        var effectiveRecipient = ResolveRecipient(recipientEmail);
 
         var payload = new
         {
@@ -124,5 +123,31 @@ public class ResendEmailService : IEmailService
                 Status = ex.Message
             };
         }
+    }
+
+    private string ResolveRecipient(string recipientEmail)
+    {
+        // Safe defaults: sandbox in Development, real recipient elsewhere unless explicitly overridden.
+        var useSandboxRecipient = bool.TryParse(_configuration["Resend:UseSandboxRecipient"], out var parsed)
+            ? parsed
+            : _environment.IsDevelopment();
+
+        if (!useSandboxRecipient)
+        {
+            return recipientEmail;
+        }
+
+        return _configuration["Resend:SandboxRecipient"] ?? recipientEmail;
+    }
+
+    private string ResolveFromEmail()
+    {
+        var configuredFrom = _configuration["Resend:FromEmail"];
+        if (!string.IsNullOrWhiteSpace(configuredFrom))
+        {
+            return configuredFrom;
+        }
+
+        return "no-reply@kaliscore.tech";
     }
 }
