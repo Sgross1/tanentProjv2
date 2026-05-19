@@ -7,6 +7,7 @@ import {
 } from "../../../core/services/landlord.service";
 import { CitiesService } from "../../../core/services/cities.service";
 import { AuthService } from "../../../core/services/auth.service";
+import { AppComponent } from "../../../app.component";
 
 @Component({
   selector: "app-landlord-search",
@@ -36,6 +37,7 @@ export class LandlordSearchComponent implements OnInit {
     private landlordService: LandlordService,
     private citiesService: CitiesService,
     private authService: AuthService,
+    private appComponent: AppComponent,
   ) {}
 
   ngOnInit() {
@@ -140,6 +142,7 @@ export class LandlordSearchComponent implements OnInit {
     const currentUser = this.authService.getCurrentUserValue();
     if (!currentUser?.token) {
       this.actionError = "כדי לשמור פנייה יש להתחבר לחשבון.";
+      this.appComponent.openAuth();
       return;
     }
 
