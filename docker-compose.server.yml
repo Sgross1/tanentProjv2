@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-rating-api
     ports:
-      - "8080:8080"
+      - '127.0.0.1:8080:8080'
     volumes:
       - ./data:/app/data
       - ./tenantrating_v2.db:/app/tenantrating_v2.db
@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-rating-client
     ports:
-      - "80:80"
+      - '127.0.0.1:8081:80'
     depends_on:
       - api
     restart: always

@@ -23,5 +23,5 @@ jobs:
           script: |
             cd tanentProjv2
             git pull origin ${{ github.ref_name }}
-            sudo docker compose up --build -d
+            sudo docker compose -f docker-compose.server.yml up --build -d
             sudo docker system prune -f
