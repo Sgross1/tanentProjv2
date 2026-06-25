@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TenantRating.API.DTOs;
 
-// ⚠️ לשימוש לבדיקות בלבד (Swagger/Postman)
-// ⚠️ ממשק הלקוח אסור להשתמש ב-DTO זה - יש להשתמש ב-/api/requests/submit
-// ⚠️ FOR TESTING ONLY (Swagger/Postman) - Client UI must use /api/requests/submit
+// ⚠️ DTO למסלול בדיקות/דיבאג בלבד (Swagger/Postman)
+// ⚠️ לא מיועד למסלול הלקוח בייצור - יש להשתמש ב-/api/requests/submit
+// ⚠️ משמש בעיקר ללוגים, בדיקות וחשיפת פירוט OCR בעת פיתוח
 public class CreateRequestDto
 {
     [Required]
@@ -15,7 +15,7 @@ public class CreateRequestDto
     [Required]
     public List<string> IdNumbers { get; set; } = new();
 
-    // Input for scoring simulation (mocking the file upload parsing)
+    // קלט לסימולציית חישוב במסלול הבדיקות של OCR
     public decimal NetIncome { get; set; }
     public int NumChildren { get; set; }
     public bool IsMarried { get; set; }
@@ -23,7 +23,7 @@ public class CreateRequestDto
     public decimal PensionGrossAmount { get; set; }
     public decimal PensionDeductionPercent { get; set; }
 
-    // Debug Data
+    // נתוני דיבאג בלבד - לא מיועדים למסלול הייצור
     public object? RawData { get; set; }
     public string? ScoreFormula { get; set; }
     public List<string>? CalculationDetails { get; set; }

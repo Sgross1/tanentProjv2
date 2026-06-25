@@ -206,7 +206,7 @@ class RubiksCube {
     "מיקום",
     "%",
     "נוסחה",
-    "פרמטר"
+    "פרמטר",
   ];
   private offset: number;
   private lastAxis: "x" | "y" | "z" = "x";

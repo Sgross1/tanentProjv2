@@ -13,7 +13,13 @@ RUN dotnet publish "TenantRating.API.csproj" -c Release -o /app/publish /p:UseAp
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
+
+# Install CA certificates
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
@@ -23,4 +29,4 @@ ENV ConnectionStrings__DefaultConnection="Data Source=/app/data/tenantrating_v2.
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
-ENTRYPOINT ["dotnet", "TenantRating.API.dll"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

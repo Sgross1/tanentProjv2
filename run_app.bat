@@ -1,7 +1,7 @@
 @echo off
 if exist secrets.bat call secrets.bat
 echo ===================================================
-echo   Tenant Rating - One Click Setup ^& Run
+echo   Tenant Rating - One Click Setup & Run
 echo ===================================================
 echo.
 echo [1/3] Checking environment...

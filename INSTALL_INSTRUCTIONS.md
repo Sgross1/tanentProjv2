@@ -1,47 +1,133 @@
-# הוראות התקנה - Tenant Rating
-
-כדי להריץ את הפרויקט, עליך להתקין את שני הכלים הבאים:
-
-## 1. Node.js (עבור האתר / Frontend)
-
-- **מה להתקין:** גרסת **LTS** (מומלץ) או Current.
-- **קישור להורדה:** [https://nodejs.org/en](https://nodejs.org/en)
-- _הוראות:_ תוריד את הקובץ ותעשה Next, Next, Next עד שזה מותקן.
-
-## 2. .NET 9 SDK (עבור השרת / Backend)
-
-- **מה להתקין:** .NET SDK version 9.0
-- **קישור להורדה:** [https://dotnet.microsoft.com/en-us/download/dotnet/9.0](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-- _חשוב:_ בחר את הגרסה של **Windows x64**.
+# הוראות התקנה - KaLiScore (Tenant Rating)
 
 ---
 
-## מה עושים אחרי ההתקנה?
+## הרצה עם Docker (מומלץ)
 
-1.  **סגור את כל החלונות השחורים** (טרמינלים) הפתוחים כרגע.
-2.  פתח חלון CMD או PowerShell חדש.
-3.  כנס לתיקיית הפרויקט:
-    `C:\Users\shlgr\.gemini\antigravity\scratch\tenant-rating`
-4.  הפעל שוב את הקובץ האוטומטי:
-    `run_app.bat`
+### דרישות מקדימות
 
-בהצלחה!
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### שלבים
+
+1. שכפל את הריפוזיטורי:
+
+   ```bash
+   git clone https://github.com/Sgross1/tanentProjv2.git
+   cd tanentProjv2
+   ```
+
+2. צור קובץ `.env` בתיקיית השורש (ראה פורמט למטה).
+
+3. הפעל:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. גלוש ל: `http://localhost:800`
+
+5. לעצור:
+   ```bash
+   docker compose down
+   ```
 
 ---
 
-## הגדרות אימייל (Resend) - מצב פיתוח מול ענן
+## קובץ `.env` — משתני סביבה נדרשים
 
-הגדרות ה-Resend נמצאות בקובץ:
-`TenantRating.API/appsettings.json`
+צור קובץ `.env` בתיקיית השורש עם הערכים הבאים:
 
-בפיתוח מקומי הפרויקט מוגדר למצב Sandbox:
+```env
+# Azure Document Intelligence (OCR)
+AZURE_API_KEY=your_azure_api_key
+AZURE_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
+AZURE_MODEL_ID=prebuilt-document
 
-- `UseSandboxRecipient: true`
-- `SandboxRecipient`: המייל המאומת של חשבון ה-Resend
+# JWT Authentication
+JWT_KEY=your_long_random_secret_key_min_32_chars
+JWT_ISSUER=TenantRatingAPI
+JWT_AUDIENCE=TenantRatingClient
 
-כאשר מעלים לענן ומאשרים דומיין/נמענים לפי מדיניות Resend:
+# Resend Email
+RESEND_API_KEY=re_xxxxxxxxxxxx
 
-- שנה ל-`UseSandboxRecipient: false`
-- ודא ש-`FromEmail` הוא שולח מאומת
+# SMS (SMS4Free)
+SMS_KEY=your_sms_key
+SMS_USER=your_sms_user
+SMS_PASS=your_sms_password
+```
 
-כך לא צריך לשנות קוד, רק קונפיגורציה.
+> **הערה:** קובץ `.env` לא נדחף ל-Git. אל תשמור סודות בקוד.
+
+---
+
+## הגדרות אימייל (Resend)
+
+הגדרות ה-Resend נמצאות ב-`TenantRating.API/appsettings.json`:
+
+```json
+"Resend": {
+  "ApiKey": "",
+  "FromEmail": "no-reply@kaliscore.tech",
+  "UseSandboxRecipient": false,
+  "SandboxRecipient": ""
+}
+```
+
+- **`FromEmail`** — חייב להיות מדומיין מאומת ב-Resend (`kaliscore.tech`).
+- **`UseSandboxRecipient: false`** — שולח למייל האמיתי של המשתמש.
+- **`UseSandboxRecipient: true`** — שולח לכתובת ב-`SandboxRecipient` (לבדיקות בלבד).
+- ה-API Key מגיע ממשתנה סביבה `RESEND_API_KEY` בלבד — לא נשמר בקוד.
+
+---
+
+## פריסה לשרת / AWS
+
+השתמש ב-`docker-compose.server.yml`:
+
+```bash
+docker compose -f docker-compose.server.yml up -d --build
+```
+
+השרת מגדיר:
+
+- `ASPNETCORE_ENVIRONMENT=Production`
+- Volume לקובץ ה-SQLite: `tenantrating_v2.db`
+- פורט חיצוני: `80`
+
+---
+
+## פיתוח מקומי (ללא Docker)
+
+### דרישות
+
+- Node.js LTS
+- .NET 9.0 SDK — [הורדה](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+
+### Backend
+
+```bash
+cd TenantRating.API
+dotnet restore
+dotnet run
+```
+
+### Frontend
+
+```bash
+cd TenantRating.Client
+npm install
+ng serve
+```
+
+גלוש ל: `http://localhost:4200`
+
+---
+
+## מבנה Docker
+
+| קובץ                        | סביבה                | פורט                  |
+| --------------------------- | -------------------- | --------------------- |
+| `docker-compose.yml`        | Development (מקומי)  | `800:80`, `8080:8080` |
+| `docker-compose.server.yml` | Production (AWS/שרת) | `80:80`, `8080:8080`  |

@@ -2,12 +2,11 @@ namespace TenantRating.API.Logic;
 
 public static class RentabilityScoreCalculator
 {
-    // Risk factors (Haircuts) - Reduction for safety buffer
-    private const decimal KidExpenseFactor = 400m; // Risk per child
-    private const decimal MarriedExpenseFactor = 300m; // Risk per spouse
+    private const decimal KidExpenseFactor = 300m; // סיכון לכל ילד
+    private const decimal MarriedExpenseFactor = 400m; // סיכון לכל בן/בת זוג
 
-    // Debt-to-Income Ratio (DTI)
-    public const decimal RentToIncomeRatio = 0.35m; // 35% of adjusted income allocated for rent
+    // יחס חוב להכנסה (DTI)
+    public const decimal RentToIncomeRatio = 0.35m; // 35% מההכנסה המתואמת מוקצה לשכר דירה
 
     public static decimal CalculateTempScore(
         decimal netIncome,
@@ -19,59 +18,38 @@ public static class RentabilityScoreCalculator
     {
         decimal tempScore = netIncome;
 
-        // --- 1. Demographic Dilution (Haircuts) ---
-        tempScore -= numChildren * 300m; // 300 per child
-        if (isMarried)
-        {
-            tempScore -= 400m; // Fixed expenses for spouse
-        }
+        // --- 1. הפחתה דמוגרפית (תספורות) ---
+        tempScore -= CalculateChildrenReduction(numChildren);
+        tempScore -= CalculateSpouseReduction(isMarried);
 
-        // --- 2. Stability Premium ---
-        decimal stabilityBonus = 0;
-        if (seniorityYears >= 2)
-        {
-            if (seniorityYears <= 5)
-            {
-                stabilityBonus = 50m * (seniorityYears - 1);
-            }
-            else
-            {
-                stabilityBonus = 50m * 4 + 100m * (seniorityYears - 5);
-            }
-            stabilityBonus = Math.Min(stabilityBonus, 700m); // Cap at 700
-        }
+        // --- 2. פרמיית יציבות ---
+        decimal stabilityBonus = CalculateStabilityBonus(seniorityYears);
         tempScore += stabilityBonus;
 
-        // --- 3. Discipline Predictor (Pension) ---
-        decimal disciplineBonus = 0;
-        if (pensionDeductionPercent > 6)
-        {
-            decimal excessPercent = pensionDeductionPercent - 6;
-            disciplineBonus = 50m * (excessPercent / 0.1m);
-            disciplineBonus = Math.Min(disciplineBonus, 500m); // Cap at 500
-        }
+        // --- 3. מנבא משמעת (פנסיה) ---
+        decimal disciplineBonus = CalculateDisciplineBonus(pensionDeductionPercent);
         tempScore += disciplineBonus;
 
-        // Ensure non-negative
+        // הבטח ערך לא שלילי
         return Math.Max(0, tempScore);
     }
 
     public static decimal CalculateFinalScore(decimal tempScore, decimal requestedRent)
     {
-        if (requestedRent <= 0) return 100m; // Fallback
+        if (requestedRent <= 0) return 100m; // ערך ברירת מחדל
 
-        // 1. Max Affordable Rent (35% of Adjusted Income)
+        // 1. שכר דירה מקסימלי אפשרי (35% מההכנסה המתואמת)
         decimal maxAffordableRent = tempScore * RentToIncomeRatio;
 
-        // 2. Risk Ratio
+        // 2. יחס סיכון
         decimal riskRatio = maxAffordableRent / requestedRent;
 
-        // 3. Convert to Score (0-100)
+        // 3. המרה לציון (0-100)
         decimal finalScore = riskRatio * 100m;
 
         return Math.Min(Math.Max(finalScore, 0m), 100m);
     }
-
+    // מסלול בדיקות/דיבאג בלבד: מיועד ל-OCR, לוגים ותצוגת פירוט, ולא למסלול הלקוח בייצור.
     public static (string Formula, List<string> Details) GetCalculationDetails(
         decimal netIncome,
         int numChildren,
@@ -83,72 +61,90 @@ public static class RentabilityScoreCalculator
     {
         var details = new List<string>();
 
-        // A: Base Income
+        // A: הכנסה בסיסית
         details.Add($"[A] הכנסה התחלתית (נטו): {netIncome:N0} ₪");
 
         decimal tempScore = netIncome;
 
-        // B: Demographic Dilution - Children
-        decimal childReduction = numChildren * 300m;
+        // B: הפחתה דמוגרפית - ילדים
+        decimal childReduction = CalculateChildrenReduction(numChildren);
         tempScore -= childReduction;
-        details.Add($"[B] הפחתה דמוגרפית בגין {numChildren} ילדים (300 ₪ לילד): {childReduction:N0} ₪");
+        details.Add($"[B] הפחתה דמוגרפית בגין {numChildren} ילדים ({KidExpenseFactor:N0} ₪ לילד): {childReduction:N0} ₪");
 
-        // C: Demographic Dilution - Spouse
-        decimal spouseReduction = isMarried ? 400m : 0;
+        // C: הפחתה דמוגרפית - בן/בת זוג
+        decimal spouseReduction = CalculateSpouseReduction(isMarried);
         tempScore -= spouseReduction;
         details.Add($"[C] הפחתה דמוגרפית בגין בן/בת זוג (הוצאות קבועות): {spouseReduction:N0} ₪");
 
-        // D: Stability Premium
-        decimal stabilityBonus = 0;
-        if (seniorityYears >= 2)
-        {
-            if (seniorityYears <= 5)
-            {
-                stabilityBonus = 50m * (seniorityYears - 1);
-            }
-            else
-            {
-                stabilityBonus = 50m * 4 + 100m * (seniorityYears - 5);
-            }
-            stabilityBonus = Math.Min(stabilityBonus, 700m);
-        }
+        // D: פרמיית יציבות
+        decimal stabilityBonus = CalculateStabilityBonus(seniorityYears);
         tempScore += stabilityBonus;
         details.Add($"[D] פרמיית יציבות בגין {seniorityYears} שנות ותק: {stabilityBonus:N0} ₪");
 
-        // E: Discipline Predictor (Pension)
-        decimal disciplineBonus = 0;
-        if (pensionDeductionPercent > 6)
-        {
-            decimal excessPercent = pensionDeductionPercent - 6;
-            disciplineBonus = 50m * (excessPercent / 0.1m);
-            disciplineBonus = Math.Min(disciplineBonus, 500m);
-        }
+        // E: מנבא משמעת (פנסיה)
+        decimal disciplineBonus = CalculateDisciplineBonus(pensionDeductionPercent);
         tempScore += disciplineBonus;
         details.Add($"[E] מנבא משמעת (פנסיה {pensionDeductionPercent:F1}%): {disciplineBonus:N0} ₪");
 
-        // F: Temp Score
+        // F: ציון זמני
         tempScore = Math.Max(0, tempScore);
         details.Add($"[F] נטו מתואם (A - B - C + D + E): {tempScore:N0} ₪");
 
-        // Final Calculation
+        // חישוב סופי
         if (desiredRent <= 0)
         {
             return ("לא ניתן לחשב (שכר דירה 0)", details);
         }
 
-        // G: Max Affordable
+        // G: מקסימום אפשרי
         decimal maxAffordableRent = tempScore * RentToIncomeRatio;
         details.Add($"[G] שכר דירה מקסימלי מומלץ (F * 0.35): {maxAffordableRent:N0} ₪");
 
-        // H: Requested Rent
+        // H: שכר דירה מבוקש
         details.Add($"[H] שכר דירה מבוקש: {desiredRent:N0} ₪");
 
-        // Formula
+        // נוסחה
         string formula = $$"""
         נוסחה: (G / H) * 100
         הצבה: ({{maxAffordableRent:N0}} / {{desiredRent:N0}}) * 100
         """;
 
         return (formula, details);
+    }
+
+    private static decimal CalculateChildrenReduction(int numChildren)
+    {
+        return numChildren * KidExpenseFactor;
+    }
+
+    private static decimal CalculateSpouseReduction(bool isMarried)
+    {
+        return isMarried ? MarriedExpenseFactor : 0m;
+    }
+
+    private static decimal CalculateStabilityBonus(decimal seniorityYears)
+    {
+        if (seniorityYears < 2) return 0m;
+
+        decimal stabilityBonus;
+        if (seniorityYears <= 5)
+        {
+            stabilityBonus = 50m * (seniorityYears);
+        }
+        else
+        {
+            stabilityBonus = 50m * 5 + 100m * (seniorityYears - 5);
+        }
+
+        return Math.Min(stabilityBonus, 700m);
+    }
+
+    private static decimal CalculateDisciplineBonus(decimal pensionDeductionPercent)
+    {
+        if (pensionDeductionPercent <= 6) return 0m;
+
+        decimal excessPercent = pensionDeductionPercent - 6;
+        decimal disciplineBonus = 50m * (excessPercent / 0.1m);
+        return Math.Min(disciplineBonus, 500m);
     }
 }

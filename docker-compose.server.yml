@@ -5,12 +5,14 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-rating-api
     ports:
-      - "8080:8080"
+      - '127.0.0.1:8080:8080'
     volumes:
       - ./data:/app/data
+      - ./tenantrating_v2.db:/app/tenantrating_v2.db
       - ./certs:/usr/local/share/ca-certificates/custom:ro
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=tenantrating_v2.db
+      - ASPNETCORE_ENVIRONMENT=Production
       - AzureDocumentIntelligence__ApiKey=${AZURE_API_KEY}
       - AzureDocumentIntelligence__Endpoint=${AZURE_ENDPOINT}
       - AzureDocumentIntelligence__ModelId=${AZURE_MODEL_ID}
@@ -31,7 +33,7 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-rating-client
     ports:
-      - "800:80"
+      - '127.0.0.1:8081:80'
     depends_on:
       - api
     restart: always

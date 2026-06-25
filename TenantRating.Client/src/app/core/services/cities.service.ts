@@ -48,14 +48,14 @@ export class CitiesService {
   }
 
   /**
-   * Get cached cities (no API call)
+   * Get cached cities (no API call) אין שימוש
    */
   getCachedCities(): string[] {
     return this.cachedCities || [];
   }
 
   /**
-   * Clear cache (useful for refresh)
+   * Clear cache (useful for refresh) אין שימוש
    */
   clearCache(): void {
     this.cachedCities = null;

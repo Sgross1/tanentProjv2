@@ -29,6 +29,7 @@ public class RequestsController : ControllerBase
         _emailService = emailService;
     }
 
+    // מסלול בדיקות/דיבאג בלבד: מיועד ל-OCR, לוגים ותצוגת פירוט, ולא למסלול הלקוח בייצור.
     [HttpPost("analyze")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<CreateRequestDto>> AnalyzePayslips([FromForm] List<IFormFile> files, [FromForm] decimal? desiredRent)
@@ -130,6 +131,7 @@ public class RequestsController : ControllerBase
             Percentile = percentile
         };
     }
+
 
     // ✅ SECURE ENDPOINT - For production client UI
     [HttpPost("submit")]
